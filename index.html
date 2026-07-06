@@ -53,6 +53,17 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 .label{fill:var(--text);font-size:13px;font-weight:700;paint-order:stroke;stroke:#000;stroke-width:3}.smallLabel{fill:rgba(255,255,255,.86);font-size:12px;font-weight:650;paint-order:stroke;stroke:#000;stroke-width:3}.constLabel{fill:rgba(255,255,255,.72);font-size:12px;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3}.symbol{font-size:22px;text-anchor:middle;fill:rgba(255,255,255,.78);paint-order:stroke;stroke:#000;stroke-width:3}.north{fill:white;font-size:13px;text-anchor:middle}
 @media(max-width:900px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}svg{width:96vw;height:96vw}}
 .cardinal{fill:#bfe3ff;font-size:16px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.modebtn{margin:0;padding:9px 4px;font-size:12px;font-weight:700;background:#223047}
+.modebtn.active{background:var(--sat)}
+.analemmaCurve{fill:none;stroke:var(--sun);stroke-width:2.2}
+.wheelRing{fill:none;stroke:rgba(255,255,255,.4);stroke-width:1.2}
+.wheelSpoke{stroke:rgba(255,255,255,.16);stroke-width:.8}
+.wheelGlyph{font-size:20px;text-anchor:middle;fill:rgba(255,255,255,.75);paint-order:stroke;stroke:#000;stroke-width:3}
+.gridline{stroke:rgba(255,255,255,.12);stroke-width:.8}
+.gridlabel{fill:rgba(255,255,255,.6);font-size:11px;text-anchor:middle}
+.eclAxis{stroke:var(--ecl);stroke-width:1.4}
+.trace{fill:none;stroke-width:2}
 </style>
 </head>
 <body>
@@ -80,7 +91,13 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 <div id="passes" class="note" style="display:none"></div>
 <button id="astrosBtn" class="secondary">Astros visibles (mi ubicación)</button>
 <div id="astros" class="note" style="display:none"></div>
-<button id="skyBtn" class="secondary">Modo cielo (mi ubicación)</button>
+<div class="modes">
+<button id="mMap" class="modebtn active">Mapa</button>
+<button id="mSky" class="modebtn">Cielo</button>
+<button id="mAna" class="modebtn">Analema</button>
+<button id="mZod" class="modebtn">Zodíaco</button>
+<button id="mChart" class="modebtn">Carta</button>
+</div>
 
 <div class="toggles">
 <label class="toggle"><input type="checkbox" id="showNight" checked>Día/noche</label>
@@ -143,7 +160,7 @@ const labelLayer=root.append("g").attr("class","mapLayer");
 const zoom=d3.zoom().scaleExtent([1,14]).on("zoom",ev=>{root.attr("transform",ev.transform);const z=document.getElementById("zlvl");if(z)z.textContent=ev.transform.k.toFixed(1)+"×";});
 const skyLayer=root.append("g");
 
-let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null,skyMode=false;
+let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null,viewMode="map";
 
 const FALLBACK_TLE={
  name:"SATGUS",
@@ -245,7 +262,7 @@ function getSun(date){
  const Om=(125.04-1934.136*T)*Math.PI/180;
  const lambda=normDeg(L0+C-0.00569-0.00478*Math.sin(Om));   // aparente, eclíptica de fecha
  const eq=eclToEqDate(lambda,0,date),sub=raDecToSub(eq.ra,eq.dec,date);
- return{lat:sub.lat,lon:sub.lon,eclLon:lambda,ra:eq.ra,dec:eq.dec}
+ return{lat:sub.lat,lon:sub.lon,eclLon:lambda,ra:eq.ra,dec:eq.dec,L0Sun:L0}
 }
 function getMoon(date){
  const d=jdTT(date)-2451543.5,N=normDeg(125.1228-0.0529538083*d),i=5.1454,w=normDeg(318.0634+0.1643573223*d),a=60.2666,e=.0549,M=normDeg(115.3654+13.0649929509*d);
@@ -395,6 +412,77 @@ function renderSky(date,sun,moon,sat){
  skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-8).text("cenit");
 }
 
+// ---- Modo ANALEMA: el "8" del Sol a hora de reloj fija desde tu ubicación ----
+function eqTimeMin(date){const T=Tt(date),s=getSun(date),eps=(meanObliquity(T)+nutation(date).deps)*Math.PI/180;
+ let E=s.L0Sun-0.0057183-s.ra+nutation(date).dpsi*Math.cos(eps);E=((E+540)%360)-180;return E*4;}
+function renderAnalemma(date){
+ skyLayer.selectAll("*").remove();
+ const cx=width/2,cy=height/2,R=410,u=userLocation,y=date.getUTCFullYear();
+ const hourUTC=12-u.lon/15,hh=Math.floor((hourUTC+24)%24),mm=Math.round((((hourUTC+24)%24)-hh)*60);
+ skyLayer.append("circle").attr("cx",cx).attr("cy",cy).attr("r",R).attr("fill","#0b1a2e").attr("stroke","rgba(255,255,255,.5)").attr("stroke-width",1.2);
+ [30,60].forEach(a=>skyLayer.append("circle").attr("cx",cx).attr("cy",cy).attr("r",R*(90-a)/90).attr("fill","none").attr("stroke","rgba(255,255,255,.13)").attr("stroke-width",.7));
+ [["N",0],["E",90],["S",180],["O",270]].forEach(([lab,az])=>{const p=domeXY(2,az);skyLayer.append("text").attr("class","cardinal").attr("x",p[0]).attr("y",p[1]+5).text(lab);});
+ const daily=[];for(let n=0;n<=365;n++){const dt=new Date(Date.UTC(y,0,1+n,hh,mm,0)),s=getSun(dt),aa=altAz(s.ra,s.dec,u,dt);daily.push({dt,alt:aa.alt,az:aa.az,dec:s.dec});}
+ let d="",started=false;daily.forEach(p=>{if(p.alt<0){started=false;return;}const xy=domeXY(p.alt,p.az);d+=(started?"L":"M")+xy[0].toFixed(1)+","+xy[1].toFixed(1);started=true;});
+ skyLayer.append("path").attr("class","analemmaCurve").attr("d",d);
+ // marcas: solsticios (dec máx/mín) y equinoccios (cruce dec=0)
+ let iMax=0,iMin=0;daily.forEach((p,i)=>{if(p.dec>daily[iMax].dec)iMax=i;if(p.dec<daily[iMin].dec)iMin=i;});
+ const eqx=[];for(let i=1;i<daily.length;i++)if((daily[i-1].dec<0)!==(daily[i].dec<0))eqx.push(i);
+ const mk=(p,label,col)=>{if(p.alt<0)return;const xy=domeXY(p.alt,p.az);skyLayer.append("circle").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",4).attr("fill",col);skyLayer.append("text").attr("class","smallLabel").attr("x",xy[0]+7).attr("y",xy[1]+4).text(label);};
+ mk(daily[iMax],"solsticio "+daily[iMax].dt.toLocaleDateString([], {month:"short"}),"#ffd166");
+ mk(daily[iMin],"solsticio "+daily[iMin].dt.toLocaleDateString([], {month:"short"}),"#8fb7ff");
+ eqx.forEach(i=>mk(daily[i],"equinoccio "+daily[i].dt.toLocaleDateString([], {month:"short"}),"#b06cff"));
+ const dt0=new Date(Date.UTC(y,date.getUTCMonth(),date.getUTCDate(),hh,mm,0)),s0=getSun(dt0),aa0=altAz(s0.ra,s0.dec,u,dt0);
+ if(aa0.alt>0){const xy=domeXY(aa0.alt,aa0.az);skyLayer.append("circle").attr("class","sunDot").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",7);skyLayer.append("text").attr("class","label").attr("x",xy[0]+9).attr("y",xy[1]-7).text("hoy");}
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",44).text("Analema solar · "+String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")+" UTC (~mediodía solar local)");
+ skyLayer.append("text").attr("class","smallLabel").attr("x",cx-140).attr("y",height-30).text("Ecuación del tiempo hoy: "+eqTimeMin(dt0).toFixed(1)+" min · Declinación ☉: "+s0.dec.toFixed(1)+"°");
+}
+
+// ---- Modo ZODÍACO: rueda con Sol, Luna y planetas por signo y grado ----
+function renderZodiacWheel(date){
+ skyLayer.selectAll("*").remove();
+ const cx=width/2,cy=height/2,Rout=395,Rin=315,D2R=Math.PI/180;
+ skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rout);
+ skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rin);
+ const at=(lon,r)=>{const f=(180+lon)*D2R;return[cx+r*Math.cos(f),cy-r*Math.sin(f)];};
+ for(let s=0;s<12;s++){const a=s*30,p1=at(a,Rin),p2=at(a,Rout);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);
+  const g=at(a+15,(Rin+Rout)/2);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+7).text(zodiac[s].sym);}
+ for(let a=0;a<360;a+=10){const p1=at(a,Rin-6),p2=at(a,Rin);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);}
+ const bodies=[{sym:"☉",n:"Sol",lon:getSun(date).eclLon,c:"#ffd166"},{sym:"☾",n:"Luna",lon:getMoon(date).eclLon,c:"#dce6f2"}];
+ planetDefs.forEach(pl=>bodies.push({sym:pl.sym,n:pl.name,lon:planetPosition(pl,date).eclLon,c:pl.color}));
+ bodies.forEach((b,i)=>{const r=Rin-30-(i%3)*30,p=at(b.lon,r),tick=at(b.lon,Rin);
+  skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p[0]).attr("y1",p[1]).attr("x2",tick[0]).attr("y2",tick[1]).attr("stroke",b.c).attr("stroke-width",1);
+  skyLayer.append("circle").attr("cx",p[0]).attr("cy",p[1]).attr("r",6).attr("fill",b.c).attr("stroke","#000").attr("stroke-width",1);
+  const deg=Math.floor(b.lon%30),mnt=Math.round((b.lon%1)*60);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]).attr("y",p[1]-11).attr("text-anchor","middle").text(b.sym+" "+deg+"°"+String(mnt).padStart(2,"0")+"′ "+zodiac[Math.floor(normDeg(b.lon)/30)].name.slice(0,3));});
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-4).text("Zodíaco tropical");
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy+14).text(date.toISOString().slice(0,10));
+}
+
+// ---- Modo CARTA: tira de eclíptica con recorridos y retrógrados (±6 meses) ----
+function renderChart(date){
+ skyLayer.selectAll("*").remove();
+ const x0=46,x1=854,y0=150,y1=760,latSpan=9;
+ const lon2x=l=>x0+(normDeg(l)/360)*(x1-x0),lat2y=b=>((y0+y1)/2)-(b/latSpan)*((y1-y0)/2);
+ skyLayer.append("text").attr("class","constLabel").attr("x",(x0+x1)/2).attr("y",y0-70).text("Recorrido de los planetas ±6 meses (longitud eclíptica × latitud) — los lazos son los retrógrados");
+ for(let a=0;a<=360;a+=30){const x=lon2x(a);skyLayer.append("line").attr("class","gridline").attr("x1",x).attr("y1",y0).attr("x2",x).attr("y2",y1);
+  if(a<360)skyLayer.append("text").attr("class","wheelGlyph").attr("x",lon2x(a+15)).attr("y",y0-40).text(zodiac[a/30].sym);}
+ skyLayer.append("line").attr("class","eclAxis").attr("x1",x0).attr("y1",lat2y(0)).attr("x2",x1).attr("y2",lat2y(0));
+ [-5,5].forEach(b=>{skyLayer.append("line").attr("class","gridline").attr("x1",x0).attr("y1",lat2y(b)).attr("x2",x1).attr("y2",lat2y(b));skyLayer.append("text").attr("class","gridlabel").attr("x",x0-6).attr("y",lat2y(b)+3).attr("text-anchor","end").text(b+"°");});
+ const bodies=[{sym:"☉",n:"Sol",kind:"sun",c:"#ffd166"}].concat(planetDefs.map(pl=>({sym:pl.sym,n:pl.name,kind:"pl",def:pl,c:pl.color})));
+ bodies.forEach(b=>{let path="",prev=null;
+  for(let dd=-183;dd<=183;dd+=2){const dt=new Date(date.getTime()+dd*86400000);let lon,lat;
+   if(b.kind==="sun"){const s=getSun(dt);lon=s.eclLon;lat=0;}else{const p=planetPosition(b.def,dt);lon=p.eclLon;lat=p.eclLat;}
+   const x=lon2x(lon),yv=lat2y(Math.max(-latSpan,Math.min(latSpan,lat)));
+   if(prev!==null&&Math.abs(lon-prev)>180){skyLayer.append("path").attr("class","trace").attr("stroke",b.c).attr("d",path);path="";}
+   path+=(path===""?"M":"L")+x.toFixed(1)+","+yv.toFixed(1);prev=lon;}
+  skyLayer.append("path").attr("class","trace").attr("stroke",b.c).attr("d",path).attr("opacity",.85);
+  let lon,lat;if(b.kind==="sun"){lon=getSun(date).eclLon;lat=0;}else{const p=planetPosition(b.def,date);lon=p.eclLon;lat=p.eclLat;}
+  const x=lon2x(lon),yv=lat2y(Math.max(-latSpan,Math.min(latSpan,lat)));
+  skyLayer.append("circle").attr("cx",x).attr("cy",yv).attr("r",5).attr("fill",b.c).attr("stroke","#000").attr("stroke-width",1);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",x+7).attr("y",yv-6).text(b.sym+" "+b.n);});
+}
+
 function render(){
  const now=getRenderDate(),sun=getSun(now),moon=getMoon(now),sat=satPos(now);
  document.getElementById("utc").textContent=now.toISOString().replace("T"," ").slice(0,19);
@@ -412,10 +500,17 @@ function render(){
   if(userLocation){const inFoot=ang(userLocation,sat)<beta,dark=ang(userLocation,sun)>96,sunlit=ang(sat,sun)<108;document.getElementById("visible").textContent=(inFoot&&dark&&sunlit)?"posible":(inFoot?"sobre el horizonte, pero no en oscuridad":"fuera de alcance")}
  }else{["satpos","alt","speed","period","footprint"].forEach(id=>document.getElementById(id).textContent="—")}
 
- const skyOn=skyMode&&!!userLocation;
- [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",skyOn?"none":null));
- skyLayer.style("display",skyOn?null:"none");
- if(skyOn){renderSky(now,sun,moon,sat);return;}
+ if((viewMode==="sky"||viewMode==="analemma")&&!userLocation)viewMode="map";
+ const mapOn=viewMode==="map";
+ [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",mapOn?null:"none"));
+ skyLayer.style("display",mapOn?"none":null);
+ if(!mapOn){
+  if(viewMode==="sky")renderSky(now,sun,moon,sat);
+  else if(viewMode==="analemma")renderAnalemma(now);
+  else if(viewMode==="zodiac")renderZodiacWheel(now);
+  else if(viewMode==="chart")renderChart(now);
+  return;
+ }
 
  const showNight=document.getElementById("showNight").checked,showMoon=document.getElementById("showMoon").checked,showZodiac=document.getElementById("showZodiac").checked,showAnalemma=document.getElementById("showAnalemma").checked,showPlanets=document.getElementById("showPlanets").checked,showStars=document.getElementById("showStars").checked,showMilkyWay=document.getElementById("showMilkyWay").checked,showVisibleSky=document.getElementById("showVisibleSky").checked,showLines=document.getElementById("showLines").checked,showFootprint=document.getElementById("showFootprint").checked;
  nightLayer.style("display",showNight?null:"none").datum(circleAt({lat:-sun.lat,lon:normLon(sun.lon+180)})).attr("d",path);
@@ -472,7 +567,9 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("nowMode").onclick=backToNow;
  document.getElementById("passBtn").onclick=showPasses;
  document.getElementById("astrosBtn").onclick=showVisibility;
- document.getElementById("skyBtn").onclick=()=>{if(!userLocation){setStatus("El modo cielo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D.","status warn");return;}skyMode=!skyMode;const b=document.getElementById("skyBtn");b.textContent=skyMode?"Volver al mapa":"Modo cielo (mi ubicación)";b.className=skyMode?"user":"secondary";render();};
+ const modeBtns={map:"mMap",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart"};
+ function setMode(m){if((m==="sky"||m==="analemma")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");render();}
+ Object.keys(modeBtns).forEach(m=>document.getElementById(modeBtns[m]).onclick=()=>setMode(m));
  svg.call(zoom);
  document.getElementById("zin").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1.6);
  document.getElementById("zout").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1/1.6);
