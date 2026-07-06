@@ -17,7 +17,14 @@
 body{margin:0;background:radial-gradient(circle,#142033 0%,var(--bg) 65%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
 .app{min-height:100vh;display:grid;grid-template-columns:420px 1fr}
 aside{background:rgba(16,23,34,.95);border-right:1px solid rgba(255,255,255,.1);padding:20px;overflow:auto}
-main{display:grid;place-items:center;padding:14px;overflow:hidden}
+main{position:relative;display:grid;place-items:center;padding:14px;overflow:hidden}
+.mapctrl{position:absolute;top:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:5}
+.mapctrl button{margin:0;width:46px;height:46px;padding:0;border-radius:12px;background:rgba(16,23,34,.9);border:1px solid rgba(255,255,255,.18);color:var(--text);font-size:20px;font-weight:700;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+.mapctrl button:active{background:rgba(255,255,255,.15)}
+.mapctrl .zlvl{width:46px;height:26px;font-size:12px;background:rgba(16,23,34,.9);border:1px solid rgba(255,255,255,.18);border-radius:10px;display:grid;place-items:center;color:var(--muted);font-family:ui-monospace,monospace}
+.zoomRoot{cursor:grab}.zoomRoot:active{cursor:grabbing}
+body.map-full .app{grid-template-columns:1fr}body.map-full aside{display:none}
+body.map-full svg{width:min(96vw,96vh);height:min(96vw,96vh);max-width:none;max-height:none}
 h1{font-size:22px;margin:0 0 4px}h2{font-size:14px;margin:0 0 14px;color:var(--muted)}
 p{color:var(--muted);font-size:14px;line-height:1.42}
 label{display:block;margin:13px 0 5px;color:var(--muted);font-size:13px}
@@ -45,6 +52,7 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 .starDot{fill:white;opacity:.86}.starLine{fill:none;stroke:rgba(255,255,255,.34);stroke-width:.8}.starName{fill:rgba(255,255,255,.74);font-size:11px;font-weight:650;paint-order:stroke;stroke:#000;stroke-width:3}
 .label{fill:var(--text);font-size:13px;font-weight:700;paint-order:stroke;stroke:#000;stroke-width:3}.smallLabel{fill:rgba(255,255,255,.86);font-size:12px;font-weight:650;paint-order:stroke;stroke:#000;stroke-width:3}.constLabel{fill:rgba(255,255,255,.72);font-size:12px;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3}.symbol{font-size:22px;text-anchor:middle;fill:rgba(255,255,255,.78);paint-order:stroke;stroke:#000;stroke-width:3}.north{fill:white;font-size:13px;text-anchor:middle}
 @media(max-width:900px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}svg{width:96vw;height:96vw}}
+.cardinal{fill:#bfe3ff;font-size:16px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3}
 </style>
 </head>
 <body>
@@ -70,6 +78,9 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 
 <button id="passBtn" class="user">Próximos pases sobre mi ubicación</button>
 <div id="passes" class="note" style="display:none"></div>
+<button id="astrosBtn" class="secondary">Astros visibles (mi ubicación)</button>
+<div id="astros" class="note" style="display:none"></div>
+<button id="skyBtn" class="secondary">Modo cielo (mi ubicación)</button>
 
 <div class="toggles">
 <label class="toggle"><input type="checkbox" id="showNight" checked>Día/noche</label>
@@ -106,9 +117,15 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 <div class="row"><span class="key">Mi ubicación</span><span id="userpos" class="value">no cargada</span></div>
 <div class="row"><span class="key">Visibilidad</span><span id="visible" class="value">—</span></div>
 </div>
-<div class="note">Mapa base embebido (siempre disponible, incluso sin internet); mejora a 50m si hay red, con la Antártida separada del resto para que nunca tumbe al mapa. Sol/Luna aproximados; planetas con modelo kepleriano (excentricidad e inclinación). El satélite usa SGP4 real (satellite.js).</div>
+<div class="note">Mapa base embebido (siempre disponible, incluso sin internet); mejora a 50m si hay red, con la Antártida separada. Posiciones geocéntricas aparentes referidas al equinoccio de fecha (Sol con ecuación del centro; planetas keplerianos con tiempo-luz, precesión, nutación y aberración; Luna topocéntrica en el cielo/tabla). Zodíaco tropical de fecha. Estrellas en J2000. El satélite usa SGP4 real. Precisión típica: minutos de arco en planetas, algo más en la Luna.</div>
 </aside>
-<main><svg id="map" viewBox="0 0 900 900" role="img" aria-label="Mapa polar azimutal con SATGUS, Sol, Luna y cielo"><title>SATGUS 62713 — tracker polar</title><desc>Proyección azimutal equidistante centrada en el polo norte, con la huella del satélite y objetos celestes.</desc></svg></main>
+<main><div class="mapctrl">
+<button id="zin" title="Acercar" aria-label="Acercar">+</button>
+<div id="zlvl" class="zlvl">1.0×</div>
+<button id="zout" title="Alejar" aria-label="Alejar">−</button>
+<button id="zreset" title="Restablecer vista" aria-label="Restablecer">⌂</button>
+<button id="zfull" title="Mapa grande / mostrar panel" aria-label="Pantalla del mapa">⛶</button>
+</div><svg id="map" viewBox="0 0 900 900" role="img" aria-label="Mapa polar azimutal con SATGUS, Sol, Luna y cielo"><title>SATGUS 62713 — tracker polar</title><desc>Proyección azimutal equidistante centrada en el polo norte, con la huella del satélite y objetos celestes.</desc></svg></main>
 </div>
 
 <script>
@@ -119,11 +136,14 @@ const path=d3.geoPath(projection), graticule=d3.geoGraticule().step([15,15]);
 
 svg.append("defs").append("clipPath").attr("id","mapClip").append("circle").attr("cx",width/2).attr("cy",height/2).attr("r",432);
 
-const baseLayer=svg.append("g").attr("class","mapLayer");
-const overlayLayer=svg.append("g").attr("class","mapLayer");
-const labelLayer=svg.append("g").attr("class","mapLayer");
+const root=svg.append("g").attr("class","zoomRoot");
+const baseLayer=root.append("g").attr("class","mapLayer");
+const overlayLayer=root.append("g").attr("class","mapLayer");
+const labelLayer=root.append("g").attr("class","mapLayer");
+const zoom=d3.zoom().scaleExtent([1,14]).on("zoom",ev=>{root.attr("transform",ev.transform);const z=document.getElementById("zlvl");if(z)z.textContent=ev.transform.k.toFixed(1)+"×";});
+const skyLayer=root.append("g");
 
-let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null;
+let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null,skyMode=false;
 
 const FALLBACK_TLE={
  name:"SATGUS",
@@ -199,6 +219,17 @@ function jd(date){return date.getTime()/86400000+2440587.5}
 function gmstDeg(date){const J=jd(date),T=(J-2451545)/36525;return normDeg(280.46061837+360.98564736629*(J-2451545)+0.000387933*T*T-T*T*T/38710000)}
 function raDecToSub(ra,dec,date){const gha=normDeg(gmstDeg(date)-ra);return{lat:dec,lon:normLon(-gha)}}
 function eclToEq(lambda,beta=0){const eps=23.439291*Math.PI/180,lam=lambda*Math.PI/180,b=beta*Math.PI/180;const dec=Math.asin(Math.sin(b)*Math.cos(eps)+Math.cos(b)*Math.sin(eps)*Math.sin(lam));const ra=Math.atan2(Math.sin(lam)*Math.cos(eps)-Math.tan(b)*Math.sin(eps),Math.cos(lam));return{ra:normDeg(ra*180/Math.PI),dec:dec*180/Math.PI}}
+// --- Reducción a la fecha (equinoccio de fecha + aparente) ---
+function jdTT(date){return jd(date)+69/86400}            // TT ≈ UTC + 69 s (2026)
+function Tt(date){return (jdTT(date)-2451545)/36525}
+function meanObliquity(T){return 23.4392911-0.0130042*T-1.64e-7*T*T+5.04e-7*T*T*T}
+function nutation(date){const T=Tt(date),D2R=Math.PI/180,Om=(125.04452-1934.136261*T)*D2R,Ls=(280.4665+36000.7698*T)*D2R,Lm=(218.3165+481267.8813*T)*D2R;
+ return{dpsi:(-17.20*Math.sin(Om)-1.32*Math.sin(2*Ls)-0.23*Math.sin(2*Lm)+0.21*Math.sin(2*Om))/3600,
+        deps:(9.20*Math.cos(Om)+0.57*Math.cos(2*Ls)+0.10*Math.cos(2*Lm)-0.09*Math.cos(2*Om))/3600}}
+function precessionLon(T){return (5028.796195*T+1.1054348*T*T)/3600}
+function eclToEqDate(lon,lat,date){const eps=(meanObliquity(Tt(date))+nutation(date).deps)*Math.PI/180,lam=lon*Math.PI/180,b=lat*Math.PI/180;
+ const dec=Math.asin(Math.sin(b)*Math.cos(eps)+Math.cos(b)*Math.sin(eps)*Math.sin(lam));
+ const ra=Math.atan2(Math.sin(lam)*Math.cos(eps)-Math.tan(b)*Math.sin(eps),Math.cos(lam));return{ra:normDeg(ra*180/Math.PI),dec:dec*180/Math.PI}}
 function dayOfYear(d){return (Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())-Date.UTC(d.getUTCFullYear(),0,0))/86400000}
 
 function toDateTimeLocalValue(date){const pad=n=>String(n).padStart(2,"0");return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())+"T"+pad(date.getHours())+":"+pad(date.getMinutes())}
@@ -207,14 +238,17 @@ function setDateFromInput(){const v=document.getElementById("dateTime").value;if
 function backToNow(){fixedDate=null;document.getElementById("dateTime").value=toDateTimeLocalValue(new Date());setStatus("Modo tiempo real activado.","status ok");render()}
 
 function getSun(date){
- const N=dayOfYear(date),sec=date.getUTCHours()*3600+date.getUTCMinutes()*60+date.getUTCSeconds();
- const gamma=2*Math.PI/365*(N-1+(sec/3600-12)/24);
- const decl=0.006918-0.399912*Math.cos(gamma)+0.070257*Math.sin(gamma)-0.006758*Math.cos(2*gamma)+0.000907*Math.sin(2*gamma)-0.002697*Math.cos(3*gamma)+0.00148*Math.sin(3*gamma);
- const eqTime=229.18*(0.000075+0.001868*Math.cos(gamma)-0.032077*Math.sin(gamma)-0.014615*Math.cos(2*gamma)-0.040849*Math.sin(2*gamma));
- return{lat:decl*180/Math.PI,lon:normLon(180-(sec/240+eqTime/4)),eclLon:normDeg((N-80)*360/365.2422)}
+ const T=Tt(date);
+ const L0=normDeg(280.46646+36000.76983*T+0.0003032*T*T);
+ const M=normDeg(357.52911+35999.05029*T-0.0001537*T*T)*Math.PI/180;
+ const C=(1.914602-0.004817*T-0.000014*T*T)*Math.sin(M)+(0.019993-0.000101*T)*Math.sin(2*M)+0.000289*Math.sin(3*M);
+ const Om=(125.04-1934.136*T)*Math.PI/180;
+ const lambda=normDeg(L0+C-0.00569-0.00478*Math.sin(Om));   // aparente, eclíptica de fecha
+ const eq=eclToEqDate(lambda,0,date),sub=raDecToSub(eq.ra,eq.dec,date);
+ return{lat:sub.lat,lon:sub.lon,eclLon:lambda,ra:eq.ra,dec:eq.dec}
 }
 function getMoon(date){
- const d=jd(date)-2451543.5,N=normDeg(125.1228-0.0529538083*d),i=5.1454,w=normDeg(318.0634+0.1643573223*d),a=60.2666,e=.0549,M=normDeg(115.3654+13.0649929509*d);
+ const d=jdTT(date)-2451543.5,N=normDeg(125.1228-0.0529538083*d),i=5.1454,w=normDeg(318.0634+0.1643573223*d),a=60.2666,e=.0549,M=normDeg(115.3654+13.0649929509*d);
  const Mr=M*Math.PI/180,E=Mr+e*Math.sin(Mr)*(1+e*Math.cos(Mr));
  const xv=a*(Math.cos(E)-e),yv=a*Math.sqrt(1-e*e)*Math.sin(E),v=Math.atan2(yv,xv)*180/Math.PI,r=Math.sqrt(xv*xv+yv*yv);
  const Nr=N*Math.PI/180,ir=i*Math.PI/180,wrv=(w+v)*Math.PI/180;
@@ -222,7 +256,7 @@ function getMoon(date){
  const yh=r*(Math.sin(Nr)*Math.cos(wrv)+Math.cos(Nr)*Math.sin(wrv)*Math.cos(ir));
  const zh=r*Math.sin(wrv)*Math.sin(ir);
  const lon=normDeg(Math.atan2(yh,xh)*180/Math.PI),lat=Math.atan2(zh,Math.sqrt(xh*xh+yh*yh))*180/Math.PI;
- const eq=eclToEq(lon,lat),sub=raDecToSub(eq.ra,eq.dec,date);return{lat:sub.lat,lon:sub.lon,eclLon:lon}
+ const eq=eclToEqDate(lon,lat,date),sub=raDecToSub(eq.ra,eq.dec,date);return{lat:sub.lat,lon:sub.lon,eclLon:lon,eclLat:lat,rER:r,ra:eq.ra,dec:eq.dec}
 }
 function moonPhaseName(sunLon,moonLon){const age=normDeg(moonLon-sunLon)/360*29.530588;let name="Luna nueva";if(age>=1.845&&age<5.536)name="Creciente";else if(age<9.228)name="Cuarto creciente";else if(age<12.919)name="Gibosa creciente";else if(age<16.611)name="Luna llena";else if(age<20.302)name="Gibosa menguante";else if(age<23.994)name="Cuarto menguante";else if(age<27.685)name="Menguante";return name+" · día "+age.toFixed(1)}
 function zodiacName(lon){const names=["Aries","Tauro","Géminis","Cáncer","Leo","Virgo","Libra","Escorpio","Sagitario","Capricornio","Acuario","Piscis"];return names[Math.floor(normDeg(lon)/30)]}
@@ -246,11 +280,19 @@ function helioXYZ(el,T){
  return{x:(cw*cn-sw*sn*ci)*xo+(-sw*cn-cw*sn*ci)*yo,y:(cw*sn+sw*cn*ci)*xo+(-sw*sn+cw*cn*ci)*yo,z:sw*si*xo+cw*si*yo};
 }
 function planetPosition(def,date){
- const T=(jd(date)-2451545)/36525,p=helioXYZ(def.el,T),ea=helioXYZ(EARTH_EL,T);
- const X=p.x-ea.x,Y=p.y-ea.y,Z=p.z-ea.z;
- const lon=normDeg(Math.atan2(Y,X)*180/Math.PI),lat=Math.atan2(Z,Math.hypot(X,Y))*180/Math.PI;
- const eq=eclToEq(lon,lat),sub=raDecToSub(eq.ra,eq.dec,date);
- return{...sub,eclLon:lon,eclLat:lat};
+ const T=Tt(date),ea=helioXYZ(EARTH_EL,T);let tau=0,X,Y,Z;
+ for(let k=0;k<3;k++){const p=helioXYZ(def.el,T-tau);X=p.x-ea.x;Y=p.y-ea.y;Z=p.z-ea.z;tau=Math.sqrt(X*X+Y*Y+Z*Z)*0.0057755183/36525;} // corrección por tiempo-luz
+ let lon=normDeg(Math.atan2(Y,X)*180/Math.PI);const lat=Math.atan2(Z,Math.hypot(X,Y))*180/Math.PI;
+ const nut=nutation(date);lon=normDeg(lon+precessionLon(T)+nut.dpsi);                 // precesión + nutación -> de fecha
+ const kappa=20.49552/3600,sunLon=getSun(date).eclLon;
+ lon=normDeg(lon-kappa*Math.cos((sunLon-lon)*Math.PI/180)/Math.cos(lat*Math.PI/180)); // aberración anual
+ const eq=eclToEqDate(lon,lat,date),sub=raDecToSub(eq.ra,eq.dec,date);
+ return{...sub,eclLon:lon,eclLat:lat,ra:eq.ra,dec:eq.dec};
+}
+function moonTopo(date,user){const m=getMoon(date),sinPi=1/m.rER,phi=user.lat*Math.PI/180,u=Math.atan(0.99664719*Math.tan(phi)),rhoSin=0.99664719*Math.sin(u),rhoCos=Math.cos(u);
+ const lst=normDeg(gmstDeg(date)+user.lon);let H=normDeg(lst-m.ra);if(H>180)H-=360;const Hr=H*Math.PI/180,dec=m.dec*Math.PI/180;
+ const dA=Math.atan2(-rhoCos*sinPi*Math.sin(Hr),Math.cos(dec)-rhoCos*sinPi*Math.cos(Hr));
+ return{ra:normDeg(m.ra+dA*180/Math.PI),dec:Math.atan2((Math.sin(dec)-rhoSin*sinPi)*Math.cos(dA),Math.cos(dec)-rhoCos*sinPi*Math.cos(Hr))*180/Math.PI};
 }
 
 const zodiac=[{name:"Aries",sym:"♈",start:0,end:30},{name:"Tauro",sym:"♉",start:30,end:60},{name:"Géminis",sym:"♊",start:60,end:90},{name:"Cáncer",sym:"♋",start:90,end:120},{name:"Leo",sym:"♌",start:120,end:150},{name:"Virgo",sym:"♍",start:150,end:180},{name:"Libra",sym:"♎",start:180,end:210},{name:"Escorpio",sym:"♏",start:210,end:240},{name:"Sagitario",sym:"♐",start:240,end:270},{name:"Capricornio",sym:"♑",start:270,end:300},{name:"Acuario",sym:"♒",start:300,end:330},{name:"Piscis",sym:"♓",start:330,end:360}];
@@ -282,12 +324,100 @@ function drawHorizon(show){horizonGroup.selectAll("*").remove();if(!show||!userL
 function drawPlanets(date,show){planetGroup.selectAll("*").remove();if(!show)return;planetDefs.forEach(pl=>{const pos=planetPosition(pl,date),p=projection([pos.lon,pos.lat]);if(p){planetGroup.append("circle").attr("class","planetDot").attr("cx",p[0]).attr("cy",p[1]).attr("r",5).attr("fill",pl.color);planetGroup.append("text").attr("class","smallLabel").attr("x",p[0]+10).attr("y",p[1]-8).text(pl.sym+" "+pl.name)}})}
 function point(pos,g,label,show=true){const p=projection([pos.lon,pos.lat]);const ok=show&&p;[g.glow,g.dot,g.label].forEach(x=>x.style("display",ok?null:"none"));if(ok){g.glow.attr("cx",p[0]).attr("cy",p[1]);g.dot.attr("cx",p[0]).attr("cy",p[1]);g.label.attr("x",p[0]).attr("y",p[1]).text(label)}}
 
+// ===== Coordenadas horizontales (altura/azimut) y modo cielo =====
+function altAz(ra,dec,user,date){
+ const D2R=Math.PI/180,lst=normDeg(gmstDeg(date)+user.lon);let H=normDeg(lst-ra);const Hr=(H>180?H-360:H)*D2R,phi=user.lat*D2R,d=dec*D2R;
+ const alt=Math.asin(Math.max(-1,Math.min(1,Math.sin(phi)*Math.sin(d)+Math.cos(phi)*Math.cos(d)*Math.cos(Hr))))/D2R;
+ const az=normDeg(Math.atan2(-Math.cos(d)*Math.sin(Hr),Math.cos(phi)*Math.sin(d)-Math.sin(phi)*Math.cos(d)*Math.cos(Hr))/D2R);
+ return{alt,az};
+}
+function raDecOf(o,date,user){
+ if(o.type==="sun"){const s=getSun(date);return{ra:s.ra,dec:s.dec};}
+ if(o.type==="moon")return (user?moonTopo(date,user):(m=>({ra:m.ra,dec:m.dec}))(getMoon(date)));
+ if(o.type==="planet"){const p=planetPosition(o.def,date);return{ra:p.ra,dec:p.dec};}
+ return{ra:o.ra,dec:o.dec};
+}
+function sunAltAt(date,user){const s=getSun(date);return altAz(s.ra,s.dec,user,date).alt;}
+function skyObjectList(){
+ const arr=[{name:"Sol",type:"sun",mode:"day"},{name:"Luna",type:"moon",mode:"up"}];
+ planetDefs.forEach(p=>arr.push({name:p.name,type:"planet",def:p,sym:p.sym,mode:"night"}));
+ majorStars.filter(s=>s.mag<1.0).forEach(s=>arr.push({name:s.name,type:"star",ra:s.ra,dec:s.dec,mode:"night"}));
+ return arr;
+}
+function visWindow(o,from,user){
+ const step=120000,n=Math.round(24*3600000/step);let win=null,bestWin=null,peak=null;
+ for(let i=0;i<=n;i++){
+  const t=new Date(from.getTime()+i*step),rd=raDecOf(o,t,user),aa=altAz(rd.ra,rd.dec,user,t);
+  const sAlt=(o.type==="sun")?aa.alt:sunAltAt(t,user);
+  let cond=(o.mode==="night")?(aa.alt>=10&&sAlt<=-6):(aa.alt>=0);
+  if(cond){if(!win)win={start:t,end:t,peakAlt:aa.alt,peakAz:aa.az};else{win.end=t;if(aa.alt>win.peakAlt){win.peakAlt=aa.alt;win.peakAz=aa.az;}}}
+  else if(win){if(!bestWin||win.peakAlt>bestWin.peakAlt)bestWin=win;win=null;}
+  if(!peak||aa.alt>peak.alt)peak={alt:aa.alt};
+ }
+ if(win&&(!bestWin||win.peakAlt>bestWin.peakAlt))bestWin=win;
+ return{win:bestWin,peak:peak};
+}
+function showVisibility(){
+ const box=document.getElementById("astros");
+ if(!userLocation){box.style.display="block";box.className="note warn";box.textContent="Necesita tu ubicación: toc\u00e1 \u201CTomar mi ubicaci\u00f3n\u201D.";return;}
+ box.className="note";box.style.display="block";box.textContent="Calculando astros...";
+ setTimeout(()=>{
+  const from=getRenderDate(),objs=skyObjectList(),opt={hour:"2-digit",minute:"2-digit"};
+  let html="<b>Astros visibles</b> · pr\u00f3ximas 24 h desde la fecha vista, hora local. \u201CVisible\u201D = sobre 10\u00b0 y (de noche) Sol bajo \u22126\u00b0.<div class='data' style='margin-top:8px'>";
+  objs.forEach(o=>{
+   const r=visWindow(o,from,userLocation);let v;
+   if(r.win)v=r.win.start.toLocaleTimeString([],opt)+"\u2013"+r.win.end.toLocaleTimeString([],opt)+" \u00b7 m\u00e1x "+r.win.peakAlt.toFixed(0)+"\u00b0 "+azName(r.win.peakAz);
+   else v="no visible (m\u00e1x "+r.peak.alt.toFixed(0)+"\u00b0)";
+   html+="<div class='row'><span class='key'>"+(o.sym?o.sym+" ":"")+o.name+"</span><span class='value'>"+v+"</span></div>";
+  });
+  box.innerHTML=html+"</div>";
+ },30);
+}
+function domeXY(alt,az){const R=410,r=R*(90-alt)/90,a=az*Math.PI/180;return[width/2-r*Math.sin(a),height/2-r*Math.cos(a)];}
+function domeColor(sunAlt){return sunAlt>0?"#20416a":sunAlt>-6?"#152e4c":sunAlt>-12?"#0e2036":sunAlt>-18?"#091626":"#050d16";}
+function renderSky(date,sun,moon,sat){
+ skyLayer.selectAll("*").remove();
+ const cx=width/2,cy=height/2,R=410,u=userLocation;
+ const sunAA=altAz(sun.ra,sun.dec,u,date);
+ skyLayer.append("circle").attr("cx",cx).attr("cy",cy).attr("r",R).attr("fill",domeColor(sunAA.alt)).attr("stroke","rgba(255,255,255,.5)").attr("stroke-width",1.2);
+ [30,60].forEach(a=>skyLayer.append("circle").attr("cx",cx).attr("cy",cy).attr("r",R*(90-a)/90).attr("fill","none").attr("stroke","rgba(255,255,255,.13)").attr("stroke-width",.7));
+ [["N",0],["E",90],["S",180],["O",270]].forEach(([lab,az])=>{const p=domeXY(2,az);skyLayer.append("text").attr("class","cardinal").attr("x",p[0]).attr("y",p[1]+5).text(lab);});
+ const by={};majorStars.forEach(s=>by[s.name]=s);
+ if(document.getElementById("showStars").checked){
+  constellations.forEach(c=>c.lines.forEach(pr=>{const a=by[pr[0]],b=by[pr[1]];if(!a||!b)return;const aa=altAz(a.ra,a.dec,u,date),ab=altAz(b.ra,b.dec,u,date);if(aa.alt>0&&ab.alt>0){const pa=domeXY(aa.alt,aa.az),pb=domeXY(ab.alt,ab.az);skyLayer.append("path").attr("class","starLine").attr("d","M"+pa[0]+","+pa[1]+"L"+pb[0]+","+pb[1]);}}));
+  majorStars.forEach(s=>{const aa=altAz(s.ra,s.dec,u,date);if(aa.alt<=0)return;const p=domeXY(aa.alt,aa.az);skyLayer.append("circle").attr("class","starDot").attr("cx",p[0]).attr("cy",p[1]).attr("r",Math.max(1.8,5-s.mag));if(s.mag<1.1)skyLayer.append("text").attr("class","starName").attr("x",p[0]+6).attr("y",p[1]-4).text(s.name);});
+ }
+ if(document.getElementById("showPlanets").checked)planetDefs.forEach(pl=>{const pp=planetPosition(pl,date),aa=altAz(pp.ra,pp.dec,u,date);if(aa.alt<=0)return;const p=domeXY(aa.alt,aa.az);skyLayer.append("circle").attr("class","planetDot").attr("cx",p[0]).attr("cy",p[1]).attr("r",5).attr("fill",pl.color);skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]+8).attr("y",p[1]-6).text(pl.sym+" "+pl.name);});
+ if(document.getElementById("showMoon").checked){const mRD=moonTopo(date,u),aa=altAz(mRD.ra,mRD.dec,u,date);if(aa.alt>0){const p=domeXY(aa.alt,aa.az);skyLayer.append("circle").attr("class","moonDot").attr("cx",p[0]).attr("cy",p[1]).attr("r",7);skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]+9).attr("y",p[1]-7).text("Luna");}}
+ if(sunAA.alt>0){const p=domeXY(sunAA.alt,sunAA.az);skyLayer.append("circle").attr("class","sunDot").attr("cx",p[0]).attr("cy",p[1]).attr("r",9);skyLayer.append("text").attr("class","label").attr("x",p[0]+10).attr("y",p[1]-8).text("Sol");}
+ if(sat&&satrec&&typeof satellite.ecfToLookAngles==="function"){const pv=satellite.propagate(satrec,date);if(pv&&pv.position){const g=satellite.gstime(date),ecf=satellite.eciToEcf(pv.position,g),la=satellite.ecfToLookAngles({longitude:u.lon*Math.PI/180,latitude:u.lat*Math.PI/180,height:0.05},ecf),el=la.elevation*180/Math.PI,az=la.azimuth*180/Math.PI;if(el>0){const p=domeXY(el,az);skyLayer.append("circle").attr("class","satDot").attr("cx",p[0]).attr("cy",p[1]).attr("r",6);skyLayer.append("text").attr("class","label").attr("x",p[0]+10).attr("y",p[1]-8).text(currentName);}}}
+ skyLayer.append("circle").attr("cx",cx).attr("cy",cy).attr("r",2).attr("fill","rgba(255,255,255,.55)");
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-8).text("cenit");
+}
+
 function render(){
  const now=getRenderDate(),sun=getSun(now),moon=getMoon(now),sat=satPos(now);
- const showNight=document.getElementById("showNight").checked,showMoon=document.getElementById("showMoon").checked,showZodiac=document.getElementById("showZodiac").checked,showAnalemma=document.getElementById("showAnalemma").checked,showPlanets=document.getElementById("showPlanets").checked,showStars=document.getElementById("showStars").checked,showMilkyWay=document.getElementById("showMilkyWay").checked,showVisibleSky=document.getElementById("showVisibleSky").checked,showLines=document.getElementById("showLines").checked,showFootprint=document.getElementById("showFootprint").checked;
  document.getElementById("utc").textContent=now.toISOString().replace("T"," ").slice(0,19);
  document.getElementById("sunpos").textContent=sun.lat.toFixed(2)+"°, "+sun.lon.toFixed(2)+"°";document.getElementById("sunconst").textContent=zodiacName(sun.eclLon);
  document.getElementById("moonpos").textContent=moon.lat.toFixed(2)+"°, "+moon.lon.toFixed(2)+"°";document.getElementById("moonphase").textContent=moonPhaseName(sun.eclLon,moon.eclLon);
+ if(userLocation)document.getElementById("userpos").textContent=userLocation.lat.toFixed(4)+"°, "+userLocation.lon.toFixed(4)+"°";
+ let beta=null;
+ if(sat){
+  document.getElementById("satpos").textContent=sat.lat.toFixed(4)+"°, "+sat.lon.toFixed(4)+"°";
+  document.getElementById("alt").textContent=sat.alt.toFixed(1)+" km";
+  document.getElementById("speed").textContent=sat.speed.toFixed(2)+" km/s";
+  document.getElementById("period").textContent=satrec?(2*Math.PI/satrec.no).toFixed(1)+" min":"—";
+  const Re=6371;beta=Math.acos(Math.min(1,Re/(Re+sat.alt)))*180/Math.PI;
+  document.getElementById("footprint").textContent=beta.toFixed(1)+"° ("+Math.round(Re*beta*Math.PI/180)+" km)";
+  if(userLocation){const inFoot=ang(userLocation,sat)<beta,dark=ang(userLocation,sun)>96,sunlit=ang(sat,sun)<108;document.getElementById("visible").textContent=(inFoot&&dark&&sunlit)?"posible":(inFoot?"sobre el horizonte, pero no en oscuridad":"fuera de alcance")}
+ }else{["satpos","alt","speed","period","footprint"].forEach(id=>document.getElementById(id).textContent="—")}
+
+ const skyOn=skyMode&&!!userLocation;
+ [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",skyOn?"none":null));
+ skyLayer.style("display",skyOn?null:"none");
+ if(skyOn){renderSky(now,sun,moon,sat);return;}
+
+ const showNight=document.getElementById("showNight").checked,showMoon=document.getElementById("showMoon").checked,showZodiac=document.getElementById("showZodiac").checked,showAnalemma=document.getElementById("showAnalemma").checked,showPlanets=document.getElementById("showPlanets").checked,showStars=document.getElementById("showStars").checked,showMilkyWay=document.getElementById("showMilkyWay").checked,showVisibleSky=document.getElementById("showVisibleSky").checked,showLines=document.getElementById("showLines").checked,showFootprint=document.getElementById("showFootprint").checked;
  nightLayer.style("display",showNight?null:"none").datum(circleAt({lat:-sun.lat,lon:normLon(sun.lon+180)})).attr("d",path);
  termLayer.style("display",showNight?null:"none").datum(circleAt({lat:-sun.lat,lon:normLon(sun.lon+180)})).attr("d",path);
  eclLayer.style("display",showZodiac?null:"none").datum(ecliptic(now)).attr("d",path);
@@ -295,19 +425,8 @@ function render(){
  analemmaLayer.style("display",(showAnalemma&&userLocation)?null:"none").datum(localAnalemma(now,userLocation)).attr("d",path);
  drawLines(showLines);drawZodiac(now,showZodiac);drawMilkyWay(now,showMilkyWay);drawHorizon(showVisibleSky);drawStars(now,showStars,showVisibleSky);drawPlanets(now,showPlanets);
  point(sun,sunG,"Sol",true);point(moon,moonG,"Luna",showMoon);
- if(userLocation){document.getElementById("userpos").textContent=userLocation.lat.toFixed(4)+"°, "+userLocation.lon.toFixed(4)+"°";point(userLocation,userG,"Vos",true)}
- if(sat){
-  document.getElementById("satpos").textContent=sat.lat.toFixed(4)+"°, "+sat.lon.toFixed(4)+"°";
-  document.getElementById("alt").textContent=sat.alt.toFixed(1)+" km";
-  document.getElementById("speed").textContent=sat.speed.toFixed(2)+" km/s";
-  const periodMin=satrec?2*Math.PI/satrec.no:null;
-  document.getElementById("period").textContent=periodMin?periodMin.toFixed(1)+" min":"—";
-  const Re=6371,beta=Math.acos(Math.min(1,Re/(Re+sat.alt)))*180/Math.PI,groundR=Re*beta*Math.PI/180;
-  document.getElementById("footprint").textContent=beta.toFixed(1)+"° ("+Math.round(groundR)+" km)";
-  footprintLayer.style("display",showFootprint?null:"none").datum(circleAt(sat,beta)).attr("d",path);
-  orbit.datum(track(now)).attr("d",path);point(sat,satG,currentName,true);
-  if(userLocation){const inFoot=ang(userLocation,sat)<beta,dark=ang(userLocation,sun)>96,sunlit=ang(sat,sun)<108;document.getElementById("visible").textContent=(inFoot&&dark&&sunlit)?"posible":(inFoot?"sobre el horizonte, pero no en oscuridad":"fuera de alcance")}
- }else{document.getElementById("satpos").textContent="—";document.getElementById("alt").textContent="—";document.getElementById("speed").textContent="—";document.getElementById("period").textContent="—";document.getElementById("footprint").textContent="—";footprintLayer.style("display","none")}
+ if(userLocation)point(userLocation,userG,"Vos",true);
+ if(sat){footprintLayer.style("display",showFootprint?null:"none").datum(circleAt(sat,beta)).attr("d",path);orbit.datum(track(now)).attr("d",path);point(sat,satG,currentName,true);}else{footprintLayer.style("display","none")}
 }
 
 const COMPASS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSO","SO","OSO","O","ONO","NO","NNO"];
@@ -352,6 +471,13 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("useDate").onclick=setDateFromInput;
  document.getElementById("nowMode").onclick=backToNow;
  document.getElementById("passBtn").onclick=showPasses;
+ document.getElementById("astrosBtn").onclick=showVisibility;
+ document.getElementById("skyBtn").onclick=()=>{if(!userLocation){setStatus("El modo cielo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D.","status warn");return;}skyMode=!skyMode;const b=document.getElementById("skyBtn");b.textContent=skyMode?"Volver al mapa":"Modo cielo (mi ubicación)";b.className=skyMode?"user":"secondary";render();};
+ svg.call(zoom);
+ document.getElementById("zin").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1.6);
+ document.getElementById("zout").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1/1.6);
+ document.getElementById("zreset").onclick=()=>svg.transition().duration(300).call(zoom.transform,d3.zoomIdentity);
+ document.getElementById("zfull").onclick=()=>document.body.classList.toggle("map-full");
  ["showNight","showMoon","showZodiac","showAnalemma","showPlanets","showStars","showMilkyWay","showVisibleSky","showLines","showFootprint"].forEach(id=>document.getElementById(id).onchange=render);
  document.getElementById("dateTime").value=toDateTimeLocalValue(new Date());
  applyFallbackTle("TLE embebido cargado.");
