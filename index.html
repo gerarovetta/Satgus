@@ -97,6 +97,7 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 <button id="mAna" class="modebtn">Analema</button>
 <button id="mZod" class="modebtn">Zodíaco</button>
 <button id="mChart" class="modebtn">Carta</button>
+<button id="mWave" class="modebtn">Onda</button>
 </div>
 <label class="toggle" style="margin-top:8px"><input type="checkbox" id="chartRing" checked>Carta circular (si no, en tira)</label>
 
@@ -469,6 +470,27 @@ function renderZodiacWheel(date){
  skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy+14).text(date.toISOString().slice(0,10));
 }
 
+// ---- Modo ONDA: el zodíaco como dos semicírculos (sine wave) ----
+function renderWave(date){
+ skyLayer.selectAll("*").remove();
+ const D2R=Math.PI/180,R=210,Ax=250,cy=468,Bx=Ax+2*R;
+ const wp=(lon,rad)=>{lon=normDeg(lon);if(lon<180){const th=(180-lon)*D2R;return[Ax+rad*Math.cos(th),cy-rad*Math.sin(th)];}const p=(lon-180)*D2R;return[Bx-rad*Math.cos(p),cy+rad*Math.sin(p)];};
+ skyLayer.append("line").attr("class","wheelSpoke").attr("x1",Ax-R).attr("y1",cy).attr("x2",Bx+R).attr("y2",cy).attr("stroke","rgba(255,255,255,.4)");
+ for(let k=0;k<12;k++){const c=k<6?[Ax,cy]:[Bx,cy];let d="M"+c[0]+","+c[1];for(let a=k*30;a<=(k+1)*30;a+=3){const q=wp(a,R);d+="L"+q[0].toFixed(1)+","+q[1].toFixed(1);}d+="Z";
+  skyLayer.append("path").attr("d",d).attr("fill","hsl("+(k*30)+",66%,66%)").attr("stroke","#2a2f45").attr("stroke-width",1).attr("opacity",.92);
+  const g=wp(k*30+15,R*0.7);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+7).attr("fill","#151a28").attr("stroke","none").text(zodiac[k].sym);}
+ const tip=wp(360,R);skyLayer.append("path").attr("d","M"+tip[0]+","+tip[1]+" l -13,-6 l 0,12 z").attr("fill","#e9eef7");
+ [[0,"Equinoccio ♈ (Asc)","end",-12,4],[90,"Solsticio ♋ (MC)","middle",0,-14],[180,"Equinoccio ♎ (Desc)","middle",0,-14],[270,"Solsticio ♑ (IC)","middle",0,28]].forEach(([lon,txt,anch,dx,dy])=>{const q=wp(lon,R);skyLayer.append("circle").attr("cx",q[0]).attr("cy",q[1]).attr("r",3).attr("fill","#fff");skyLayer.append("text").attr("class","smallLabel").attr("text-anchor",anch).attr("x",q[0]+dx).attr("y",q[1]+dy).text(txt);});
+ const bodies=[{sym:"☉",n:"Sol",lon:getSun(date).eclLon,c:"#ffd166"},{sym:"☾",n:"Luna",lon:getMoon(date).eclLon,c:"#dce6f2"}];
+ planetDefs.forEach(pl=>bodies.push({sym:pl.sym,n:pl.name,lon:planetPosition(pl,date).eclLon,c:pl.color}));
+ bodies.forEach((b,i)=>{const q=wp(b.lon,R),out=wp(b.lon,R+24+(i%3)*24);
+  skyLayer.append("line").attr("x1",q[0]).attr("y1",q[1]).attr("x2",out[0]).attr("y2",out[1]).attr("stroke",b.c).attr("stroke-width",1);
+  skyLayer.append("circle").attr("cx",out[0]).attr("cy",out[1]).attr("r",6).attr("fill",b.c).attr("stroke","#000").attr("stroke-width",1);
+  const deg=Math.floor(b.lon%30);skyLayer.append("text").attr("class","smallLabel").attr("text-anchor","middle").attr("x",out[0]).attr("y",out[1]-10).text(b.sym+" "+deg+"° "+zodiac[Math.floor(normDeg(b.lon)/30)].name.slice(0,3));});
+ skyLayer.append("text").attr("class","constLabel").attr("x",450).attr("y",40).text("El zodíaco como onda · dos semicírculos");
+ skyLayer.append("text").attr("class","gridlabel").attr("x",450).attr("y",858).attr("text-anchor","middle").text("Asc/MC/Desc/IC idealizados: en una carta real dependen de hora y lugar");
+ skyLayer.append("text").attr("class","constLabel").attr("x",450).attr("y",882).attr("text-anchor","middle").text(date.toISOString().slice(0,10));
+}
 // ---- Modo CARTA: circular (anillo) o tira ----
 function renderChart(date){if(chartRing)renderChartRing(date);else renderChartStrip(date);}
 function renderChartRing(date){
@@ -536,6 +558,7 @@ function render(){
   else if(viewMode==="analemma")renderAnalemma(now);
   else if(viewMode==="zodiac")renderZodiacWheel(now);
   else if(viewMode==="chart")renderChart(now);
+  else if(viewMode==="wave")renderWave(now);
   return;
  }
 
@@ -594,7 +617,7 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("nowMode").onclick=backToNow;
  document.getElementById("passBtn").onclick=showPasses;
  document.getElementById("astrosBtn").onclick=showVisibility;
- const modeBtns={map:"mMap",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart"};
+ const modeBtns={map:"mMap",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave"};
  function setMode(m){if((m==="sky"||m==="analemma")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");render();}
  Object.keys(modeBtns).forEach(m=>document.getElementById(modeBtns[m]).onclick=()=>setMode(m));
  document.getElementById("chartRing").onchange=e=>{chartRing=e.target.checked;if(viewMode==="chart")render();};
