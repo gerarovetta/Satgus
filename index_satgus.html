@@ -320,6 +320,7 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
     <button id="mDay" class="modebtn">Día</button>
   </div>
   <label class="toggle wide" style="margin-top:8px"><input type="checkbox" id="chartRing" checked>Carta circular (si no, en tira)</label>
+  <label class="toggle wide"><input type="checkbox" id="analemmaTrue">Analema a escala 1:1 (si no, ensanchado)</label>
 </section>
 
 <section class="sec">
@@ -390,7 +391,7 @@ const labelLayer=root.append("g").attr("class","mapLayer");
 const zoom=d3.zoom().scaleExtent([1,14]).on("zoom",ev=>{root.attr("transform",ev.transform);const z=document.getElementById("zlvl");if(z)z.textContent=ev.transform.k.toFixed(1)+"×";});
 const skyLayer=root.append("g");
 
-let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null,viewMode="map",chartRing=true,skyInfo="";
+let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null,viewMode="map",chartRing=true,analemmaTrue=false,skyInfo="";
 
 const FALLBACK_TLE={
  name:"SATGUS",
@@ -670,15 +671,22 @@ function renderAnalemma(date){
  const daily=[];for(let n=0;n<=365;n++){const dt=new Date(Date.UTC(y,0,1+n,hh,mm,0)),s=getSun(dt),aa=altAz(s.ra,s.dec,u,dt);daily.push({dt,alt:aa.alt,az:aa.az,dec:s.dec,eclLon:s.eclLon});}
  let iMax=0,iMin=0;daily.forEach((p,i)=>{if(p.dec>daily[iMax].dec)iMax=i;if(p.dec<daily[iMin].dec)iMin=i;});
  const refAz=daily[iMax].az,unwrap=az=>{let d=az-refAz;return ((d+540)%360)-180;};
- // límites del 8 (puntos sobre el horizonte) y proyección que llena la pantalla
+ // límites del 8 (puntos sobre el horizonte)
  let xmin=1e9,xmax=-1e9,amin=1e9,amax=-1e9;daily.forEach(p=>{if(p.alt<0)return;const x=unwrap(p.az);xmin=Math.min(xmin,x);xmax=Math.max(xmax,x);amin=Math.min(amin,p.alt);amax=Math.max(amax,p.alt);});
  if(xmax-xmin<1){xmin-=1;xmax+=1;}
  const W=900,H=900,mx=150,myTop=96,myBot=84;
- const sx=(W-2*mx)/(xmax-xmin),sy=(H-myTop-myBot)/(amax-amin);
- const proj=(alt,az)=>[mx+(unwrap(az)-xmin)*sx,(H-myBot)-(alt-amin)*sy];
+ const availW=W-2*mx,availH=H-myTop-myBot;
+ const sxFull=availW/(xmax-xmin),syFull=availH/(amax-amin);
+ // analemmaTrue: misma escala en ambos ejes (grados↔px) y figura centrada → aspecto angular real.
+ // si no: cada eje se estira para llenar la pantalla (ensanchado horizontal, mejor lectura).
+ let sx,sy,ox,oyBot;
+ if(analemmaTrue){const s=Math.min(sxFull,syFull);sx=sy=s;ox=mx+(availW-(xmax-xmin)*s)/2;oyBot=(H-myBot)-(availH-(amax-amin)*s)/2;}
+ else{sx=sxFull;sy=syFull;ox=mx;oyBot=H-myBot;}
+ const projX=az=>ox+(unwrap(az)-xmin)*sx,projY=alt=>oyBot-(alt-amin)*sy;
+ const proj=(alt,az)=>[projX(az),projY(alt)];
  // referencias: meridiano (culminación) + líneas de altura
- const mp=mx+(0-xmin)*sx;skyLayer.append("line").attr("class","gridline").attr("x1",mp).attr("y1",myTop).attr("x2",mp).attr("y2",H-myBot).attr("stroke-dasharray","4 5");
- [amin,(amin+amax)/2,amax].forEach(al=>{const yv=(H-myBot)-(al-amin)*sy;skyLayer.append("line").attr("class","gridline").attr("x1",mx).attr("y1",yv).attr("x2",W-mx).attr("y2",yv);skyLayer.append("text").attr("class","gridlabel").attr("x",mx-8).attr("y",yv+3).attr("text-anchor","end").text("alt "+al.toFixed(0)+"°");});
+ const mp=projX(refAz);skyLayer.append("line").attr("class","gridline").attr("x1",mp).attr("y1",projY(amax)).attr("x2",mp).attr("y2",projY(amin)).attr("stroke-dasharray","4 5");
+ [amin,(amin+amax)/2,amax].forEach(al=>{const yv=projY(al);skyLayer.append("line").attr("class","gridline").attr("x1",mx).attr("y1",yv).attr("x2",W-mx).attr("y2",yv);skyLayer.append("text").attr("class","gridlabel").attr("x",mx-8).attr("y",yv+3).attr("text-anchor","end").text("alt "+al.toFixed(0)+"°");});
  // curva coloreada por signo del Sol
  for(let i=1;i<daily.length;i++){const a=daily[i-1],b=daily[i];if(a.alt<0||b.alt<0)continue;const pa=proj(a.alt,a.az),pb=proj(b.alt,b.az),sign=Math.floor(normDeg(b.eclLon)/30);
   skyLayer.append("line").attr("x1",pa[0]).attr("y1",pa[1]).attr("x2",pb[0]).attr("y2",pb[1]).attr("stroke","hsl("+(sign*30)+",72%,63%)").attr("stroke-width",4).attr("stroke-linecap","round");}
@@ -691,7 +699,7 @@ function renderAnalemma(date){
  [[0,1,"1 ene"],[1,2,"2 feb"],[4,1,"1 may"],[7,1,"1 ago"],[10,1,"1 nov"],[11,25,"25 dic"]].forEach(([mo,da,lab])=>{const dt=new Date(Date.UTC(y,mo,da,hh,mm,0)),s=getSun(dt),aa=altAz(s.ra,s.dec,u,dt);if(aa.alt>0){const xy=proj(aa.alt,aa.az);skyLayer.append("circle").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",3).attr("fill","#8fe3c0");skyLayer.append("text").attr("class","gridlabel").attr("x",xy[0]+6).attr("y",xy[1]+3).text(lab);}});
  const dt0=new Date(Date.UTC(y,date.getUTCMonth(),date.getUTCDate(),hh,mm,0)),s0=getSun(dt0),aa0=altAz(s0.ra,s0.dec,u,dt0);
  if(aa0.alt>0){const xy=proj(aa0.alt,aa0.az);skyLayer.append("circle").attr("class","sunDot").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",8);skyLayer.append("text").attr("class","label").attr("x",xy[0]+11).attr("y",xy[1]-8).text("hoy");}
- skyLayer.append("text").attr("class","constLabel").attr("x",W/2).attr("y",46).text("Analema solar · "+String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")+" UTC · color = signo del Sol · horizontal ensanchada");
+ skyLayer.append("text").attr("class","constLabel").attr("x",W/2).attr("y",46).text("Analema solar · "+String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")+" UTC · color = signo del Sol · "+(analemmaTrue?"escala 1:1 (real)":"horizontal ensanchada"));
  skyLayer.append("text").attr("class","smallLabel").attr("x",W/2).attr("y",H-34).attr("text-anchor","middle").text("Ecuación del tiempo hoy: "+eqTimeMin(dt0).toFixed(1)+" min · Declinación ☉: "+s0.dec.toFixed(1)+"°");
 }
 
@@ -939,6 +947,7 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  function setMode(m){if((m==="sky"||m==="analemma")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");render();}
  Object.keys(modeBtns).forEach(m=>document.getElementById(modeBtns[m]).onclick=()=>setMode(m));
  document.getElementById("chartRing").onchange=e=>{chartRing=e.target.checked;if(viewMode==="chart")render();};
+ document.getElementById("analemmaTrue").onchange=e=>{analemmaTrue=e.target.checked;if(viewMode==="analemma")render();};
  svg.call(zoom);
  document.getElementById("zin").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1.6);
  document.getElementById("zout").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1/1.6);
