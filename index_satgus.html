@@ -40,9 +40,11 @@
   --trop:#f0bd6b;          /* warm tropic */
 
   --ok:#7fd8a0; --warn:#f0b25a;
-  --sans:"Space Grotesk",system-ui,-apple-system,Segoe UI,sans-serif;
-  --serif:"Cormorant Garamond",Georgia,"Times New Roman",serif;
-  --mono:"Space Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* symbol stack: fonts that ship the astrological/astronomical glyphs (♈–♓, ☉☽☿♀♂♃♄, ☊☋, ⚸, ℞) on each OS */
+  --glyph:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2","Noto Sans Symbols","Symbola","DejaVu Sans",system-ui,sans-serif;
+  --sans:"Space Grotesk",system-ui,-apple-system,"Segoe UI","Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",sans-serif;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman","Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",serif;
+  --mono:"Space Mono",ui-monospace,SFMono-Regular,Menlo,"Segoe UI Symbol","Apple Symbols",monospace;
 }
 *{box-sizing:border-box}
 body{
@@ -245,13 +247,13 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 .label{fill:var(--text);font-size:13px;font-weight:700;font-family:var(--sans);paint-order:stroke;stroke:#000;stroke-width:3}
 .smallLabel{fill:rgba(236,227,206,.9);font-size:12px;font-weight:650;font-family:var(--sans);paint-order:stroke;stroke:#000;stroke-width:3}
 .constLabel{fill:rgba(216,206,178,.68);font-size:12px;text-anchor:middle;font-family:var(--serif);font-style:italic;paint-order:stroke;stroke:#000;stroke-width:3}
-.symbol{font-size:22px;text-anchor:middle;fill:rgba(236,227,206,.8);paint-order:stroke;stroke:#000;stroke-width:3}
+.symbol{font-family:var(--glyph);font-size:22px;text-anchor:middle;fill:rgba(236,227,206,.8);paint-order:stroke;stroke:#000;stroke-width:3}
 .north{fill:var(--brass);font-size:14px;font-weight:700;text-anchor:middle;font-family:var(--serif)}
 .cardinal{fill:var(--brass);font-size:16px;font-weight:700;text-anchor:middle;font-family:var(--serif);paint-order:stroke;stroke:#000;stroke-width:3}
 .analemmaCurve{fill:none;stroke:var(--sun);stroke-width:2.2}
 .wheelRing{fill:none;stroke:rgba(201,151,63,.4);stroke-width:1.2}
 .wheelSpoke{stroke:rgba(216,206,178,.14);stroke-width:.8}
-.wheelGlyph{font-size:20px;text-anchor:middle;fill:rgba(236,227,206,.78);paint-order:stroke;stroke:#000;stroke-width:3}
+.wheelGlyph{font-family:var(--glyph);font-size:20px;text-anchor:middle;fill:rgba(236,227,206,.78);paint-order:stroke;stroke:#000;stroke-width:3}
 .gridline{stroke:rgba(216,206,178,.12);stroke-width:.8}
 .gridlabel{fill:rgba(216,206,178,.6);font-size:11px;text-anchor:middle;font-family:var(--mono)}
 .eclAxis{stroke:var(--ecl);stroke-width:1.4}
