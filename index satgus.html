@@ -849,6 +849,14 @@ function renderChartRing(date){
   skyLayer.append("circle").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",5).attr("fill",pl.color).attr("stroke","#000").attr("stroke-width",1);
   skyLayer.append("text").attr("class","smallLabel").attr("x",xy[0]+7).attr("y",xy[1]-6).text(pl.sym+" "+pl.name);});
  const sp=at(getSun(date).eclLon,Rbase);skyLayer.append("circle").attr("class","sunDot").attr("cx",sp[0]).attr("cy",sp[1]).attr("r",7);skyLayer.append("text").attr("class","label").attr("x",sp[0]+8).attr("y",sp[1]-7).text("Sol");
+ // Eje nodal verdadero (retrógrado): traza ±6 meses sobre la eclíptica + glifos ☊/☋
+ [[0,"☊","#b7f5c8"],[180,"☋","#9fd8b0"]].forEach(([off,sym,col])=>{let path="",prev=null;
+  for(let dd=-183;dd<=183;dd+=3){const dt=new Date(date.getTime()+dd*86400000),lon=normDeg(trueNode(dt)+off),xy=at(lon,Rbase);
+   if(prev!==null&&Math.abs(lon-prev)>180){skyLayer.append("path").attr("class","trace").attr("stroke",col).attr("stroke-dasharray","3 4").attr("opacity",.8).attr("d",path);path="";}
+   path+=(path===""?"M":"L")+xy[0].toFixed(1)+","+xy[1].toFixed(1);prev=lon;}
+  skyLayer.append("path").attr("class","trace").attr("stroke",col).attr("stroke-dasharray","3 4").attr("opacity",.8).attr("d",path);
+  const nl=normDeg(trueNode(date)+off),np=at(nl,Rbase);skyLayer.append("circle").attr("cx",np[0]).attr("cy",np[1]).attr("r",5).attr("fill",col).attr("stroke","#000").attr("stroke-width",1);
+  skyLayer.append("text").attr("class","symbol").attr("x",np[0]).attr("y",np[1]-9).attr("text-anchor","middle").attr("fill",col).text(sym);});
 }
 function renderChartStrip(date){
  skyLayer.selectAll("*").remove();
@@ -871,6 +879,14 @@ function renderChartStrip(date){
   const x=lon2x(lon),yv=lat2y(Math.max(-latSpan,Math.min(latSpan,lat)));
   skyLayer.append("circle").attr("cx",x).attr("cy",yv).attr("r",5).attr("fill",b.c).attr("stroke","#000").attr("stroke-width",1);
   skyLayer.append("text").attr("class","smallLabel").attr("x",x+7).attr("y",yv-6).text(b.sym+" "+b.n);});
+ // Eje nodal verdadero sobre la eclíptica (y=0), retrógrado
+ [[0,"☊","#b7f5c8"],[180,"☋","#9fd8b0"]].forEach(([off,sym,col])=>{let path="",prev=null;
+  for(let dd=-183;dd<=183;dd+=3){const dt=new Date(date.getTime()+dd*86400000),lon=normDeg(trueNode(dt)+off),xv=lon2x(lon),yv=lat2y(0);
+   if(prev!==null&&Math.abs(lon-prev)>180){skyLayer.append("path").attr("class","trace").attr("stroke",col).attr("stroke-dasharray","3 4").attr("d",path);path="";}
+   path+=(path===""?"M":"L")+xv.toFixed(1)+","+yv.toFixed(1);prev=lon;}
+  skyLayer.append("path").attr("class","trace").attr("stroke",col).attr("stroke-dasharray","3 4").attr("d",path);
+  const nl=normDeg(trueNode(date)+off),nx=lon2x(nl),ny=lat2y(0);skyLayer.append("circle").attr("cx",nx).attr("cy",ny).attr("r",5).attr("fill",col).attr("stroke","#000").attr("stroke-width",1);
+  skyLayer.append("text").attr("class","symbol").attr("x",nx).attr("y",ny-9).attr("text-anchor","middle").attr("fill",col).text(sym);});
 }
 
 // ===== Órbes: vista 3D geocéntrica (orden caldeo) + analema círculo⟷8 =====
@@ -1047,9 +1063,18 @@ function showPasses(){
 const SIGN3=["Ari","Tau","Gém","Cán","Leo","Vir","Lib","Esc","Sag","Cap","Acu","Pis"];
 function fmtSign(lon){lon=normDeg(lon);const s=Math.floor(lon/30),d=lon-s*30;return Math.floor(d)+"°"+String(Math.round((d-Math.floor(d))*60)).padStart(2,"0")+"′ "+SIGN3[s];}
 function moonNode(date){const d=jdTT(date)-2451543.5;return normDeg(125.1228-0.0529538083*d);}
+// Nodo Norte VERDADERO (medio + correcciones periódicas, Meeus). ~7' vs Swiss Eph. Sur = +180.
+function trueNode(date){const T=Tt(date),R=Math.PI/180;
+ let om=125.0445479-1934.1362891*T+0.0020754*T*T+T*T*T/467441-T*T*T*T/60616000;
+ const D=297.8501921+445267.1114034*T-0.0018819*T*T+T*T*T/545868-T*T*T*T/113065000;
+ const M=357.5291092+35999.0502909*T-0.0001536*T*T+T*T*T/24490000;
+ const Mp=134.9633964+477198.8675055*T+0.0087414*T*T+T*T*T/69699-T*T*T*T/14712000;
+ const F=93.2720950+483202.0175233*T-0.0036539*T*T-T*T*T/3526000+T*T*T*T/863310000;
+ const dOm=-1.4979*Math.sin(R*2*(D-F))-0.1500*Math.sin(R*M)-0.1226*Math.sin(R*2*D)+0.1176*Math.sin(R*2*F)-0.0801*Math.sin(R*2*(Mp-F));
+ return normDeg(om+dOm);}
 function lilithLon(date){const d=jdTT(date)-2451543.5;return normDeg((125.1228-0.0529538083*d)+(318.0634+0.1643573223*d)+180);}
 function eqToEcl(ra,dec,date){const eps=(meanObliquity(Tt(date))+nutation(date).deps)*Math.PI/180,r=ra*Math.PI/180,dd=dec*Math.PI/180;return normDeg(Math.atan2(Math.sin(r)*Math.cos(eps)+Math.tan(dd)*Math.sin(eps),Math.cos(r))*180/Math.PI);}
-function extraPoints(date){const nn=moonNode(date);return[{sym:"☊",n:"Nodo N",lon:nn,c:"#b7f5c8"},{sym:"☋",n:"Nodo S",lon:normDeg(nn+180),c:"#9fd8b0"},{sym:"⚸",n:"Lilith",lon:lilithLon(date),c:"#c9a6ff"}];}
+function extraPoints(date){const nn=trueNode(date);return[{sym:"☊",n:"Nodo N",lon:nn,c:"#b7f5c8"},{sym:"☋",n:"Nodo S",lon:normDeg(nn+180),c:"#9fd8b0"},{sym:"⚸",n:"Lilith",lon:lilithLon(date),c:"#c9a6ff"}];}
 function isRetro(def,date){const a=planetPosition(def,date).eclLon,b=planetPosition(def,new Date(date.getTime()+86400000)).eclLon;let dl=b-a;dl=((dl+540)%360)-180;return dl<0;}
 function nextStations(def,from,n){const res=[];let prevDir=null,prev=planetPosition(def,from).eclLon;for(let i=1;i<=430&&res.length<n;i++){const t=new Date(from.getTime()+i*86400000),l=planetPosition(def,t).eclLon;let dl=l-prev;dl=((dl+540)%360)-180;const dir=dl<0?"R":"D";if(prevDir!==null&&dir!==prevDir)res.push({date:t,dir});prevDir=dir;prev=l;}return res;}
 const DIGN={"Sol":{dom:[4],exa:0,det:[10],fal:6},"Luna":{dom:[3],exa:1,det:[9],fal:7},"Mercurio":{dom:[2,5],exa:5,det:[8,11],fal:11},"Venus":{dom:[1,6],exa:11,det:[0,7],fal:5},"Marte":{dom:[0,7],exa:9,det:[1,6],fal:3},"Júpiter":{dom:[8,11],exa:3,det:[2,5],fal:9},"Saturno":{dom:[9,10],exa:6,det:[3,4],fal:0}};
@@ -1070,7 +1095,7 @@ function showAstroData(){
   const now=getRenderDate(),opt={day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"},dmy={day:"2-digit",month:"short"};
   const rows=[["☉ Sol",getSun(now).eclLon,"Sol",null],["☾ Luna",getMoon(now).eclLon,"Luna",null]];
   planetDefs.forEach(p=>rows.push([p.sym+" "+p.name,planetPosition(p,now).eclLon,p.name,p]));
-  const nn=moonNode(now);rows.push(["☊ Nodo N",nn,null,null],["☋ Nodo S",normDeg(nn+180),null,null],["⚸ Lilith",lilithLon(now),null,null]);
+  const nn=trueNode(now);rows.push(["☊ Nodo N",nn,null,null],["☋ Nodo S",normDeg(nn+180),null,null],["⚸ Lilith",lilithLon(now),null,null]);
   let h="<b>Posiciones (tropical de fecha)</b><div class='data' style='margin-top:6px'>";
   rows.forEach(r=>{const sign=Math.floor(normDeg(r[1])/30),dg=r[2]?dignity(r[2],sign):"",rr=r[3]?(isRetro(r[3],now)?" ℞":""):"";h+="<div class='row'><span class='key'>"+r[0]+rr+"</span><span class='value'>"+fmtSign(r[1])+dg+"</span></div>";});
   h+="</div>";
