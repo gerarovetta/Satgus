@@ -266,7 +266,6 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
   aside{border-right:0;border-bottom:1px solid var(--line)}
   svg{width:96vw;height:96vw}
   h1{font-size:34px}
-  #orbesUI{left:12px;right:12px;top:auto;bottom:12px;width:auto;max-width:none;max-height:calc(100vh - 120px)}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 /* ---------------- Órbes 3D mode ---------------- */
@@ -298,6 +297,10 @@ body.orbes-mode #orbesUI{display:flex}
 #orbesUI input[type=range]{width:100%;accent-color:var(--brass);margin-top:2px}
 #orbesUI .ml{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted-2)}
 #orbesUI .ml b{color:var(--parchment);font-family:var(--mono);font-size:10.5px}
+@media(max-width:900px){
+  #orbesUI{position:fixed;left:10px;right:10px;bottom:10px;top:auto;width:auto;max-width:none;max-height:70vh}
+  #orbesUI.collapsed{max-height:none}
+}
 </style>
 </head>
 <body>
