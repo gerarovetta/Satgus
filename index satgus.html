@@ -406,6 +406,8 @@ body.orbes-mode #orbesUI{display:flex}
 <div class="oh">Órbes · orden caldeo (geocéntrico)</div>
 <div class="oseg" id="oPreset"><button data-p="ladder" class="on">Escalera</button><button data-p="orbs">Concéntrico</button></div>
 <label class="oswitch"><input type="checkbox" id="oSpin" checked><span>Giro automático</span></label>
+<div class="oh" style="margin-top:4px">Firmamento estelar</div>
+<div class="oseg" id="oFirm"><button data-f="plano" class="on">Plano</button><button data-f="domo">Domo</button><button data-f="esfera">Esfera</button></div>
 <div class="oh" style="margin-top:4px">Analema · círculo ⟷ 8</div>
 <div class="oseg" id="oWhich"><button data-w="sun">Sol</button><button data-w="moon">Luna</button><button data-w="both" class="on">Ambos</button></div>
 <input type="range" id="oMorph" min="0" max="100" value="0">
@@ -912,7 +914,7 @@ const STARDOME=[];for(let i=0;i<340;i++){const u=Math.random()*2-1,th=Math.rando
 const Orbes={
   running:false,raf:0,dpr:1,w:0,h:0,_key:null,
   yaw:-0.6,pitch:0.42,zoom:1,dragging:false,px:0,py:0,pinch:0,
-  preset:"ladder",spin:true,which:"both",morph:0,starAngle:0,
+  preset:"ladder",spin:true,which:"both",morph:0,starAngle:0,firm:"plano",
   date:null,dirty:true,bodies:null,ana:{},
   setDate(d){const key=d.toISOString().slice(0,16);if(key!==this._key){this._key=key;this.date=new Date(d.getTime());this.dirty=true;}},
   start(){if(this.running)return;this.running=true;this.resize();this.loop();},
@@ -951,12 +953,17 @@ const Orbes={
   draw(){
     const c=oCtx,dpr=this.dpr;c.clearRect(0,0,this.w,this.h);
     for(const s of OSTARS){c.globalAlpha=0.45+Math.random()*0.12;c.fillStyle="#cdd6ee";c.fillRect(s[0]*this.w,s[1]*this.h,s[2]*dpr,s[2]*dpr);}c.globalAlpha=1;
-    // Firmamento de estrellas fijas más allá de Saturno, contra-rotante
-    {const Rs=this.preset==="orbs"?1.30:0.98,A=-this.starAngle,ca=Math.cos(A),sa=Math.sin(A);
-     for(const s of STARDOME){const rx=s[0]*ca-s[2]*sa,rz=s[0]*sa+s[2]*ca,P=this.project(rx*Rs,s[1]*Rs,rz*Rs),far=P.depth<=0;
+    // Firmamento de estrellas fijas más allá de Saturno: plano / domo / esfera, contra-rotante
+    {const A=-this.starAngle,ca=Math.cos(A),sa=Math.sin(A),orbs=this.preset==="orbs";
+     const Rs=orbs?1.30:0.98,spread=orbs?1.55:1.15,Yp=orbs?0.60:0.90,lift=orbs?0.05:0.32;
+     for(const s of STARDOME){let x,y,z;
+      if(this.firm==="plano"){x=s[0]*spread;y=Yp;z=s[2]*spread;}
+      else if(this.firm==="domo"){x=s[0]*Rs;y=Math.abs(s[1])*Rs*0.92+lift;z=s[2]*Rs;}
+      else{x=s[0]*Rs;y=s[1]*Rs;z=s[2]*Rs;}
+      const rx=x*ca-z*sa,rz=x*sa+z*ca,P=this.project(rx,y,rz),far=P.depth<=0;
       const tw=0.62+0.38*Math.sin(this.starAngle*5+s[4]*6.2831853);
-      c.globalAlpha=(far?0.9:0.16)*tw;c.fillStyle="#eaf0ff";
-      const sz=Math.max(0.5,s[3]*dpr*(far?1:0.7)*(0.85+P.depth*0.12));
+      c.globalAlpha=(far?0.9:0.20)*tw;c.fillStyle="#eaf0ff";
+      const sz=Math.max(0.5,s[3]*dpr*(far?1:0.72)*(0.85+P.depth*0.12));
       c.beginPath();c.arc(P.x,P.y,sz,0,7);c.fill();}
      c.globalAlpha=1;}
     const jobs=[];
@@ -999,6 +1006,7 @@ oCanvas.addEventListener("touchmove",e=>{if(e.touches.length===2){const dx=e.tou
 oCanvas.addEventListener("touchend",()=>Orbes.pinch=0);
 document.getElementById("oPreset").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.preset=b.dataset.p;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
 document.getElementById("oWhich").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.which=b.dataset.w;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
+document.getElementById("oFirm").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.firm=b.dataset.f;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
 document.getElementById("oSpin").onchange=e=>Orbes.spin=e.target.checked;
 document.getElementById("oMorph").oninput=e=>{Orbes.morph=e.target.value/100;document.getElementById("oMlab").textContent=Orbes.morph<0.5?"Círculo":(Orbes.morph<0.98?"…":"Analema 8");};
 if(window.ResizeObserver)new ResizeObserver(()=>{if(Orbes.running)Orbes.resize();}).observe(document.querySelector("main"));
