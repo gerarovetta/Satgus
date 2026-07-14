@@ -266,6 +266,7 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
   aside{border-right:0;border-bottom:1px solid var(--line)}
   svg{width:96vw;height:96vw}
   h1{font-size:34px}
+  #orbesUI{left:12px;right:12px;top:auto;bottom:12px;width:auto;max-width:none;max-height:calc(100vh - 120px)}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 /* ---------------- Órbes 3D mode ---------------- */
@@ -274,10 +275,15 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 body.orbes-mode #orbes{display:block}
 body.orbes-mode #map{display:none}
 body.orbes-mode #zin,body.orbes-mode #zout,body.orbes-mode #zreset,body.orbes-mode #zlvl{display:none}
-#orbesUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:9px;width:238px;max-width:calc(100% - 44px);
+#orbesUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:9px;width:238px;max-width:calc(100% - 44px);max-height:calc(100vh - 44px);overflow-y:auto;
   background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
   backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
 body.orbes-mode #orbesUI{display:flex}
+#orbesUI .ohead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#orbesUI .oclps{margin:0;flex:none;width:26px;height:26px;padding:0;border:1px solid var(--line-soft);border-radius:7px;background:#11162b;color:var(--brass);cursor:pointer;font-size:12px;line-height:1;transition:transform .18s}
+#orbesUI.collapsed{gap:0;padding:9px 12px;overflow:visible}
+#orbesUI.collapsed > :not(.ohead){display:none}
+#orbesUI.collapsed .oclps{transform:rotate(-90deg)}
 #orbesUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
 #orbesUI .oseg{display:flex;gap:6px}
 #orbesUI .oseg button{flex:1;margin:0;padding:7px 5px;font:500 11.5px var(--sans);background:#11162b;color:var(--muted);
@@ -403,7 +409,7 @@ body.orbes-mode #orbesUI{display:flex}
 <button id="zreset" title="Restablecer vista" aria-label="Restablecer">⌂</button>
 <button id="zfull" title="Mapa grande / mostrar panel" aria-label="Pantalla del mapa">⛶</button>
 </div><svg id="map" viewBox="0 0 900 900" role="img" aria-label="Mapa polar azimutal con SATGUS, Sol, Luna y cielo"><title>SATGUS 62713 — tracker polar</title><desc>Proyección azimutal equidistante centrada en el polo norte, con la huella del satélite y objetos celestes.</desc></svg><canvas id="orbes"></canvas><div id="orbesUI">
-<div class="oh">Órbes · orden caldeo (geocéntrico)</div>
+<div class="ohead"><div class="oh">Órbes · orden caldeo (geocéntrico)</div><button id="oCollapse" class="oclps" aria-label="Ocultar / mostrar controles">▾</button></div>
 <div class="oseg" id="oPreset"><button data-p="ladder" class="on">Escalera</button><button data-p="orbs">Concéntrico</button></div>
 <label class="oswitch"><input type="checkbox" id="oSpin" checked><span>Giro automático</span></label>
 <div class="oh" style="margin-top:4px">Firmamento estelar</div>
@@ -1007,6 +1013,8 @@ oCanvas.addEventListener("touchend",()=>Orbes.pinch=0);
 document.getElementById("oPreset").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.preset=b.dataset.p;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
 document.getElementById("oWhich").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.which=b.dataset.w;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
 document.getElementById("oFirm").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.firm=b.dataset.f;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
+document.getElementById("oCollapse").onclick=()=>document.getElementById("orbesUI").classList.toggle("collapsed");
+if(innerWidth<=900)document.getElementById("orbesUI").classList.add("collapsed");
 document.getElementById("oSpin").onchange=e=>Orbes.spin=e.target.checked;
 document.getElementById("oMorph").oninput=e=>{Orbes.morph=e.target.value/100;document.getElementById("oMlab").textContent=Orbes.morph<0.5?"Círculo":(Orbes.morph<0.98?"…":"Analema 8");};
 if(window.ResizeObserver)new ResizeObserver(()=>{if(Orbes.running)Orbes.resize();}).observe(document.querySelector("main"));
