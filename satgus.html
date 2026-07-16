@@ -56,7 +56,31 @@ body{
     radial-gradient(circle at 50% 40%, #10182e 0%, var(--bg) 62%, var(--bg-2) 100%);
   -webkit-font-smoothing:antialiased;
 }
-.app{min-height:100vh;display:grid;grid-template-columns:min(420px,42vw) 1fr}
+.app{min-height:100vh;display:grid;grid-template-columns:64px minmax(0,340px) 1fr}
+.app.pc{grid-template-columns:64px 0 1fr}
+.app.pc aside{display:none}
+.rail{background:linear-gradient(180deg,#0b0e1c,#080b16);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0 14px;overflow-y:auto}
+.railbrand{color:var(--brass);font-size:20px;margin-bottom:6px}
+.rail .modebtn{width:52px;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:12px;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;padding:0;font-family:var(--sans)}
+.rail .modebtn .ico{font-size:17px;line-height:1}
+.rail .modebtn .lbl{font-size:8px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
+.rail .modebtn:hover{color:var(--parchment);background:rgba(201,151,63,.07)}
+.rail .modebtn.active{color:var(--brass);background:var(--panel);border-color:var(--line)}
+.railspace{flex:1;min-height:8px}
+.railtoggle{width:42px;height:36px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--brass);cursor:pointer;font-size:15px}
+.railtoggle:hover{border-color:var(--brass)}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;height:62px;z-index:55;background:linear-gradient(180deg,#0b0e1cf7,#080b16);border-top:1px solid var(--line);justify-content:space-around;align-items:center;backdrop-filter:blur(8px)}
+.bottomnav .bn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--muted);font:600 9.5px var(--sans);cursor:pointer;padding:4px 8px}
+.bottomnav .bn .i{font-size:19px;line-height:1}
+.bottomnav .bn.on{color:var(--brass)}
+.moresheet{display:none;position:fixed;left:0;right:0;bottom:62px;z-index:56;background:linear-gradient(180deg,#11162bf7,#0b0e1cfc);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:10px 14px 16px;box-shadow:0 -14px 34px rgba(0,0,0,.5);transform:translateY(120%);transition:transform .25s}
+.moresheet.open{transform:none}
+.moresheet .grip{width:40px;height:4px;border-radius:3px;background:var(--line);margin:2px auto 12px}
+.moresheet .moregrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.moresheet .moregrid button,.moresheet .morectrl{background:var(--panel);border:1px solid var(--line);color:var(--parchment);border-radius:10px;padding:11px 10px;font:600 13px var(--sans);cursor:pointer;text-align:left}
+.moresheet .morectrl{width:100%;margin-top:10px;color:var(--brass);border-color:var(--brass)}
+.panelscrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:59}
+.asideclose{display:none;position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--parchment);font-size:15px;cursor:pointer;z-index:2}
 @media(min-width:901px){.app{height:100vh}aside{min-height:0}}
 body.orbes-mode main{height:100vh}
 
@@ -263,9 +287,17 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 
 @media(max-width:900px){
   .app{grid-template-columns:1fr}
-  aside{border-right:0;border-bottom:1px solid var(--line)}
-  svg{width:96vw;height:96vw}
-  h1{font-size:34px}
+  .rail{display:none}
+  aside{position:fixed;top:0;left:0;bottom:0;width:min(88vw,360px);z-index:60;transform:translateX(-103%);transition:transform .25s;overflow-y:auto;border-right:1px solid var(--line);border-bottom:0}
+  .app.showpanel aside{transform:none}
+  .app.showpanel .panelscrim{display:block}
+  .asideclose{display:block}
+  .bottomnav{display:flex}
+  .moresheet{display:block}
+  main{padding-bottom:70px}
+  body.zodiac-mode main{padding-bottom:70px}
+  svg{width:94vw;height:94vw}
+  h1{font-size:30px}
   body.zodiac-mode main{display:block;height:auto;min-height:auto;overflow:visible;padding:12px}
   body.zodiac-mode #map{width:94vw;height:94vw;margin:0 auto;display:block}
   body.zodiac-mode #zodUI{position:static;width:auto;max-width:100%;max-height:none;overflow:visible;margin:14px auto 30px}
@@ -381,7 +413,23 @@ body.zodiac-mode #zodUI{display:flex}
 </head>
 <body>
 <div class="app">
+<nav class="rail" id="rail">
+  <div class="railbrand">✦</div>
+  <button id="mMap" class="modebtn active"><span class="ico">◐</span><span class="lbl">Mapa</span></button>
+  <button id="mSky" class="modebtn"><span class="ico">✦</span><span class="lbl">Cielo</span></button>
+  <button id="mAna" class="modebtn"><span class="ico">◊</span><span class="lbl">Analema</span></button>
+  <button id="mZod" class="modebtn"><span class="ico">⊙</span><span class="lbl">Zodíaco</span></button>
+  <button id="mChart" class="modebtn"><span class="ico">◈</span><span class="lbl">Carta</span></button>
+  <button id="mWave" class="modebtn"><span class="ico">∿</span><span class="lbl">Onda</span></button>
+  <button id="mDay" class="modebtn"><span class="ico">☀</span><span class="lbl">Día</span></button>
+  <button id="mOrbs" class="modebtn"><span class="ico">◉</span><span class="lbl">Órbes</span></button>
+  <button id="mAna3D" class="modebtn"><span class="ico">∞</span><span class="lbl">Analema∞</span></button>
+  <button id="mDomo" class="modebtn"><span class="ico">⌂</span><span class="lbl">Domo 3D</span></button>
+  <div class="railspace"></div>
+  <button id="panelToggle" class="railtoggle" title="Ocultar / mostrar panel">⟨</button>
+</nav>
 <aside>
+<button id="asideClose" class="asideclose" title="Cerrar">✕</button>
 <div class="masthead">
   <h1><span class="spark">✦</span>SATGUS</h1>
   <h2>NORAD 62713 · efemérides estables</h2>
@@ -422,20 +470,8 @@ body.zodiac-mode #zodUI{display:flex}
 </section>
 
 <section class="sec">
-  <div class="sec-h"><span class="g">◐</span><span class="t">Vistas</span><span class="ln"></span></div>
-  <div class="modes">
-    <button id="mMap" class="modebtn active">Mapa</button>
-    <button id="mSky" class="modebtn">Cielo</button>
-    <button id="mAna" class="modebtn">Analema</button>
-    <button id="mZod" class="modebtn">Zodíaco</button>
-    <button id="mChart" class="modebtn">Carta</button>
-    <button id="mWave" class="modebtn">Onda</button>
-    <button id="mDay" class="modebtn">Día</button>
-    <button id="mOrbs" class="modebtn">Órbes</button>
-    <button id="mAna3D" class="modebtn">Analema ∞</button>
-    <button id="mDomo" class="modebtn">Domo 3D</button>
-  </div>
-  <label class="toggle wide" style="margin-top:8px"><input type="checkbox" id="chartRing" checked>Carta circular (si no, en tira)</label>
+  <div class="sec-h"><span class="g">◐</span><span class="t">Opciones de vista</span><span class="ln"></span></div>
+  <label class="toggle wide"><input type="checkbox" id="chartRing" checked>Carta circular (si no, en tira)</label>
   <label class="toggle wide"><input type="checkbox" id="analemmaTrue">Analema a escala 1:1 (si no, ensanchado)</label>
   <label class="toggle wide"><input type="checkbox" id="analemmaMoon">Analema lunar ☾ (si no, solar ☉)</label>
   <label class="toggle wide"><input type="checkbox" id="analemmaClean">Figura ∞ limpia · dec × ec. tiempo (si no, observada)</label>
@@ -526,6 +562,22 @@ body.zodiac-mode #zodUI{display:flex}
 <div id="zodInfo" class="zinfo"></div>
 <div class="zexport"><button id="zDlHtml">Descargar carta (HTML)</button><button id="zDlTxt">Texto</button></div>
 </div></main>
+<nav class="bottomnav" id="bnav">
+  <button data-m="map" class="bn"><span class="i">◐</span>Mapa</button>
+  <button data-m="sky" class="bn"><span class="i">✦</span>Cielo</button>
+  <button data-m="zodiac" class="bn"><span class="i">⊙</span>Carta</button>
+  <button data-m="domo" class="bn"><span class="i">⌂</span>Domo</button>
+  <button id="bnMore" class="bn"><span class="i">⋯</span>Más</button>
+</nav>
+<div class="moresheet" id="moreSheet">
+  <div class="grip"></div>
+  <div class="moregrid">
+    <button data-m="analemma">◊ Analema</button><button data-m="chart">◈ Carta (trazas)</button><button data-m="wave">∿ Onda</button>
+    <button data-m="day">☀ Día</button><button data-m="orbes">◉ Órbes</button><button data-m="ana3d">∞ Analema ∞</button>
+  </div>
+  <button id="openPanel" class="morectrl">⚙ Controles y ajustes</button>
+</div>
+<div class="panelscrim" id="scrim"></div>
 </div>
 
 <script>
@@ -1685,8 +1737,18 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("astrosBtn").onclick=showVisibility;
  document.getElementById("astroBtn").onclick=showAstroData;
  const modeBtns={map:"mMap",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay",orbes:"mOrbs",ana3d:"mAna3D",domo:"mDomo"};
- function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");render();}
+ function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
+  const prim={map:0,sky:1,zodiac:2,domo:3},bn=document.querySelectorAll("#bnav .bn");bn.forEach(x=>x.classList.remove("on"));if(m in prim)bn[prim[m]].classList.add("on");else{const more=document.getElementById("bnMore");if(more)more.classList.add("on");}
+  const ms=document.getElementById("moreSheet");if(ms)ms.classList.remove("open");
+  render();}
  Object.keys(modeBtns).forEach(m=>document.getElementById(modeBtns[m]).onclick=()=>setMode(m));
+ document.getElementById("panelToggle").onclick=function(){const c=document.querySelector(".app").classList.toggle("pc");this.textContent=c?"⟩":"⟨";};
+ document.querySelectorAll("#bnav .bn[data-m], #moreSheet button[data-m]").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+ document.getElementById("bnMore").onclick=()=>document.getElementById("moreSheet").classList.toggle("open");
+ const app=document.querySelector(".app");
+ document.getElementById("openPanel").onclick=()=>{document.getElementById("moreSheet").classList.remove("open");app.classList.add("showpanel");};
+ document.getElementById("asideClose").onclick=()=>app.classList.remove("showpanel");
+ document.getElementById("scrim").onclick=()=>app.classList.remove("showpanel");
  document.getElementById("chartRing").onchange=e=>{chartRing=e.target.checked;if(viewMode==="chart")render();};
  document.getElementById("analemmaTrue").onchange=e=>{analemmaTrue=e.target.checked;if(viewMode==="analemma")render();};
  document.getElementById("analemmaMoon").onchange=()=>{if(viewMode==="analemma")render();};
