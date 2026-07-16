@@ -268,7 +268,11 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
   h1{font-size:34px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
-/* ---------------- Órbes 3D mode ---------------- */
+.locsearch{display:flex;gap:6px;margin-top:8px}
+.locsearch input{flex:1;min-width:0;background:#11162b;border:1px solid var(--line-soft);border-radius:8px;color:var(--parchment);padding:9px 10px;font:13px var(--sans)}
+.locsearch input::placeholder{color:var(--muted-2)}
+.locsearch input:focus{outline:none;border-color:var(--brass)}
+.locsearch button{flex:none;padding:9px 14px;background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border:1px solid var(--brass);border-radius:8px;cursor:pointer;font:600 13px var(--sans)}
 #orbes{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:2;touch-action:none;cursor:grab}
 #orbes:active{cursor:grabbing}
 body.orbes-mode #orbes{display:block}
@@ -324,6 +328,45 @@ body.domo-mode #zin,body.domo-mode #zout,body.domo-mode #zreset,body.domo-mode #
   background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
   backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
 body.domo-mode #domoUI{display:flex}
+#zodUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:9px;width:238px;max-width:calc(100% - 44px);
+  background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
+  backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+body.zodiac-mode #zodUI{display:flex}
+#zodUI{max-height:calc(100vh - 44px);overflow-y:auto}
+#zodUI .ztab{width:100%;border-collapse:collapse;margin:3px 0 8px}
+#zodUI .ztab td{padding:1px 4px 1px 0;font-size:10.5px;color:var(--parchment);vertical-align:top;white-space:nowrap}
+#zodUI .ztab td.dg{color:var(--brass);font-size:9.5px}
+#zodUI .ztab td.ho{color:var(--muted-2);text-align:right}
+#zodUI .lectwrap{border-top:1px solid var(--line-soft);margin-top:8px;padding-top:8px}
+#zodUI .lect .lq{font-family:var(--serif);font-style:italic;font-size:11.5px;color:var(--brass);opacity:.92;margin:4px 0 8px;line-height:1.45}
+#zodUI .lect p{margin:4px 0 8px;font-size:11px;line-height:1.5;color:var(--parchment)}
+#zodUI .lecttab td.lx{color:var(--muted);font-size:10px;line-height:1.4;white-space:normal;padding-bottom:6px}
+#zodUI .lecttab td.lx .dg{color:var(--brass);font-size:9.5px}
+#zodUI .lect p.pl{border-left:2px solid rgba(201,151,63,.4);padding-left:8px;margin:6px 0}
+#zodUI .lect p.pl b{color:var(--parchment)}
+#zodUI .lect p.hs{font-size:10.5px;margin:5px 0;color:var(--muted)}
+#zodUI .lect p.hs b{color:var(--brass)}
+#zodUI .lect p.hs .ang{color:var(--muted-2);font-style:italic}
+#zodUI .lect p.syn{font-size:12px;line-height:1.55;color:var(--parchment);background:rgba(201,151,63,.06);border:1px solid rgba(201,151,63,.25);border-radius:8px;padding:8px 10px;margin:4px 0 10px}
+#zodUI .lect p.syn b{color:var(--brass)}
+#zodUI .lect p.ax{font-size:10.5px;line-height:1.45;margin:4px 0;color:var(--muted)}
+#zodUI .lect p.ax b{color:var(--parchment)}
+#zodUI .lect p.ax .ag{font-size:12px}
+#zodUI .lect p.ax .am{color:var(--muted-2);font-size:9.5px}
+#zodUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
+#zodUI .oseg{display:flex;gap:6px}
+#zodUI .oseg button{flex:1;margin:0;padding:7px 5px;font:500 11.5px var(--sans);background:#11162b;color:var(--muted);border:1px solid var(--line-soft);border-radius:7px;cursor:pointer}
+#zodUI .oseg button.on{background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border-color:var(--brass)}
+#zodUI .oswitch{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans)}
+#zodUI .oswitch input{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;flex:none;border-radius:20px;background:#1b2036;border:1px solid var(--line-soft);position:relative;cursor:pointer;transition:background .18s}
+#zodUI .oswitch input::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--muted-2);transition:.18s}
+#zodUI .oswitch input:checked{background:rgba(201,151,63,.28);border-color:var(--brass)}
+#zodUI .oswitch input:checked::after{transform:translateX(14px);background:var(--brass)}
+#zodUI .zinfo{font-family:var(--sans);font-size:11px;line-height:1.5;color:var(--muted);border-top:1px solid var(--line-soft);padding-top:9px;margin-top:2px}
+#zodUI .zexport{display:flex;gap:6px;margin-top:10px}
+#zodUI .zexport button{flex:1;padding:8px 6px;font:600 11.5px var(--sans);background:linear-gradient(180deg,rgba(201,151,63,.2),rgba(201,151,63,.06));color:var(--brass);border:1px solid var(--brass);border-radius:8px;cursor:pointer}
+#zodUI .zexport button:last-child{flex:none;padding:8px 12px}
+#zodUI .zinfo b{color:var(--brass);font-weight:600}
 #domoUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
 #domoUI .oswitch{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans)}
 #domoUI .oswitch input{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;flex:none;border-radius:20px;background:#1b2036;border:1px solid var(--line-soft);position:relative;cursor:pointer;transition:background .18s}
@@ -354,6 +397,8 @@ body.domo-mode #domoUI{display:flex}
 <section class="sec">
   <div class="sec-h"><span class="g">⊕</span><span class="t">Observador</span><span class="ln"></span></div>
   <button id="locate" class="user">Tomar mi ubicación</button>
+  <div class="locsearch"><input id="cityInput" list="cityList" placeholder="…o buscá tu ciudad (ej. Rocha)"><button id="cityGo">Ir</button></div>
+  <datalist id="cityList"></datalist>
   <label>Fecha/hora para ver cielo y satélite</label>
   <div class="date-controls">
     <input id="dateTime" type="datetime-local">
@@ -465,6 +510,17 @@ body.domo-mode #domoUI{display:flex}
 <label class="oswitch"><input type="checkbox" id="dSpin" checked><span>Giro de cámara</span></label>
 <label class="oswitch"><input type="checkbox" id="dConst" checked><span>Constelaciones</span></label>
 <label class="oswitch"><input type="checkbox" id="dEcl" checked><span>Eclíptica + ecuador</span></label>
+</div><div id="zodUI">
+<div class="oh">Carta del momento</div>
+<label class="oswitch"><input type="checkbox" id="zAsp" checked><span>Aspectos</span></label>
+<label class="oswitch"><input type="checkbox" id="zDign" checked><span>Dignidades</span></label>
+<label class="oswitch"><input type="checkbox" id="zElem" checked><span>Elemento / modalidad</span></label>
+<label class="oswitch"><input type="checkbox" id="zHouse" checked><span>Ascendente + casas</span></label>
+<div class="oseg" id="zHsys"><button data-h="whole" class="on">Signos</button><button data-h="equal">Iguales</button><button data-h="porphyry">Porfirio</button></div>
+<label class="oswitch"><input type="checkbox" id="zRot" checked><span>Rotar al Ascendente</span></label>
+<label class="oswitch"><input type="checkbox" id="zLect" checked><span>Lectura helenística</span></label>
+<div id="zodInfo" class="zinfo"></div>
+<div class="zexport"><button id="zDlHtml">Descargar carta (HTML)</button><button id="zDlTxt">Texto</button></div>
 </div></main>
 </div>
 
@@ -825,26 +881,248 @@ function renderAnalemma(date){
 }
 
 // ---- Modo ZODÍACO: rueda con Sol, Luna y planetas por signo y grado ----
+// ===== Carta del momento: aspectos, dignidades, elemento/modalidad, Ascendente + casas =====
+const ELEM=["Fuego","Tierra","Aire","Agua"],ELEMC=["#e8734a","#6fae7a","#e6c34a","#5aa0d6"];
+const MODAL=["Cardinal","Fijo","Mutable"];
+const ZASPECTS=[
+ {name:"Conjunción",sym:"\u260C",ang:0,orb:8,col:"#c9973f"},
+ {name:"Sextil",sym:"\u26B9",ang:60,orb:5,col:"#5fb8a6"},
+ {name:"Cuadratura",sym:"\u25A1",ang:90,orb:7,col:"#e0564e"},
+ {name:"Trígono",sym:"\u25B3",ang:120,orb:7,col:"#6db6ff"},
+ {name:"Oposición",sym:"\u260D",ang:180,orb:8,col:"#e0564e"}
+];
+function chartBodies(date){
+ const b=[{name:"Sol",sym:"\u2609",lon:getSun(date).eclLon,c:"#ffd166",dg:"Sol",def:null,lum:true},
+          {name:"Luna",sym:"\u263E",lon:getMoon(date).eclLon,c:"#dce6f2",dg:"Luna",def:null,lum:true}];
+ planetDefs.forEach(pl=>b.push({name:pl.name,sym:pl.sym,lon:planetPosition(pl,date).eclLon,c:pl.color,dg:pl.name,def:pl,lum:false}));
+ return b;
+}
+function aspectsBetween(bodies){
+ const out=[];
+ for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
+  let d=Math.abs(normDeg(bodies[i].lon-bodies[j].lon));if(d>180)d=360-d;
+  for(const A of ZASPECTS){const orb=A.orb+((bodies[i].lum||bodies[j].lum)?2:0);if(Math.abs(d-A.ang)<=orb){out.push({i,j,asp:A,orb:Math.abs(d-A.ang)});break;}}
+ }
+ return out;
+}
+function ascMC(date,u){
+ const D2R=Math.PI/180,eps=23.439291*D2R,ramc=normDeg(gmstDeg(date)+u.lon)*D2R,phi=u.lat*D2R;
+ const mc=Math.atan2(Math.sin(ramc),Math.cos(ramc)*Math.cos(eps));
+ const asc=Math.atan2(Math.cos(ramc),-(Math.sin(ramc)*Math.cos(eps)+Math.tan(phi)*Math.sin(eps)));
+ return{asc:normDeg(asc/D2R),mc:normDeg(mc/D2R)};
+}
+function houseCusps(asc,mc,system){const c=new Array(12);
+ if(system==="equal"){for(let i=0;i<12;i++)c[i]=normDeg(asc+i*30);return c;}
+ if(system==="porphyry"){const ic=normDeg(mc+180),dc=normDeg(asc+180);
+  const q1=normDeg(asc-mc),q2=normDeg(ic-asc),q3=normDeg(dc-ic),q4=normDeg(mc-dc);
+  c[9]=normDeg(mc);c[0]=normDeg(asc);c[3]=ic;c[6]=dc;
+  c[10]=normDeg(mc+q1/3);c[11]=normDeg(mc+2*q1/3);
+  c[1]=normDeg(asc+q2/3);c[2]=normDeg(asc+2*q2/3);
+  c[4]=normDeg(ic+q3/3);c[5]=normDeg(ic+2*q3/3);
+  c[7]=normDeg(dc+q4/3);c[8]=normDeg(dc+2*q4/3);return c;}
+ const base=Math.floor(normDeg(asc)/30)*30;for(let i=0;i<12;i++)c[i]=normDeg(base+i*30);return c;} // whole
+function angularity(h){return(h===0||h===3||h===6||h===9)?"angular":((h===1||h===4||h===7||h===10)?"sucedente":"cadente");}
+const JOY={"Mercurio":0,"Luna":2,"Venus":4,"Marte":5,"Sol":8,"Júpiter":10,"Saturno":11};
+function zGet(id){const e=document.getElementById(id);return e?e.checked:false;}
+
+// ===== Lectura helenística (offline): secta, 5 dignidades, condición solar, Lotes, regente =====
+const PL7=["Sol","Luna","Mercurio","Venus","Marte","Júpiter","Saturno"];
+const PGLY={"Sol":"\u2609","Luna":"\u263D","Mercurio":"\u263F","Venus":"\u2640","Marte":"\u2642","Júpiter":"\u2643","Saturno":"\u2644"};
+const RULER=["Marte","Venus","Mercurio","Luna","Sol","Mercurio","Venus","Marte","Júpiter","Saturno","Saturno","Júpiter"]; // regente de cada signo
+// triplicidades doroteanas por elemento [fuego,tierra,aire,agua] → {día,noche,participa}
+const TRIP=[{d:"Sol",n:"Júpiter",p:"Saturno"},{d:"Venus",n:"Luna",p:"Marte"},{d:"Saturno",n:"Mercurio",p:"Júpiter"},{d:"Venus",n:"Marte",p:"Luna"}];
+// términos egipcios: por signo, [regente, hasta grado]
+const BOUNDS=[
+ [["Júpiter",6],["Venus",12],["Mercurio",20],["Marte",25],["Saturno",30]],
+ [["Venus",8],["Mercurio",14],["Júpiter",22],["Saturno",27],["Marte",30]],
+ [["Mercurio",6],["Júpiter",12],["Venus",17],["Marte",24],["Saturno",30]],
+ [["Marte",7],["Venus",13],["Mercurio",19],["Júpiter",26],["Saturno",30]],
+ [["Júpiter",6],["Venus",11],["Saturno",18],["Mercurio",24],["Marte",30]],
+ [["Mercurio",7],["Venus",17],["Júpiter",21],["Marte",28],["Saturno",30]],
+ [["Saturno",6],["Mercurio",14],["Júpiter",21],["Venus",28],["Marte",30]],
+ [["Marte",7],["Venus",11],["Mercurio",19],["Júpiter",24],["Saturno",30]],
+ [["Júpiter",12],["Venus",17],["Mercurio",21],["Saturno",26],["Marte",30]],
+ [["Mercurio",7],["Júpiter",14],["Venus",22],["Saturno",26],["Marte",30]],
+ [["Mercurio",7],["Venus",13],["Júpiter",20],["Marte",25],["Saturno",30]],
+ [["Venus",12],["Júpiter",16],["Mercurio",19],["Marte",28],["Saturno",30]]
+];
+const CHALD=["Marte","Sol","Venus","Mercurio","Luna","Saturno","Júpiter"]; // orden de las faces
+function faceRuler(sign,deg){return CHALD[((sign*3+Math.floor(deg/10))%7+7)%7];}
+const HOUSEM=["el cuerpo, la vida y el timón del ser","los bienes y el sustento","hermanos, aprendizajes y viajes cortos","el hogar, los padres y las raíces","los hijos, la creación y el placer","el trabajo, la servidumbre y la enfermedad","la pareja y los otros","la muerte, el miedo y lo compartido","el dios, la filosofía y los viajes largos","la acción, la vocación y la reputación","los amigos, los dones y las esperanzas","el retiro, lo oculto y el sacrificio"];
+const SIGNSTYLE=["impulso que inicia","arraigo que sostiene","curiosidad que conecta","cuidado que protege","brillo que crea","discernimiento que afina","vínculo que equilibra","intensidad que transforma","búsqueda que se expande","estructura que perdura","visión que libera","entrega que disuelve"];
+const PLFUNC={"Sol":"la identidad y el propósito","Luna":"el alma sensible y el cuerpo","Mercurio":"la mente y la palabra","Venus":"el deseo y la unión","Marte":"la fuerza y el corte","Júpiter":"la expansión y la fe","Saturno":"el límite y el tiempo"};
+
+function chartSect(date,u){const s=getSun(date),aa=altAz(s.ra,s.dec,u,date);return aa.alt>0;} // true=diurna
+function essentialDignities(name,lon,day){
+ const sign=Math.floor(normDeg(lon)/30),deg=normDeg(lon)%30,elem=sign%4,D=DIGN[name],out=[],deb=[];let score=0;
+ if(D){if(D.dom.includes(sign)){out.push("domicilio");score+=5;}if(D.exa===sign){out.push("exaltación");score+=4;}if(D.det.includes(sign)){deb.push("exilio");score-=5;}if(D.fal===sign){deb.push("caída");score-=4;}}
+ const tr=TRIP[elem];if(tr.d===name||tr.n===name||tr.p===name){out.push("triplicidad");score+=3;}
+ let bd=null;for(const bnd of BOUNDS[sign]){if(deg<bnd[1]){bd=bnd[0];break;}}if(bd===name){out.push("término");score+=2;}
+ if(faceRuler(sign,deg)===name){out.push("decano");score+=1;}
+ return{out,deb,score,bound:bd};
+}
+function solarCondition(lon,sunLon){let d=Math.abs(normDeg(lon-sunLon));if(d>180)d=360-d;
+ if(d<0.283)return"cazimi (en el corazón del Sol)";if(d<8.5)return"combusto";if(d<15)return"bajo los rayos";return"";}
+function computeLots(asc,sun,moon,day){const F=day?normDeg(asc+moon-sun):normDeg(asc+sun-moon);const S=day?normDeg(asc+sun-moon):normDeg(asc+moon-sun);return{fortuna:F,espiritu:S};}
+
+function almutenOfDegree(lon,day){const sign=Math.floor(normDeg(lon)/30),deg=normDeg(lon)%30,elem=sign%4,sc={};PL7.forEach(n=>sc[n]=0);
+ PL7.forEach(n=>{if(DIGN[n].dom.includes(sign))sc[n]+=5;if(DIGN[n].exa===sign)sc[n]+=4;});
+ const tr=TRIP[elem];sc[day?tr.d:tr.n]+=3;
+ let bd=null;for(const b of BOUNDS[sign]){if(deg<b[1]){bd=b[0];break;}}if(bd)sc[bd]+=2;sc[faceRuler(sign,deg)]+=1;
+ let best=null,bs=-1;PL7.forEach(n=>{if(sc[n]>bs){bs=sc[n];best=n;}});return best;}
+function receptions(by){const out=[];for(let i=0;i<PL7.length;i++)for(let j=i+1;j<PL7.length;j++){const A=PL7[i],B=PL7[j],sA=Math.floor(normDeg(by[A])/30),sB=Math.floor(normDeg(by[B])/30);
+  const aByB=DIGN[B].dom.includes(sA)?"domicilio":(DIGN[B].exa===sA?"exaltación":null),bByA=DIGN[A].dom.includes(sB)?"domicilio":(DIGN[A].exa===sB?"exaltación":null);
+  if(aByB&&bByA)out.push(PGLY[A]+" y "+PGLY[B]+" en recepción mutua (por "+(aByB===bByA?aByB:aByB+"/"+bByA)+")");}return out;}
+function configurations(by){const P=PL7.map(n=>({sym:PGLY[n],lon:by[n]}));const out=[];
+ const sep=(a,b)=>{let d=Math.abs(normDeg(P[a].lon-P[b].lon));return d>180?360-d:d;},is=(a,b,ang,orb)=>Math.abs(sep(a,b)-ang)<=orb;
+ const bysign={};P.forEach(b=>{const s=Math.floor(normDeg(b.lon)/30);(bysign[s]=bysign[s]||[]).push(b.sym);});
+ Object.keys(bysign).forEach(s=>{if(bysign[s].length>=3)out.push("Stellium en "+zodiac[s].name+" — "+bysign[s].join(" "));});
+ for(let i=0;i<7;i++)for(let j=i+1;j<7;j++)for(let k=j+1;k<7;k++)if(is(i,j,120,7)&&is(i,k,120,7)&&is(j,k,120,7))out.push("Gran trígono — "+P[i].sym+" "+P[j].sym+" "+P[k].sym);
+ for(let i=0;i<7;i++)for(let j=i+1;j<7;j++){if(!is(i,j,180,8))continue;for(let k=0;k<7;k++){if(k===i||k===j)continue;if(is(k,i,90,7)&&is(k,j,90,7))out.push("T-cuadrada — "+P[i].sym+" op "+P[j].sym+", ápex "+P[k].sym);}}
+ return[...new Set(out)];}
+
+const RN=["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+const HOUSESHORT=["el ser y el cuerpo","los recursos","la palabra y lo cercano","el hogar y las raíces","la creación y el placer","la labor y la salud","los otros y la pareja","la crisis y lo compartido","lo divino y el sentido","la vocación","los dones y los amigos","el retiro y lo oculto"];
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function dignPhrase(dg){const map={domicilio:"en su domicilio, señor de sí mismo",exaltación:"exaltado, huésped de honor",triplicidad:"sostenido por su triplicidad",término:"en sus propios términos",decano:"en su decano"};
+ const good=dg.out.map(d=>map[d]||d),bad=dg.deb.map(d=>d==="caída"?"en caída, sin apoyo":"en exilio, en tierra ajena");
+ if(good.length&&bad.length)return good.join(", ")+", aunque "+bad.join(" y ")+" — mezcla de fuerza y merma";
+ if(good.length)return good.join(", ");if(bad.length)return bad.join(" y ");return "peregrino, sin dignidad ni tacha en su asiento";}
+function narratePlanet(nm,lon,house,day,roles,sunL,retro){const sign=Math.floor(normDeg(lon)/30),dg=essentialDignities(nm,lon,day),parts=[dignPhrase(dg)];
+ const sc=nm==="Sol"?"":solarCondition(lon,sunL);
+ if(sc.indexOf("cazimi")>=0)parts.push("en el corazón del Sol —cazimi—, encendido");else if(sc==="combusto")parts.push("combusto, velado por el fuego solar");else if(sc==="bajo los rayos")parts.push("bajo los rayos, a media luz");
+ let sect="";if(nm===roles.lum)sect="luminar que rige la secta";else if(nm===roles.benS)sect="benéfico en su secta, su bien fluye con largueza";else if(nm===roles.malS)sect="maléfico de secta, su rigor se atempera";else if(nm===roles.malC)sect="maléfico fuera de secta, su filo se endurece";else if((day&&(nm==="Venus"||nm==="Marte"))||(!day&&(nm==="Júpiter"||nm==="Saturno")))sect="fuera de su secta, más medido";
+ if(sect)parts.push(sect);
+ const ang=angularity(house);parts.push(ang==="angular"?"angular, con brío para manifestarse":(ang==="sucedente"?"sucedente, que sostiene y acumula":"cadente, de trasfondo"));
+ if(JOY[nm]===house)parts.push("y se alegra de morar en su propia casa de gozo");
+ let s="<p class='pl'>"+PGLY[nm]+" <b>"+nm+"</b>: "+PLFUNC[nm]+", se reviste de "+SIGNSTYLE[sign]+" en "+zodiac[sign].name+" y obra en la casa "+(house+1)+" —"+HOUSEM[house]+"—. "+cap(parts.join("; "))+".";
+ if(retro)s+=" Retrógrado, su obra se vuelve hacia dentro.";return s+"</p>";}
+function narrateHouse(i,cusps,by,occ){const sign=Math.floor(normDeg(cusps[i])/30),lord=RULER[sign],lh=bodyHouse(by[lord],cusps);
+ let s="<p class='hs'><b>"+RN[i]+"</b> · "+HOUSEM[i]+" <span class='ang'>("+angularity(i)+")</span>: en "+zodiac[sign].name+", su señor "+PGLY[lord]+" "+lord+" mora en la casa "+(lh+1)+", de modo que "+HOUSESHORT[i]+" se entreteje con "+HOUSESHORT[lh]+".";
+ if(occ[i].length)s+=" Habitan aquí "+occ[i].join(" ")+".";return s+"</p>";}
+
+function planetStrength(nm,lon,house,day,sunL,retro){let s=essentialDignities(nm,lon,day).score;
+ const ang=angularity(house);s+=ang==="angular"?4:(ang==="sucedente"?1:-2);
+ const diu=["Sol","Júpiter","Saturno"];if(nm!=="Mercurio")s+=((day&&diu.includes(nm))||(!day&&!diu.includes(nm)))?2:-2;
+ const sc=nm==="Sol"?"":solarCondition(lon,sunL);if(sc.indexOf("cazimi")>=0)s+=5;else if(sc==="combusto")s-=5;else if(sc==="bajo los rayos")s-=2;
+ if(retro)s-=2;if(JOY[nm]===house)s+=2;return s;}
+
+const ASPREL={"Conjunción":{v:"se une a",t:"funden sus naturalezas en un solo impulso"},"Sextil":{v:"colabora con",t:"se abre una oportunidad que pide ser tomada"},"Cuadratura":{v:"tensiona con",t:"hay fricción que exige obra y ajuste"},"Trígono":{v:"fluye con",t:"el don se da con facilidad, casi sin esfuerzo"},"Oposición":{v:"se enfrenta a",t:"dos fuerzas se miran y piden equilibrio"}};
+function narrateAspects(bs){const asps=aspectsBetween(bs).sort((a,b)=>a.orb-b.orb);let s="<b>Aspectos</b>";
+ if(!asps.length)return s+"<p class='ax'>Sin aspectos mayores entre los siete: cada uno obra por su cuenta.</p>";
+ asps.forEach(ap=>{const A=bs[ap.i],B=bs[ap.j],R=ASPREL[ap.asp.name],tight=ap.orb<=1.5?", ajustado":(ap.orb>=5?", amplio":"");
+  s+="<p class='ax'><span class='ag' style='color:"+ap.asp.col+"'>"+A.sym+" "+ap.asp.sym+" "+B.sym+"</span> <b>"+A.name+"</b> "+R.v+" <b>"+B.name+"</b> <span class='am'>("+ap.asp.name.toLowerCase()+", "+ap.orb.toFixed(1)+"\u00b0"+tight+")</span>: "+PLFUNC[A.name]+" · "+PLFUNC[B.name]+" — "+R.t+".</p>";});
+ return s;}
+
+function composeReading(date,u){
+ if(!u)return"<i>La lectura helenística necesita tu ubicación (Ascendente y secta).</i>";
+ const AM=ascMC(date,u),day=chartSect(date,u),ascSign=Math.floor(normDeg(AM.asc)/30);
+ const bs=chartBodies(date),by={};bs.forEach(b=>by[b.name]=b.lon);
+ const sunL=by["Sol"],moonL=by["Luna"];
+ const sys=hsysNow(),cusps=houseCusps(AM.asc,AM.mc,sys);
+ const lum=day?"Sol":"Luna",benSecta=day?"Júpiter":"Venus",malSecta=day?"Saturno":"Marte",malContra=day?"Marte":"Saturno";
+ const ruler=RULER[ascSign],rulerLon=by[ruler],rulerSign=Math.floor(normDeg(rulerLon)/30),rulerHouse=bodyHouse(rulerLon,cusps);
+ const lots=computeLots(AM.asc,sunL,moonL,day);
+ let h="<div class='lect'>";
+ h+="<p class='lq'>El alma desciende por las esferas y de cada una toma una vestidura; esta carta es el reflejo de ese instante en el orden del cosmos.</p>";
+ // síntesis jerárquica (pesa la carta)
+ const scored=PL7.map(nm=>{const pd=planetDefs.find(p=>p.name===nm),retro=pd?isRetro(pd,date):false;return{nm,score:planetStrength(nm,by[nm],bodyHouse(by[nm],cusps),day,sunL,retro)};}).sort((a,b)=>b.score-a.score);
+ const strongP=scored[0],weakP=scored[scored.length-1],almS=almutenOfDegree(AM.asc,day);
+ const elc=[0,0,0,0],moc=[0,0,0];PL7.forEach(nm=>{const s=Math.floor(normDeg(by[nm])/30);elc[s%4]++;moc[s%3]++;});
+ const elMax=elc.indexOf(Math.max(...elc)),elMin=elc.indexOf(Math.min(...elc)),moMax=moc.indexOf(Math.max(...moc)),cfgS=configurations(by);
+ h+="<b>Síntesis</b><p class='syn'>Carta <b>"+(day?"diurna":"nocturna")+"</b>, gobernada por "+PGLY[lum]+" "+lum+". El timón es "+PGLY[ruler]+" "+ruler+" (regente del Ascendente"+(almS===ruler?" y almuten del grado —doble foco—":", con "+PGLY[almS]+" "+almS+" como almuten del grado")+"). El más apto para obrar es "+PGLY[strongP.nm]+" "+strongP.nm+"; el más afligido, "+PGLY[weakP.nm]+" "+weakP.nm+". Predomina "+ELEM[elMax]+(elc[elMin]===0?", y falta "+ELEM[elMin]:"")+"; el tono es "+MODAL[moMax].toLowerCase()+"."+(cfgS.length?" Y manda una figura: "+cfgS[0]+".":"")+"</p>";
+ h+="<b>Panorama</b><br>Carta <b>"+(day?"diurna":"nocturna")+"</b> — el luminar de secta es "+PGLY[lum]+" "+lum+". El benéfico de secta es "+PGLY[benSecta]+" "+benSecta+"; el maléfico más áspero (fuera de secta) es "+PGLY[malContra]+" "+malContra+".<br>";
+ h+="Ascendente en <b>"+zodiac[ascSign].name+"</b>: su regente "+PGLY[ruler]+" "+ruler+" es el timonel de la carta, en "+zodiac[rulerSign].name+" (casa "+(rulerHouse+1)+" — "+HOUSEM[rulerHouse]+").";
+ const rd=essentialDignities(ruler,rulerLon,day);
+ let rline;if(rd.out.length)rline="Con dignidad por "+rd.out.join(", ")+(rd.deb.length?(", aunque en "+rd.deb.join(", ")+" — mezcla de fuerza y dificultad."):" — fuerza para obrar.");else if(rd.deb.length)rline="En "+rd.deb.join(", ")+": obra con dificultad.";else rline="Peregrino: sin dignidad propia.";
+ h+=" "+rline;
+ const alm=almutenOfDegree(AM.asc,day);h+=" El <b>almuten</b> del grado ascendente (mayor dignidad allí) es "+PGLY[alm]+" "+alm+(alm===ruler?" — coincide con el regente, señal de foco.":", que matiza al regente.");
+ h+="</p>";
+ // planetas (narrado)
+ const roles={lum:lum,benS:benSecta,malS:malSecta,malC:malContra};
+ h+="<b>Los siete</b>";
+ PL7.forEach(nm=>{const pd=planetDefs.find(p=>p.name===nm),retro=pd?isRetro(pd,date):false;h+=narratePlanet(nm,by[nm],bodyHouse(by[nm],cusps),day,roles,sunL,retro);});
+ // las doce casas (narrado)
+ const occ={};for(let i=0;i<12;i++)occ[i]=[];
+ PL7.forEach(nm=>{occ[bodyHouse(by[nm],cusps)].push(PGLY[nm]);});
+ h+="<b>Las doce casas</b>";
+ for(let i=0;i<12;i++)h+=narrateHouse(i,cusps,by,occ);
+ // aspectos narrados
+ h+=narrateAspects(bs);
+ // configuraciones y recepciones
+ const cfg=configurations(by),rec=receptions(by);
+ if(cfg.length||rec.length){h+="<b>Configuraciones</b><div class='lx' style='margin:3px 0 8px'>";
+  if(cfg.length)h+=cfg.join("<br>");else h+="<i>Sin patrones mayores.</i>";
+  if(rec.length)h+="<br>"+rec.join("<br>");
+  h+="</div>";}
+ // lotes
+ const fh=bodyHouse(lots.fortuna,cusps),eh=bodyHouse(lots.espiritu,cusps);
+ h+="<b>Lotes</b><table class='ztab'><tr><td>\u2297 Fortuna</td><td>"+fmtSign(lots.fortuna)+"</td><td class='ho'>c"+(fh+1)+"</td></tr><tr><td>Espíritu</td><td>"+fmtSign(lots.espiritu)+"</td><td class='ho'>c"+(eh+1)+"</td></tr></table>";
+ h+="<p class='lq'>Fortuna es el cuerpo y lo que la vida trae; Espíritu es el alma y lo que uno obra. Entre ambos, el retorno.</p>";
+ h+="<p>La Fortuna cae en la casa "+(fh+1)+" ("+HOUSEM[fh]+"): allí se concentra la suerte del cuerpo y la vida.</p>";
+ h+="</div>";return h;
+}
+function hsysNow(){const e=document.querySelector("#zHsys button.on");return e?e.dataset.h:"whole";}
+function bodyHouseFromAsc(lon,asc,mc,system){return bodyHouse(lon,houseCusps(asc,mc,system));}
 function renderZodiacWheel(date){
  skyLayer.selectAll("*").remove();
- const cx=width/2,cy=height/2,Rout=395,Rin=315,D2R=Math.PI/180;
+ const cx=width/2,cy=height/2,Rout=395,Rin=315,Rasp=246,D2R=Math.PI/180;
+ const optAsp=zGet("zAsp"),optDign=zGet("zDign"),optElem=zGet("zElem"),optHouse=zGet("zHouse"),optRot=zGet("zRot");
+ const hsegEl=document.querySelector("#zHsys button.on"),hsys=hsegEl?hsegEl.dataset.h:"whole";
+ const u=userLocation;const haveAsc=optHouse&&u;
+ const AM=haveAsc?ascMC(date,u):null,rot=(optRot&&AM)?AM.asc:0;
+ const cusps=haveAsc?houseCusps(AM.asc,AM.mc,hsys):null;
+ const at=(lon,r)=>{const f=(180+lon-rot)*D2R;return[cx+r*Math.cos(f),cy-r*Math.sin(f)];};
+ // sectores por elemento
+ if(optElem){for(let s=0;s<12;s++){let d="M"+cx+","+cy;for(let a=s*30;a<=s*30+30;a+=3){const p=at(a,Rout);d+=(a===s*30?"":"L")+p[0].toFixed(1)+","+p[1].toFixed(1);}const p0=at(s*30,Rout);d="M"+cx+","+cy+"L"+p0[0].toFixed(1)+","+p0[1].toFixed(1);for(let a=s*30;a<=s*30+30;a+=3){const p=at(a,Rout);d+="L"+p[0].toFixed(1)+","+p[1].toFixed(1);}d+="Z";
+  skyLayer.append("path").attr("d",d).attr("fill",ELEMC[s%4]).attr("opacity",0.06).attr("stroke","none");}}
  skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rout);
  skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rin);
- const at=(lon,r)=>{const f=(180+lon)*D2R;return[cx+r*Math.cos(f),cy-r*Math.sin(f)];};
  for(let s=0;s<12;s++){const a=s*30,p1=at(a,Rin),p2=at(a,Rout);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);
-  const g=at(a+15,(Rin+Rout)/2);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+7).text(zodiac[s].sym);}
+  const g=at(a+15,(Rin+Rout)/2);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+7).attr("fill",optElem?ELEMC[s%4]:null).text(zodiac[s].sym);
+  if(optElem){const m=at(a+15,Rout-12);skyLayer.append("text").attr("class","gridlabel").attr("x",m[0]).attr("y",m[1]+3).attr("text-anchor","middle").attr("font-size",8).text(MODAL[s%3][0]);}}
  for(let a=0;a<360;a+=10){const p1=at(a,Rin-6),p2=at(a,Rin);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);}
- const bodies=[{sym:"☉",n:"Sol",lon:getSun(date).eclLon,c:"#ffd166"},{sym:"☾",n:"Luna",lon:getMoon(date).eclLon,c:"#dce6f2"}];
- planetDefs.forEach(pl=>bodies.push({sym:pl.sym,n:pl.name,lon:planetPosition(pl,date).eclLon,c:pl.color}));
- extraPoints(date).forEach(b=>bodies.push(b));
- bodies.forEach((b,i)=>{const r=Rin-30-(i%3)*30,p=at(b.lon,r),tick=at(b.lon,Rin);
+ // casas + ejes
+ if(haveAsc){
+  cusps.forEach((cu,i)=>{const p1=at(cu,0),p2=at(cu,Rin);const axis=(i===0||i===3||i===6||i===9);
+   skyLayer.append("line").attr("x1",cx).attr("y1",cy).attr("x2",p2[0]).attr("y2",p2[1]).attr("stroke",axis?"rgba(201,151,63,.85)":"rgba(201,151,63,.28)").attr("stroke-width",axis?2:1).attr("stroke-dasharray",axis?null:"3 4");
+   const mid=normDeg((cusps[i]+ (((cusps[(i+1)%12]-cusps[i])+360)%360)/2)),hp=at(mid,70);
+   skyLayer.append("text").attr("class","gridlabel").attr("x",hp[0]).attr("y",hp[1]+3).attr("text-anchor","middle").attr("opacity",.6).text(i+1);});
+  [["AC",AM.asc],["DC",normDeg(AM.asc+180)],["MC",AM.mc],["IC",normDeg(AM.mc+180)]].forEach(ax=>{const p=at(ax[1],Rout+14);skyLayer.append("text").attr("class","label").attr("x",p[0]).attr("y",p[1]+4).attr("text-anchor","middle").attr("fill","#c9973f").text(ax[0]);});}
+ // cuerpos
+ const bodies=chartBodies(date);extraPoints(date).forEach(b=>bodies.push({name:b.n,sym:b.sym,lon:b.lon,c:b.c,dg:null,def:null,lum:false}));
+ if(haveAsc){const dd=chartSect(date,u),lt=computeLots(AM.asc,getSun(date).eclLon,getMoon(date).eclLon,dd);bodies.push({name:"Fortuna",sym:"\u2297",lon:lt.fortuna,c:"#8fe3c0",dg:null,def:null,lum:false});}
+ // aspectos
+ if(optAsp){const bb=bodies.filter(b=>b.dg||b.name==="Sol"||b.name==="Luna");const asps=aspectsBetween(bb);
+  asps.forEach(ap=>{const p1=at(bb[ap.i].lon,Rasp),p2=at(bb[ap.j].lon,Rasp),exact=1-ap.orb/(ap.asp.orb+2);
+   skyLayer.append("line").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]).attr("stroke",ap.asp.col).attr("stroke-width",0.8+exact*2).attr("opacity",0.35+exact*0.5);});
+  skyLayer.append("circle").attr("cx",cx).attr("cy",cy).attr("r",Rasp).attr("fill","none").attr("stroke","rgba(255,255,255,.06)");}
+ bodies.forEach((b,i)=>{const sign=Math.floor(normDeg(b.lon)/30),r=Rin-34-(i%3)*26,p=at(b.lon,r),tick=at(b.lon,Rin);
   skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p[0]).attr("y1",p[1]).attr("x2",tick[0]).attr("y2",tick[1]).attr("stroke",b.c).attr("stroke-width",1);
+  if(optDign&&b.dg){const dg=dignity(b.dg,sign);if(dg){const good=/domicilio|exaltaci/.test(dg);skyLayer.append("circle").attr("cx",p[0]).attr("cy",p[1]).attr("r",10).attr("fill","none").attr("stroke",good?"#e6c34a":"#e0564e").attr("stroke-width",1.6).attr("opacity",.9);}}
   skyLayer.append("circle").attr("cx",p[0]).attr("cy",p[1]).attr("r",6).attr("fill",b.c).attr("stroke","#000").attr("stroke-width",1);
-  const deg=Math.floor(b.lon%30),mnt=Math.round((b.lon%1)*60);
-  skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]).attr("y",p[1]-11).attr("text-anchor","middle").text(b.sym+" "+deg+"°"+String(mnt).padStart(2,"0")+"′ "+zodiac[Math.floor(normDeg(b.lon)/30)].name.slice(0,3));});
- skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-4).text("Zodíaco tropical");
+  const retro=b.def&&isRetro(b.def,date),deg=Math.floor(b.lon%30),mnt=Math.round((b.lon%1)*60);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]).attr("y",p[1]-11).attr("text-anchor","middle").text(b.sym+(retro?" ℞":"")+" "+deg+"°"+String(mnt).padStart(2,"0")+"′ "+zodiac[sign].name.slice(0,3));});
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-4).text("Carta del momento");
  skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy+14).text(date.toISOString().slice(0,10));
+ // panel de lectura
+ const info=document.getElementById("zodInfo");
+ if(info){const bs=chartBodies(date),el=[0,0,0,0],mo=[0,0,0];bs.forEach(b=>{const s=Math.floor(normDeg(b.lon)/30);el[s%4]++;mo[s%3]++;});
+  const asps=optAsp?aspectsBetween(bs):[];
+  let t="<b>Posiciones</b><table class='ztab'>";
+  bs.forEach(b=>{const s=Math.floor(normDeg(b.lon)/30),retro=b.def&&isRetro(b.def,date),dg=b.dg?dignity(b.dg,s).replace(" · ",""):"",ho=cusps?("c"+(bodyHouse(b.lon,cusps)+1)):"";
+   t+="<tr><td>"+b.sym+"</td><td>"+fmtSign(b.lon)+(retro?" ℞":"")+"</td><td class='dg'>"+dg+"</td><td class='ho'>"+ho+"</td></tr>";});
+  t+="</table>";
+  if(optAsp){t+="<b>Aspectos · "+asps.length+"</b><table class='ztab'>";
+   asps.forEach(ap=>{t+="<tr><td style='color:"+ap.asp.col+"'>"+bs[ap.i].sym+" "+ap.asp.sym+" "+bs[ap.j].sym+"</td><td>"+ap.asp.name+"</td><td class='ho'>"+ap.orb.toFixed(1)+"°</td></tr>";});
+   t+="</table>";}
+  t+="<b>Balance</b><table class='ztab'><tr><td>"+ELEM.map((e,k)=>e+" "+el[k]).join(" · ")+"</td></tr><tr><td>"+MODAL.map((m,k)=>m+" "+mo[k]).join(" · ")+"</td></tr></table>";
+  if(AM)t+="<b>Ejes</b><table class='ztab'><tr><td>AC</td><td>"+fmtSign(AM.asc)+"</td></tr><tr><td>MC</td><td>"+fmtSign(AM.mc)+"</td></tr></table>";
+  else if(optHouse)t+="<i>Ascendente: cargá tu ubicación</i>";
+  if(zGet("zLect"))t+="<div class='lectwrap'>"+composeReading(date,u)+"</div>";
+  info.innerHTML=t;}
 }
+function bodyHouse(lon,cusps){lon=normDeg(lon);for(let i=0;i<12;i++){const off=normDeg(lon-cusps[i]),span=normDeg(cusps[(i+1)%12]-cusps[i])||30;if(off<span)return i;}return 0;}
 
 // ---- Modo DÍA: largo del día y crepúsculos a lo largo del año ----
 function renderDayLength(date){
@@ -1216,6 +1494,8 @@ dCanvas.addEventListener("touchend",()=>Domo.pinch=0);
 document.getElementById("dSpin").onchange=e=>Domo.spin=e.target.checked;
 document.getElementById("dConst").onchange=e=>Domo.constel=e.target.checked;
 document.getElementById("dEcl").onchange=e=>Domo.eclEq=e.target.checked;
+["zAsp","zDign","zElem","zHouse","zRot","zLect"].forEach(id=>{const el=document.getElementById(id);if(el)el.onchange=()=>{if(viewMode==="zodiac")render();};});
+document.getElementById("zHsys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));if(viewMode==="zodiac")render();});
 if(window.ResizeObserver)new ResizeObserver(()=>{if(Domo.running)Domo.resize();}).observe(document.querySelector("main"));
 function render(){
  const now=getRenderDate(),sun=getSun(now),moon=getMoon(now),sat=satPos(now);
@@ -1250,6 +1530,7 @@ function render(){
  document.body.classList.toggle("domo-mode",domoOn);
  if(domoOn){skyLayer.style("display","none");Domo.setDate(now);Domo.start();return;}
  else if(Domo.running){Domo.stop();}
+ document.body.classList.toggle("zodiac-mode",viewMode==="zodiac");
  if(!mapOn){
   if(viewMode==="sky")renderSky(now,sun,moon,sat);
   else if(viewMode==="analemma")renderAnalemma(now);
@@ -1352,6 +1633,34 @@ function showAstroData(){
  },30);
 }
 function locate(){if(!navigator.geolocation){setStatus("Este navegador no soporta geolocalización.");return}setStatus("Solicitando ubicación...");navigator.geolocation.getCurrentPosition(p=>{userLocation={lat:p.coords.latitude,lon:p.coords.longitude};setStatus("Ubicación cargada.","status ok");render();if(document.getElementById("passes").style.display!=="none")showPasses();},e=>setStatus("No se pudo obtener ubicación: "+e.message),{enableHighAccuracy:true,timeout:10000,maximumAge:60000})}
+const CITIES=[
+ {n:"Rocha, UY",lat:-34.48,lon:-54.33},{n:"Montevideo, UY",lat:-34.90,lon:-56.19},{n:"Fray Bentos, UY",lat:-33.13,lon:-58.30},
+ {n:"Maldonado / Punta del Este, UY",lat:-34.91,lon:-54.96},{n:"Salto, UY",lat:-31.39,lon:-57.96},{n:"Paysandú, UY",lat:-32.32,lon:-58.08},
+ {n:"Colonia del Sacramento, UY",lat:-34.47,lon:-57.84},{n:"Mercedes, UY",lat:-33.25,lon:-58.03},{n:"Melo, UY",lat:-32.37,lon:-54.18},
+ {n:"Tacuarembó, UY",lat:-31.73,lon:-55.98},{n:"Rivera, UY",lat:-30.90,lon:-55.55},{n:"Durazno, UY",lat:-33.38,lon:-56.52},
+ {n:"Florida, UY",lat:-34.10,lon:-56.21},{n:"Minas, UY",lat:-34.38,lon:-55.24},{n:"Trinidad, UY",lat:-33.52,lon:-56.90},
+ {n:"San José de Mayo, UY",lat:-34.34,lon:-56.71},{n:"Canelones, UY",lat:-34.52,lon:-56.28},{n:"Artigas, UY",lat:-30.40,lon:-56.47},
+ {n:"Treinta y Tres, UY",lat:-33.23,lon:-54.38},{n:"Carmelo, UY",lat:-34.00,lon:-58.28},
+ {n:"Buenos Aires, AR",lat:-34.60,lon:-58.38},{n:"Córdoba, AR",lat:-31.42,lon:-64.18},{n:"Rosario, AR",lat:-32.95,lon:-60.64},
+ {n:"Mendoza, AR",lat:-32.89,lon:-68.84},{n:"Santiago, CL",lat:-33.45,lon:-70.67},{n:"Porto Alegre, BR",lat:-30.03,lon:-51.23},
+ {n:"São Paulo, BR",lat:-23.55,lon:-46.63},{n:"Lima, PE",lat:-12.05,lon:-77.04},{n:"Bogotá, CO",lat:4.71,lon:-74.07},
+ {n:"Ciudad de México, MX",lat:19.43,lon:-99.13},{n:"Madrid, ES",lat:40.42,lon:-3.70},{n:"Barcelona, ES",lat:41.39,lon:2.17},
+ {n:"Londres, UK",lat:51.51,lon:-0.13},{n:"París, FR",lat:48.86,lon:2.35},{n:"Nueva York, US",lat:40.71,lon:-74.01}
+];
+function setLocation(lat,lon,label){userLocation={lat,lon};setStatus("Ubicación: "+label+" ("+lat.toFixed(2)+", "+lon.toFixed(2)+")","status ok");render();if(document.getElementById("passes").style.display!=="none")showPasses();}
+async function geocodeCity(q){try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});const j=await r.json();if(j&&j.length)return{lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon),label:j[0].display_name.split(",").slice(0,2).join(",").trim()};}catch(e){}return null;}
+async function cityGo(){const q=(document.getElementById("cityInput").value||"").trim();if(!q){setStatus("Escribí una ciudad o elegila de la lista.");return;}
+ const ql=q.toLowerCase(),hit=CITIES.find(c=>c.n.toLowerCase()===ql)||CITIES.find(c=>c.n.toLowerCase().startsWith(ql))||CITIES.find(c=>c.n.toLowerCase().indexOf(ql)>=0);
+ if(hit){setLocation(hit.lat,hit.lon,hit.n);return;}
+ setStatus("Buscando \u201C"+q+"\u201D\u2026");const g=await geocodeCity(q);
+ if(g)setLocation(g.lat,g.lon,g.label);else setStatus("No encontré esa ciudad (¿internet?). Probá una de la lista.","status warn");}
+const EXPORT_CSS=":root{--bg:#080b16;--ink:#ece3ce;--brass:#c9973f;--muted:#9aa3bd}*{box-sizing:border-box}body{max-width:820px;margin:0 auto;padding:28px 22px 60px;background:var(--bg);color:var(--ink);font-family:Georgia,'Cormorant Garamond',serif;line-height:1.55}h1{font-size:26px;color:var(--brass);margin:0 0 4px}.meta{color:var(--muted);font-size:13px;margin:0 0 18px;font-family:ui-monospace,monospace}.wheel{background:#0b0f1e;border:1px solid rgba(201,151,63,.25);border-radius:12px;padding:8px;margin:0 0 20px}.wheel svg{width:100%;height:auto;display:block}.reading{font-size:15px}.reading b{color:var(--brass)}.wheelRing{fill:none;stroke:var(--brass);stroke-opacity:.5}.wheelSpoke{stroke:var(--brass);stroke-opacity:.3;stroke-width:1}.wheelGlyph{fill:var(--ink);text-anchor:middle;font-size:20px;font-family:'Segoe UI Symbol',serif}.smallLabel{fill:#cdd6ee;font-size:11px;font-family:system-ui,sans-serif}.constLabel{fill:var(--brass);text-anchor:middle;font-size:16px}.gridlabel{fill:#8894ad;font-size:10px;font-family:system-ui,sans-serif}.gridline{stroke:var(--brass);stroke-opacity:.15}.label{fill:var(--ink);font-size:12px;font-family:system-ui,sans-serif}.ztab{width:100%;border-collapse:collapse;margin:4px 0 14px;font-size:13px}.ztab td{padding:2px 10px 2px 0;vertical-align:top}.ztab td.ho{color:var(--muted);text-align:right}.ztab td.dg{color:var(--brass)}.lq{font-style:italic;color:var(--brass);opacity:.9}.syn{background:rgba(201,151,63,.08);border:1px solid rgba(201,151,63,.3);border-radius:8px;padding:10px 14px;margin:6px 0 14px}.pl{border-left:3px solid rgba(201,151,63,.5);padding-left:10px;margin:8px 0}.pl b{color:var(--ink)}.hs{font-size:13px;color:var(--muted);margin:5px 0}.hs b{color:var(--brass)}.hs .ang{font-style:italic;color:#8894ad}.ax{font-size:13px;color:var(--muted);margin:5px 0}.ax b{color:var(--ink)}.ax .am{color:#8894ad;font-size:11px}.ax .ag{font-size:14px}.lecttab td.lx{color:var(--muted);font-size:12px}.lecttab td.lx .dg{color:var(--brass)}hr{border:none;border-top:1px solid rgba(201,151,63,.2);margin:24px 0 10px}.foot{color:var(--muted);font-size:11px;font-family:ui-monospace,monospace}";
+function chartMeta(){const d=getRenderDate(),loc=userLocation?(userLocation.lat.toFixed(2)+", "+userLocation.lon.toFixed(2)):"sin ubicación",sys={whole:"Signos enteros",equal:"Iguales",porphyry:"Porfirio"}[hsysNow()]||"—";return{d,loc,sys,when:d.toLocaleString()};}
+function dlFile(name,content,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},200);}
+function exportChartHTML(){const info=document.getElementById("zodInfo");if(!info||!info.innerHTML){setStatus("Abrí el modo Zodíaco primero.","status warn");return;}const m=chartMeta();let wheel="";try{wheel='<div class="wheel"><svg viewBox="0 0 '+width+' '+height+'" xmlns="http://www.w3.org/2000/svg">'+skyLayer.node().outerHTML+'</svg></div>';}catch(e){}
+ const doc='<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Carta del momento — '+m.when+'</title><style>'+EXPORT_CSS+'</style></head><body><h1>Carta del momento</h1><p class="meta">'+m.when+' · '+m.loc+' · casas: '+m.sys+'</p>'+wheel+'<div class="reading">'+info.innerHTML+'</div><hr><p class="foot">Generado con SATGUS · astrología helenística (Firmicus · Valens · Doroteo)</p></body></html>';
+ dlFile("carta_"+m.d.toISOString().slice(0,10)+".html",doc,"text/html;charset=utf-8");setStatus("Carta descargada (HTML).","status ok");}
+function exportChartTXT(){const info=document.getElementById("zodInfo");if(!info||!info.innerText.trim()){setStatus("Abrí el modo Zodíaco primero.","status warn");return;}const m=chartMeta();const txt="CARTA DEL MOMENTO\n"+m.when+" · "+m.loc+" · casas: "+m.sys+"\n\n"+info.innerText+"\n\n— Generado con SATGUS · astrología helenística";dlFile("carta_"+m.d.toISOString().slice(0,10)+".txt",txt,"text/plain;charset=utf-8");setStatus("Carta descargada (texto).","status ok");}
 
 // Aviso si alguna librería externa no cargó
 if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="undefined"){
@@ -1360,13 +1669,19 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("load").onclick=loadTLE;
  document.getElementById("apply").onclick=()=>{if(tleToSatrec())render()};
  document.getElementById("locate").onclick=locate;
+ document.getElementById("cityList").innerHTML=CITIES.map(c=>"<option value=\""+c.n+"\">").join("");
+ document.getElementById("cityGo").onclick=cityGo;
+ document.getElementById("cityInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();cityGo();}});
+ document.getElementById("cityInput").addEventListener("change",()=>{const v=document.getElementById("cityInput").value;if(CITIES.some(c=>c.n===v))cityGo();});
+ document.getElementById("zDlHtml").onclick=exportChartHTML;
+ document.getElementById("zDlTxt").onclick=exportChartTXT;
  document.getElementById("useDate").onclick=setDateFromInput;
  document.getElementById("nowMode").onclick=backToNow;
  document.getElementById("passBtn").onclick=showPasses;
  document.getElementById("astrosBtn").onclick=showVisibility;
  document.getElementById("astroBtn").onclick=showAstroData;
  const modeBtns={map:"mMap",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay",orbes:"mOrbs",ana3d:"mAna3D",domo:"mDomo"};
- function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");render();}
+ function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");render();}
  Object.keys(modeBtns).forEach(m=>document.getElementById(modeBtns[m]).onclick=()=>setMode(m));
  document.getElementById("chartRing").onchange=e=>{chartRing=e.target.checked;if(viewMode==="chart")render();};
  document.getElementById("analemmaTrue").onchange=e=>{analemmaTrue=e.target.checked;if(viewMode==="analemma")render();};
