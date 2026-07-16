@@ -81,6 +81,25 @@ body{
 .moresheet .morectrl{width:100%;margin-top:10px;color:var(--brass);border-color:var(--brass)}
 .panelscrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:59}
 .asideclose{display:none;position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--parchment);font-size:15px;cursor:pointer;z-index:2}
+.floatpanel .pfoldbtn{display:none}
+.locpill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:57;background:linear-gradient(180deg,#11162be6,#0b0e1cf2);border:1px solid var(--brass);color:var(--brass);border-radius:22px;padding:8px 16px;font:600 12.5px var(--sans);cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:72vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locpill:hover{background:linear-gradient(180deg,rgba(201,151,63,.2),rgba(201,151,63,.08))}
+.locpop{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:58;width:min(330px,92vw);background:linear-gradient(180deg,#11162bf5,#0b0e1cfc);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 16px 44px rgba(0,0,0,.55);display:none}
+.locpop.open{display:block}
+.locpop .lh{font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--brass);margin-bottom:9px}
+.locpop .locsearch{margin:0 0 9px}
+.locpop .locgps{width:100%;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--parchment);cursor:pointer;font:600 12.5px var(--sans)}
+.locpop .locgps:hover{border-color:var(--brass);color:var(--brass)}
+#satUI{position:absolute;left:22px;top:22px;width:308px;max-height:calc(100vh - 44px);overflow-y:auto;background:linear-gradient(180deg,#11162be8,#0b0e1cf5);border:1px solid var(--line);border-radius:14px;padding:14px;display:none;z-index:40;backdrop-filter:blur(7px)}
+body.satellite-mode #satUI{display:block}
+#satUI .oh{font-family:var(--serif);color:var(--brass);font-size:18px;font-weight:600;margin:0 0 8px}
+#satUI .sec-h{margin-top:6px}
+#satUI #passes{margin-top:8px}@media(max-width:900px){
+  .floatpanel .pfoldbtn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--brass);color:var(--brass);border-radius:10px;padding:9px 13px;font:600 12.5px var(--sans);cursor:pointer;margin:0;align-self:flex-start}
+  .floatpanel.folded{width:auto!important;max-width:none!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
+  .floatpanel.folded>*:not(.pfoldbtn){display:none!important}
+  .floatpanel:not(.folded){max-height:72vh;overflow-y:auto}
+}
 @media(min-width:901px){.app{height:100vh}aside{min-height:0}}
 body.orbes-mode main{height:100vh}
 
@@ -416,6 +435,7 @@ body.zodiac-mode #zodUI{display:flex}
 <nav class="rail" id="rail">
   <div class="railbrand">✦</div>
   <button id="mMap" class="modebtn active"><span class="ico">◐</span><span class="lbl">Mapa</span></button>
+  <button id="mSat" class="modebtn"><span class="ico">🛰</span><span class="lbl">Satélite</span></button>
   <button id="mSky" class="modebtn"><span class="ico">✦</span><span class="lbl">Cielo</span></button>
   <button id="mAna" class="modebtn"><span class="ico">◊</span><span class="lbl">Analema</span></button>
   <button id="mZod" class="modebtn"><span class="ico">⊙</span><span class="lbl">Zodíaco</span></button>
@@ -437,7 +457,7 @@ body.zodiac-mode #zodUI{display:flex}
 <div class="rule"></div>
 <p>Mapa polar azimutal estilo Gleason: SATGUS, Sol, Luna, planetas, estrellas principales, Vía Láctea, eclíptica, ecuador y trópicos, con selector de fecha.</p>
 
-<section class="sec">
+<section class="sec" id="secObjeto">
   <div class="sec-h"><span class="g">◈</span><span class="t">Objeto</span><span class="ln"></span></div>
   <label>Nombre</label><input id="satName" value="SATGUS">
   <label>TLE línea 1</label><textarea id="tle1"></textarea>
@@ -504,8 +524,8 @@ body.zodiac-mode #zodUI{display:flex}
 </div>
 
 <div class="rule mini"></div>
-<div class="sec-h"><span class="g">☽</span><span class="t">Lecturas</span><span class="ln"></span></div>
-<div class="data">
+<div class="sec-h" id="lectHdr"><span class="g">☽</span><span class="t">Lecturas</span><span class="ln"></span></div>
+<div class="data" id="satData">
   <div class="row"><span class="key">UTC</span><span id="utc" class="value">—</span></div>
   <div class="row"><span class="key">SATGUS lat/lon</span><span id="satpos" class="value">—</span></div>
   <div class="row"><span class="key">Altitud</span><span id="alt" class="value">—</span></div>
@@ -561,7 +581,7 @@ body.zodiac-mode #zodUI{display:flex}
 <label class="oswitch"><input type="checkbox" id="zLect" checked><span>Lectura helenística</span></label>
 <div id="zodInfo" class="zinfo"></div>
 <div class="zexport"><button id="zDlHtml">Descargar carta (HTML)</button><button id="zDlTxt">Texto</button></div>
-</div></main>
+</div><div id="satUI"></div></main>
 <nav class="bottomnav" id="bnav">
   <button data-m="map" class="bn"><span class="i">◐</span>Mapa</button>
   <button data-m="sky" class="bn"><span class="i">✦</span>Cielo</button>
@@ -572,12 +592,18 @@ body.zodiac-mode #zodUI{display:flex}
 <div class="moresheet" id="moreSheet">
   <div class="grip"></div>
   <div class="moregrid">
-    <button data-m="analemma">◊ Analema</button><button data-m="chart">◈ Carta (trazas)</button><button data-m="wave">∿ Onda</button>
+    <button data-m="satellite">🛰 Satélite</button><button data-m="analemma">◊ Analema</button><button data-m="chart">◈ Carta (trazas)</button><button data-m="wave">∿ Onda</button>
     <button data-m="day">☀ Día</button><button data-m="orbes">◉ Órbes</button><button data-m="ana3d">∞ Analema ∞</button>
   </div>
   <button id="openPanel" class="morectrl">⚙ Controles y ajustes</button>
 </div>
 <div class="panelscrim" id="scrim"></div>
+</div>
+<button id="locPill" class="locpill">📍 Ubicación</button>
+<div id="locPop" class="locpop">
+  <div class="lh">Ubicación</div>
+  <div class="locsearch"><input id="locPopInput" list="cityList" placeholder="Buscá tu ciudad (ej. Rocha)"><button id="locPopGo">Ir</button></div>
+  <button id="locPopGPS" class="locgps">📡 Usar mi ubicación (GPS)</button>
 </div>
 
 <script>
@@ -1571,7 +1597,8 @@ function render(){
  }else{["satpos","alt","speed","period","footprint"].forEach(id=>document.getElementById(id).textContent="—")}
 
  if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day"||viewMode==="domo")&&!userLocation)viewMode="map";
- const mapOn=viewMode==="map";
+ const mapOn=viewMode==="map"||viewMode==="satellite";
+ document.body.classList.toggle("satellite-mode",viewMode==="satellite");
  [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",mapOn?null:"none"));
  skyLayer.style("display",mapOn?"none":null);
  const orbesOn=viewMode==="orbes";
@@ -1688,7 +1715,7 @@ function showAstroData(){
   box.innerHTML=h;
  },30);
 }
-function locate(){if(!navigator.geolocation){setStatus("Este navegador no soporta geolocalización.");return}setStatus("Solicitando ubicación...");navigator.geolocation.getCurrentPosition(p=>{userLocation={lat:p.coords.latitude,lon:p.coords.longitude};setStatus("Ubicación cargada.","status ok");render();if(document.getElementById("passes").style.display!=="none")showPasses();},e=>setStatus("No se pudo obtener ubicación: "+e.message),{enableHighAccuracy:true,timeout:10000,maximumAge:60000})}
+function locate(){if(!navigator.geolocation){setStatus("Este navegador no soporta geolocalización.");return}setStatus("Solicitando ubicación...");navigator.geolocation.getCurrentPosition(p=>{userLocation={lat:p.coords.latitude,lon:p.coords.longitude};setStatus("Ubicación cargada.","status ok");updateLocPill("mi ubicación");render();if(document.getElementById("passes").style.display!=="none")showPasses();},e=>setStatus("No se pudo obtener ubicación: "+e.message),{enableHighAccuracy:true,timeout:10000,maximumAge:60000})}
 const CITIES=[
  {n:"Rocha, UY",lat:-34.48,lon:-54.33},{n:"Montevideo, UY",lat:-34.90,lon:-56.19},{n:"Fray Bentos, UY",lat:-33.13,lon:-58.30},
  {n:"Maldonado / Punta del Este, UY",lat:-34.91,lon:-54.96},{n:"Salto, UY",lat:-31.39,lon:-57.96},{n:"Paysandú, UY",lat:-32.32,lon:-58.08},
@@ -1703,7 +1730,8 @@ const CITIES=[
  {n:"Ciudad de México, MX",lat:19.43,lon:-99.13},{n:"Madrid, ES",lat:40.42,lon:-3.70},{n:"Barcelona, ES",lat:41.39,lon:2.17},
  {n:"Londres, UK",lat:51.51,lon:-0.13},{n:"París, FR",lat:48.86,lon:2.35},{n:"Nueva York, US",lat:40.71,lon:-74.01}
 ];
-function setLocation(lat,lon,label){userLocation={lat,lon};setStatus("Ubicación: "+label+" ("+lat.toFixed(2)+", "+lon.toFixed(2)+")","status ok");render();if(document.getElementById("passes").style.display!=="none")showPasses();}
+function setLocation(lat,lon,label){userLocation={lat,lon};setStatus("Ubicación: "+label+" ("+lat.toFixed(2)+", "+lon.toFixed(2)+")","status ok");updateLocPill(label);render();if(document.getElementById("passes").style.display!=="none")showPasses();}
+function updateLocPill(label){const el=document.getElementById("locPill");if(el)el.textContent="📍 "+(label||(userLocation?userLocation.lat.toFixed(2)+", "+userLocation.lon.toFixed(2):"Ubicación"));}
 async function geocodeCity(q){try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});const j=await r.json();if(j&&j.length)return{lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon),label:j[0].display_name.split(",").slice(0,2).join(",").trim()};}catch(e){}return null;}
 async function cityGo(){const q=(document.getElementById("cityInput").value||"").trim();if(!q){setStatus("Escribí una ciudad o elegila de la lista.");return;}
  const ql=q.toLowerCase(),hit=CITIES.find(c=>c.n.toLowerCase()===ql)||CITIES.find(c=>c.n.toLowerCase().startsWith(ql))||CITIES.find(c=>c.n.toLowerCase().indexOf(ql)>=0);
@@ -1731,12 +1759,17 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("cityInput").addEventListener("change",()=>{const v=document.getElementById("cityInput").value;if(CITIES.some(c=>c.n===v))cityGo();});
  document.getElementById("zDlHtml").onclick=exportChartHTML;
  document.getElementById("zDlTxt").onclick=exportChartTXT;
+ document.getElementById("locPill").onclick=()=>document.getElementById("locPop").classList.toggle("open");
+ document.getElementById("locPopGo").onclick=()=>{document.getElementById("cityInput").value=document.getElementById("locPopInput").value;cityGo();document.getElementById("locPop").classList.remove("open");};
+ document.getElementById("locPopInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();document.getElementById("locPopGo").click();}});
+ document.getElementById("locPopGPS").onclick=()=>{locate();document.getElementById("locPop").classList.remove("open");};
+ document.addEventListener("click",e=>{const pop=document.getElementById("locPop");if(pop.classList.contains("open")&&!pop.contains(e.target)&&e.target.id!=="locPill")pop.classList.remove("open");});
  document.getElementById("useDate").onclick=setDateFromInput;
  document.getElementById("nowMode").onclick=backToNow;
  document.getElementById("passBtn").onclick=showPasses;
  document.getElementById("astrosBtn").onclick=showVisibility;
  document.getElementById("astroBtn").onclick=showAstroData;
- const modeBtns={map:"mMap",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay",orbes:"mOrbs",ana3d:"mAna3D",domo:"mDomo"};
+ const modeBtns={map:"mMap",satellite:"mSat",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay",orbes:"mOrbs",ana3d:"mAna3D",domo:"mDomo"};
  function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
   const prim={map:0,sky:1,zodiac:2,domo:3},bn=document.querySelectorAll("#bnav .bn");bn.forEach(x=>x.classList.remove("on"));if(m in prim)bn[prim[m]].classList.add("on");else{const more=document.getElementById("bnMore");if(more)more.classList.add("on");}
   const ms=document.getElementById("moreSheet");if(ms)ms.classList.remove("open");
@@ -1749,6 +1782,13 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("openPanel").onclick=()=>{document.getElementById("moreSheet").classList.remove("open");app.classList.add("showpanel");};
  document.getElementById("asideClose").onclick=()=>app.classList.remove("showpanel");
  document.getElementById("scrim").onclick=()=>app.classList.remove("showpanel");
+ ["orbesUI","domoUI","ana3dUI","satUI"].forEach(id=>{const p=document.getElementById(id);if(!p)return;p.classList.add("floatpanel","folded");const btn=document.createElement("button");btn.className="pfoldbtn";btn.type="button";btn.textContent="⚙ Opciones";btn.onclick=()=>{const f=p.classList.toggle("folded");btn.textContent=f?"⚙ Opciones":"✕ Cerrar";};p.insertBefore(btn,p.firstChild);});
+ (function(){const s=document.getElementById("satUI");if(!s)return;const title=document.createElement("div");title.className="oh";title.textContent="🛰 SATGUS · NORAD 62713";s.appendChild(title);
+  const obj=document.getElementById("secObjeto");if(obj)s.appendChild(obj);
+  const lh=document.getElementById("lectHdr");if(lh)s.appendChild(lh);
+  const dt=document.getElementById("satData");if(dt)s.appendChild(dt);
+  const pb=document.getElementById("passBtn");if(pb)s.appendChild(pb);
+  const pp=document.getElementById("passes");if(pp)s.appendChild(pp);})();
  document.getElementById("chartRing").onchange=e=>{chartRing=e.target.checked;if(viewMode==="chart")render();};
  document.getElementById("analemmaTrue").onchange=e=>{analemmaTrue=e.target.checked;if(viewMode==="analemma")render();};
  document.getElementById("analemmaMoon").onchange=()=>{if(viewMode==="analemma")render();};
