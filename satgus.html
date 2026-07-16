@@ -82,7 +82,7 @@ body{
 .panelscrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:59}
 .asideclose{display:none;position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--parchment);font-size:15px;cursor:pointer;z-index:2}
 .floatpanel .pfoldbtn{display:none}
-.locpill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:57;background:linear-gradient(180deg,#11162be6,#0b0e1cf2);border:1px solid var(--brass);color:var(--brass);border-radius:22px;padding:8px 16px;font:600 12.5px var(--sans);cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:72vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locpill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:57;width:max-content;max-width:58vw;background:linear-gradient(180deg,#11162be6,#0b0e1cf2);border:1px solid var(--brass);color:var(--brass);border-radius:22px;padding:8px 15px;font:600 12.5px var(--sans);cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .locpill:hover{background:linear-gradient(180deg,rgba(201,151,63,.2),rgba(201,151,63,.08))}
 .locpop{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:58;width:min(330px,92vw);background:linear-gradient(180deg,#11162bf5,#0b0e1cfc);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 16px 44px rgba(0,0,0,.55);display:none}
 .locpop.open{display:block}
@@ -95,7 +95,7 @@ body.satellite-mode #satUI{display:block}
 #satUI .oh{font-family:var(--serif);color:var(--brass);font-size:18px;font-weight:600;margin:0 0 8px}
 #satUI .sec-h{margin-top:6px}
 #satUI #passes{margin-top:8px}@media(max-width:900px){
-  .floatpanel .pfoldbtn{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--brass);color:var(--brass);border-radius:10px;padding:9px 13px;font:600 12.5px var(--sans);cursor:pointer;margin:0;align-self:flex-start}
+  .floatpanel .pfoldbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;background:var(--panel);border:1px solid var(--brass);color:var(--brass);border-radius:50%;font-size:16px;line-height:1;cursor:pointer;margin:0;align-self:flex-start;box-shadow:0 3px 12px rgba(0,0,0,.4)}
   .floatpanel.folded{width:auto!important;max-width:none!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
   .floatpanel.folded>*:not(.pfoldbtn){display:none!important}
   .floatpanel:not(.folded){max-height:72vh;overflow-y:auto}
@@ -304,7 +304,34 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 .eclAxis{stroke:var(--ecl);stroke-width:1.4}
 .trace{fill:none;stroke-width:2}
 
+/* ---- Light mode (b): paneles + lectura en pergamino; lienzos siguen oscuros ---- */
+body.light aside,body.light .rail,body.light #orbesUI,body.light #domoUI,body.light #satUI,body.light #zodUI,body.light .locpill,body.light .locpop,body.light .moresheet,body.light .bottomnav{
+  --panel:#fbf5e6;--panel-2:#f0e6cf;--parchment:#2c2620;--text:#2c2620;--muted:#6f6144;--muted-2:#9a8a66;--line:rgba(150,110,45,.34);--line-soft:rgba(120,95,45,.16);--brass:#9a6b1f;--brass-lo:#7a5218;color:#2c2620}
+body.light aside{background:linear-gradient(180deg,#fbf5e6,#f2e8d0);box-shadow:inset -24px 0 40px -32px rgba(120,90,40,.2)}
+body.light .rail{background:linear-gradient(180deg,#f2e8d0,#e9dcbe)}
+body.light #orbesUI,body.light #domoUI,body.light #satUI,body.light #zodUI{background:linear-gradient(180deg,rgba(251,245,230,.97),rgba(242,232,208,.98))}
+body.light .locpill{background:linear-gradient(180deg,#fbf5e6,#f2e8d0);border-color:#9a6b1f;color:#7a5218}
+body.light .locpop,body.light .moresheet{background:linear-gradient(180deg,#fbf5e6,#f2e8d0)}
+body.light .bottomnav{background:linear-gradient(180deg,rgba(251,245,230,.96),rgba(242,232,208,.98))}
+body.light textarea,body.light input{background:#f0e6cf;color:#2c2620}
+body.light .toggle input{background:#ddd0af}
+body.light .toggle input::after{background:#b3a279}
+body.light #orbesUI .oseg button,body.light #domoUI .oseg button,body.light #satUI .oseg button,body.light #zodUI .oseg button{background:#ece0c4;color:#6f6144}
+body.light .floatpanel .pfoldbtn{background:#fbf5e6}
+body.light .railtoggle{background:#ece0c4}
+body.light .moresheet .moregrid button,body.light .moresheet .morectrl,body.light .locpop .locgps{background:#ece0c4;color:#2c2620}
+body.light .bottomnav .bn{color:#8a7c5e}
+body.light .bottomnav .bn.on{color:#9a6b1f}
+body.light .rail .modebtn{color:#6f6144}
+body.light .rail .modebtn.active{color:#9a6b1f;background:#fbf5e6}
+body.light main{background:#ece1c6}
+body.light #map,body.light #orbes,body.light #domo{background:radial-gradient(circle at 50% 42%,#0e1430,#070a14);border-radius:18px;box-shadow:0 14px 44px rgba(120,90,40,.22)}
+.sec-h{cursor:pointer;user-select:none}
+.sec-h .chev{margin-left:8px;color:var(--brass);transition:transform .2s;font-size:10px;flex:none}
+.sec.collapsed .sec-h .chev{transform:rotate(-90deg)}
+.sec.collapsed>*:not(.sec-h){display:none!important}
 @media(max-width:900px){
+  .aside-intro{display:none}
   .app{grid-template-columns:1fr}
   .rail{display:none}
   aside{position:fixed;top:0;left:0;bottom:0;width:min(88vw,360px);z-index:60;transform:translateX(-103%);transition:transform .25s;overflow-y:auto;border-right:1px solid var(--line);border-bottom:0}
@@ -327,7 +354,7 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 .locsearch input{flex:1;min-width:0;background:#11162b;border:1px solid var(--line-soft);border-radius:8px;color:var(--parchment);padding:9px 10px;font:13px var(--sans)}
 .locsearch input::placeholder{color:var(--muted-2)}
 .locsearch input:focus{outline:none;border-color:var(--brass)}
-.locsearch button{flex:none;padding:9px 14px;background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border:1px solid var(--brass);border-radius:8px;cursor:pointer;font:600 13px var(--sans)}
+.locsearch button{flex:none;width:auto;margin-top:0;padding:9px 14px;background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border:1px solid var(--brass);border-radius:8px;cursor:pointer;font:600 13px var(--sans)}
 #orbes{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:2;touch-action:none;cursor:grab}
 #orbes:active{cursor:grabbing}
 body.orbes-mode #orbes{display:block}
@@ -443,9 +470,9 @@ body.zodiac-mode #zodUI{display:flex}
   <button id="mWave" class="modebtn"><span class="ico">∿</span><span class="lbl">Onda</span></button>
   <button id="mDay" class="modebtn"><span class="ico">☀</span><span class="lbl">Día</span></button>
   <button id="mOrbs" class="modebtn"><span class="ico">◉</span><span class="lbl">Órbes</span></button>
-  <button id="mAna3D" class="modebtn"><span class="ico">∞</span><span class="lbl">Analema∞</span></button>
   <button id="mDomo" class="modebtn"><span class="ico">⌂</span><span class="lbl">Domo 3D</span></button>
   <div class="railspace"></div>
+  <button id="themeToggle" class="railtoggle" title="Tema claro / oscuro">🌞</button>
   <button id="panelToggle" class="railtoggle" title="Ocultar / mostrar panel">⟨</button>
 </nav>
 <aside>
@@ -455,7 +482,7 @@ body.zodiac-mode #zodUI{display:flex}
   <h2>NORAD 62713 · efemérides estables</h2>
 </div>
 <div class="rule"></div>
-<p>Mapa polar azimutal estilo Gleason: SATGUS, Sol, Luna, planetas, estrellas principales, Vía Láctea, eclíptica, ecuador y trópicos, con selector de fecha.</p>
+<p class="aside-intro">Mapa polar azimutal estilo Gleason: SATGUS, Sol, Luna, planetas, estrellas principales, Vía Láctea, eclíptica, ecuador y trópicos, con selector de fecha.</p>
 
 <section class="sec" id="secObjeto">
   <div class="sec-h"><span class="g">◈</span><span class="t">Objeto</span><span class="ln"></span></div>
@@ -557,14 +584,6 @@ body.zodiac-mode #zodUI{display:flex}
 <div class="oseg" id="oWhich"><button data-w="sun">Sol</button><button data-w="moon">Luna</button><button data-w="both" class="on">Ambos</button></div>
 <input type="range" id="oMorph" min="0" max="100" value="0">
 <div class="ml"><span>Círculo anual</span><b id="oMlab">Círculo</b><span>Analema 8</span></div>
-</div><canvas id="ana3d"></canvas><div id="ana3dUI">
-<div class="oh">Analema 3D · Tierra plana</div>
-<div class="oseg" id="aWhich"><button data-w="sun">Sol</button><button data-w="moon">Luna</button><button data-w="both" class="on">Ambos</button></div>
-<label class="oswitch"><input type="checkbox" id="aAuto" checked><span>Morph automático</span></label>
-<label class="oswitch"><input type="checkbox" id="aSpin" checked><span>Giro de cámara</span></label>
-<label class="oswitch"><input type="checkbox" id="aShadow" checked><span>Sombra en el suelo</span></label>
-<input type="range" id="aMorph" min="0" max="100" value="0">
-<div class="ml"><span>Arco del día</span><span>Analema</span></div>
 </div><canvas id="domo"></canvas><div id="domoUI">
 <div class="oh">Domo 3D · planetario</div>
 <label class="oswitch"><input type="checkbox" id="dSpin" checked><span>Giro de cámara</span></label>
@@ -593,9 +612,10 @@ body.zodiac-mode #zodUI{display:flex}
   <div class="grip"></div>
   <div class="moregrid">
     <button data-m="satellite">🛰 Satélite</button><button data-m="analemma">◊ Analema</button><button data-m="chart">◈ Carta (trazas)</button><button data-m="wave">∿ Onda</button>
-    <button data-m="day">☀ Día</button><button data-m="orbes">◉ Órbes</button><button data-m="ana3d">∞ Analema ∞</button>
+    <button data-m="day">☀ Día</button><button data-m="orbes">◉ Órbes</button>
   </div>
   <button id="openPanel" class="morectrl">⚙ Controles y ajustes</button>
+  <button id="themeToggleM" class="morectrl">🌞 Tema claro</button>
 </div>
 <div class="panelscrim" id="scrim"></div>
 </div>
@@ -1399,76 +1419,8 @@ document.getElementById("oWhich").addEventListener("click",e=>{const b=e.target.
 document.getElementById("oSpin").onchange=e=>Orbes.spin=e.target.checked;
 document.getElementById("oMorph").oninput=e=>{Orbes.morph=e.target.value/100;document.getElementById("oMlab").textContent=Orbes.morph<0.5?"Círculo":(Orbes.morph<0.98?"…":"Analema 8");};
 if(window.ResizeObserver)new ResizeObserver(()=>{if(Orbes.running)Orbes.resize();}).observe(document.querySelector("main"));
-// ===== Analema 3D: círculo real (eclíptica) ⟷ analema (8) + sombra sobre el meridiano =====
-const aCanvas=document.getElementById("ana3d"),aCtx=aCanvas.getContext("2d");
 const OSERIF='"Cormorant Garamond",Georgia,serif';
 function eqPoint(aDeg,dDeg){const a=aDeg*_D2R,d=dDeg*_D2R,cd=Math.cos(d);return[cd*Math.cos(a),Math.sin(d),cd*Math.sin(a)];}
-const Ana3D={
-  running:false,raf:0,dpr:1,w:0,h:0,_key:null,
-  yaw:-0.6,pitch:0.5,zoom:1,dragging:false,px:0,py:0,pinch:0,
-  which:"both",autoMorph:true,spin:true,shadow:true,morph:0,_t:0,
-  date:null,dirty:true,data:null,
-  setDate(d){const k=d.toISOString().slice(0,13);if(k!==this._key){this._key=k;this.date=new Date(d.getTime());this.dirty=true;}},
-  start(){if(this.running)return;this.running=true;this.resize();this.loop();},
-  stop(){this.running=false;cancelAnimationFrame(this.raf);},
-  resize(){this.dpr=Math.min(devicePixelRatio||1,2);const m=aCanvas.parentElement.getBoundingClientRect();this.w=aCanvas.width=Math.max(2,Math.round(m.width*this.dpr));this.h=aCanvas.height=Math.max(2,Math.round(m.height*this.dpr));},
-  project(x,y,z){const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw);const X=x*cy-z*sy,Z=x*sy+z*cy;const cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);const Y=y*cp-Z*sp,Zp=y*sp+Z*cp;const f=Math.min(this.w,this.h)*0.34*this.zoom;return{x:this.w/2+X*f,y:this.h/2-Y*f,depth:Zp};},
-  dir(alt,az){const A=alt*Math.PI/180,Z=az*Math.PI/180,ca=Math.cos(A);return[Math.sin(Z)*ca,Math.sin(A),Math.cos(Z)*ca];},
-  buildBody(kind,d){const u=userLocation;if(!u)return null;
-    const isSun=kind==="sun",N=isSun?183:120,periodDays=isSun?365:27.32,lonOff=(12-u.lon/15)*3600000,y0=Date.UTC(d.getUTCFullYear(),0,1),d0=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
-    const arr=[];
-    for(let i=0;i<N;i++){const f=i/(N-1);
-      const dtA=new Date(y0+f*periodDays*86400000+lonOff),bA=isSun?getSun(dtA):getMoon(dtA),aaA=altAz(bA.ra,bA.dec,u,dtA);
-      const dtD=new Date(d0+f*86400000),bD=isSun?getSun(dtD):getMoon(dtD),aaD=altAz(bD.ra,bD.dec,u,dtD);
-      arr.push({annual:this.dir(aaA.alt,aaA.az),alon:bA.eclLon,aalt:aaA.alt,day:this.dir(aaD.alt,aaD.az),dlon:bD.eclLon,dalt:aaD.alt});}
-    return arr;
-  },
-  compute(){const d=this.date||getRenderDate();this.data={sun:this.buildBody("sun",d),moon:this.buildBody("moon",d)};this.dirty=false;},
-  bodies(){return this.which==="both"?["sun","moon"]:[this.which];},
-  draw(){
-    const c=aCtx,dpr=this.dpr,m=this.morph;c.clearRect(0,0,this.w,this.h);
-    if(!this.data||!this.data.sun){c.fillStyle="rgba(236,227,206,.7)";c.font="italic "+(15*dpr)+"px "+OSERIF;c.textAlign="center";c.fillText("Cargá tu ubicación para ver el analema en tu cielo",this.w/2,this.h/2);return;}
-    const P=v=>this.project(v[0],v[1],v[2]),D=(al,az)=>P(this.dir(al,az));
-    // suelo: disco (Tierra plana, y=0)
-    const rim=[];for(let a=0;a<=360;a+=6)rim.push(this.project(Math.sin(a*Math.PI/180),0,Math.cos(a*Math.PI/180)));
-    c.beginPath();rim.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fillStyle="rgba(95,184,166,.06)";c.fill();c.strokeStyle="rgba(201,151,63,.5)";c.lineWidth=1.4*dpr;c.stroke();
-    for(let a=0;a<360;a+=30){const p0=this.project(0,0,0),p1=this.project(Math.sin(a*Math.PI/180),0,Math.cos(a*Math.PI/180));c.beginPath();c.moveTo(p0.x,p0.y);c.lineTo(p1.x,p1.y);c.strokeStyle="rgba(201,151,63,.1)";c.lineWidth=1*dpr;c.stroke();}
-    [30,60].forEach(al=>{const rr=[];for(let a=0;a<=360;a+=8)rr.push(D(al,a));c.beginPath();rr.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.strokeStyle="rgba(103,199,255,.16)";c.lineWidth=1*dpr;c.stroke();});
-    c.fillStyle="rgba(236,227,206,.82)";c.font=(12*dpr)+"px "+OSANS;c.textAlign="center";
-    [["N",0],["E",90],["S",180],["O",270]].forEach(([t,az])=>{const p=this.project(1.09*Math.sin(az*Math.PI/180),0,1.09*Math.cos(az*Math.PI/180));c.fillText(t,p.x,p.y+4*dpr);});
-    const o=this.project(0,0,0);c.beginPath();c.arc(o.x,o.y,3*dpr,0,7);c.fillStyle="rgba(240,180,80,.9)";c.fill();
-    const COL={sun:"#ffd166",moon:"#d7e2f2"};
-    for(const kind of this.bodies()){const arr=this.data[kind];if(!arr)continue;const col=COL[kind];
-      const pts=arr.map(s=>{const vx=s.day[0]+(s.annual[0]-s.day[0])*m,vy=s.day[1]+(s.annual[1]-s.day[1])*m,vz=s.day[2]+(s.annual[2]-s.day[2])*m,L=Math.hypot(vx,vy,vz)||1;return{v:[vx/L,vy/L,vz/L],proj:P([vx/L,vy/L,vz/L]),alt:s.dalt+(s.aalt-s.dalt)*m,lon:m<0.5?s.dlon:s.alon};});
-      if(this.shadow){for(let i=1;i<pts.length;i++){const A=this.project(pts[i-1].v[0],0,pts[i-1].v[2]),B=this.project(pts[i].v[0],0,pts[i].v[2]);c.beginPath();c.moveTo(A.x,A.y);c.lineTo(B.x,B.y);c.strokeStyle=col+"2e";c.lineWidth=1.4*dpr;c.stroke();}}
-      for(let i=1;i<pts.length;i++){const sign=Math.floor(normDeg(pts[i].lon)/30);c.beginPath();c.moveTo(pts[i-1].proj.x,pts[i-1].proj.y);c.lineTo(pts[i].proj.x,pts[i].proj.y);c.strokeStyle=(pts[i].alt<0)?oShade(ozc(sign),-30)+"55":ozc(sign);c.lineWidth=(kind==="sun"?3.2:2.4)*dpr;c.lineCap="round";c.stroke();}
-      const ci=Math.floor(this._t*(arr.length-1))%arr.length,s=pts[ci],foot=this.project(s.v[0],0,s.v[2]);
-      c.beginPath();c.moveTo(s.proj.x,s.proj.y);c.lineTo(foot.x,foot.y);c.strokeStyle=col+"66";c.lineWidth=1.2*dpr;c.setLineDash([3*dpr,3*dpr]);c.stroke();c.setLineDash([]);
-      const g=c.createRadialGradient(s.proj.x-2,s.proj.y-2,1,s.proj.x,s.proj.y,(kind==="sun"?9:7)*dpr);g.addColorStop(0,"#fff");g.addColorStop(.3,col);g.addColorStop(1,oShade(col,-45));
-      c.beginPath();c.arc(s.proj.x,s.proj.y,(kind==="sun"?9:7)*dpr,0,7);c.fillStyle=g;c.fill();
-      c.fillStyle="rgba(236,227,206,.92)";c.textAlign="left";c.font=(13*dpr)+"px "+OGLYPH;c.fillText(kind==="sun"?"\u2609":"\u263D",s.proj.x+11*dpr,s.proj.y+4*dpr);
-    }
-    c.textAlign="center";c.fillStyle="rgba(236,227,206,.85)";c.font="italic "+(14*dpr)+"px "+OSERIF;
-    c.fillText("Tierra plana y estática · el Sol traza un 8 en tu cielo a la misma hora del año",this.w/2,this.h-40*dpr);
-    c.fillStyle="rgba(201,151,63,.9)";c.font=(11*dpr)+"px "+OSANS;
-    c.fillText(m<0.05?"arco del día · el Sol cruza tu cielo":(m>0.95?"analema · misma hora (mediodía local), todo el año":"plegando…"),this.w/2,this.h-20*dpr);
-  },
-  loop(){if(!this.running)return;this._t+=0.0016;if(this.autoMorph){this.morph=0.5-0.5*Math.cos(this._t*0.7);const el=document.getElementById("aMorph");if(el)el.value=Math.round(this.morph*100);}
-    if(this.spin&&!this.dragging)this.yaw+=0.0012;
-    if(this.dirty||!this.data)this.compute();this.draw();this.raf=requestAnimationFrame(()=>this.loop());}
-};
-aCanvas.addEventListener("pointerdown",e=>{Ana3D.dragging=true;Ana3D.px=e.clientX;Ana3D.py=e.clientY;aCanvas.setPointerCapture(e.pointerId);});
-aCanvas.addEventListener("pointermove",e=>{if(!Ana3D.dragging)return;Ana3D._manualPitch=true;Ana3D.yaw+=(e.clientX-Ana3D.px)*0.008;Ana3D.pitch=Math.max(-1.3,Math.min(1.3,Ana3D.pitch+(e.clientY-Ana3D.py)*0.006));Ana3D.px=e.clientX;Ana3D.py=e.clientY;});
-aCanvas.addEventListener("pointerup",()=>Ana3D.dragging=false);
-aCanvas.addEventListener("wheel",e=>{e.preventDefault();Ana3D.zoom=Math.max(0.5,Math.min(2.6,Ana3D.zoom*(e.deltaY>0?0.94:1.06)));},{passive:false});
-aCanvas.addEventListener("touchmove",e=>{if(e.touches.length===2){const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY,dd=Math.hypot(dx,dy);if(Ana3D.pinch)Ana3D.zoom=Math.max(0.5,Math.min(2.6,Ana3D.zoom*dd/Ana3D.pinch));Ana3D.pinch=dd;e.preventDefault();}},{passive:false});
-aCanvas.addEventListener("touchend",()=>Ana3D.pinch=0);
-document.getElementById("aWhich").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Ana3D.which=b.dataset.w;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
-document.getElementById("aAuto").onchange=e=>Ana3D.autoMorph=e.target.checked;
-document.getElementById("aSpin").onchange=e=>Ana3D.spin=e.target.checked;
-document.getElementById("aShadow").onchange=e=>Ana3D.shadow=e.target.checked;
-document.getElementById("aMorph").oninput=e=>{Ana3D.autoMorph=false;const a=document.getElementById("aAuto");if(a)a.checked=false;Ana3D.morph=e.target.value/100;};
-if(window.ResizeObserver)new ResizeObserver(()=>{if(Ana3D.running)Ana3D.resize();}).observe(document.querySelector("main"));
 // ===== Domo 3D inmersivo: planetario desde adentro — Tierra plana + bóveda visible =====
 const dCanvas=document.getElementById("domo"),dCtx=dCanvas.getContext("2d");
 const ECLo=23.4393;
@@ -1578,7 +1530,7 @@ function render(){
   if(userLocation){const inFoot=ang(userLocation,sat)<beta,dark=ang(userLocation,sun)>96,sunlit=ang(sat,sun)<108;document.getElementById("visible").textContent=(inFoot&&dark&&sunlit)?"posible":(inFoot?"sobre el horizonte, pero no en oscuridad":"fuera de alcance")}
  }else{["satpos","alt","speed","period","footprint"].forEach(id=>document.getElementById(id).textContent="—")}
 
- if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day"||viewMode==="domo"||viewMode==="ana3d")&&!userLocation)viewMode="map";
+ if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day"||viewMode==="domo")&&!userLocation)viewMode="map";
  const mapOn=viewMode==="map"||viewMode==="satellite";
  document.body.classList.toggle("satellite-mode",viewMode==="satellite");
  [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",mapOn?null:"none"));
@@ -1587,10 +1539,6 @@ function render(){
  document.body.classList.toggle("orbes-mode",orbesOn);
  if(orbesOn){skyLayer.style("display","none");Orbes.setDate(now);Orbes.start();return;}
  else if(Orbes.running){Orbes.stop();}
- const ana3dOn=viewMode==="ana3d";
- document.body.classList.toggle("ana3d-mode",ana3dOn);
- if(ana3dOn){skyLayer.style("display","none");Ana3D.setDate(now);Ana3D.start();return;}
- else if(Ana3D.running){Ana3D.stop();}
  const domoOn=viewMode==="domo";
  document.body.classList.toggle("domo-mode",domoOn);
  if(domoOn){skyLayer.style("display","none");Domo.setDate(now);Domo.start();return;}
@@ -1751,20 +1699,24 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("passBtn").onclick=showPasses;
  document.getElementById("astrosBtn").onclick=showVisibility;
  document.getElementById("astroBtn").onclick=showAstroData;
- const modeBtns={map:"mMap",satellite:"mSat",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay",orbes:"mOrbs",ana3d:"mAna3D",domo:"mDomo"};
- function setMode(m){if((m==="sky"||m==="analemma"||m==="domo"||m==="ana3d")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
+ const modeBtns={map:"mMap",satellite:"mSat",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay",orbes:"mOrbs",domo:"mDomo"};
+ function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
   const prim={map:0,sky:1,zodiac:2,domo:3},bn=document.querySelectorAll("#bnav .bn");bn.forEach(x=>x.classList.remove("on"));if(m in prim)bn[prim[m]].classList.add("on");else{const more=document.getElementById("bnMore");if(more)more.classList.add("on");}
   const ms=document.getElementById("moreSheet");if(ms)ms.classList.remove("open");
   render();}
  Object.keys(modeBtns).forEach(m=>document.getElementById(modeBtns[m]).onclick=()=>setMode(m));
- document.getElementById("panelToggle").onclick=function(){const c=document.querySelector(".app").classList.toggle("pc");this.textContent=c?"⟩":"⟨";};
+ document.getElementById("panelToggle").onclick=function(){const c=document.querySelector(".app").classList.toggle("pc");this.textContent=c?"⟩":"⟨";setTimeout(render,60);};
+ function toggleTheme(){const light=document.body.classList.toggle("light");const t=document.getElementById("themeToggle");if(t)t.textContent=light?"🌙":"🌞";const m=document.getElementById("themeToggleM");if(m)m.textContent=light?"🌙 Tema oscuro":"🌞 Tema claro";}
+ document.getElementById("themeToggle").onclick=toggleTheme;
+ document.getElementById("themeToggleM").onclick=toggleTheme;
+ (function(){document.querySelectorAll("aside section.sec").forEach(sec=>{const hd=sec.querySelector(".sec-h");if(!hd)return;const chev=document.createElement("span");chev.className="chev";chev.textContent="▾";hd.appendChild(chev);hd.addEventListener("click",()=>sec.classList.toggle("collapsed"));sec.classList.add("collapsed");});})();
  document.querySelectorAll("#bnav .bn[data-m], #moreSheet button[data-m]").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
  document.getElementById("bnMore").onclick=()=>document.getElementById("moreSheet").classList.toggle("open");
  const app=document.querySelector(".app");
  document.getElementById("openPanel").onclick=()=>{document.getElementById("moreSheet").classList.remove("open");app.classList.add("showpanel");};
  document.getElementById("asideClose").onclick=()=>app.classList.remove("showpanel");
  document.getElementById("scrim").onclick=()=>app.classList.remove("showpanel");
- ["orbesUI","domoUI","ana3dUI","satUI"].forEach(id=>{const p=document.getElementById(id);if(!p)return;p.classList.add("floatpanel","folded");const btn=document.createElement("button");btn.className="pfoldbtn";btn.type="button";btn.textContent="⚙ Opciones";btn.onclick=()=>{const f=p.classList.toggle("folded");btn.textContent=f?"⚙ Opciones":"✕ Cerrar";};p.insertBefore(btn,p.firstChild);});
+ ["orbesUI","domoUI","satUI"].forEach(id=>{const p=document.getElementById(id);if(!p)return;p.classList.add("floatpanel","folded");const btn=document.createElement("button");btn.className="pfoldbtn";btn.type="button";btn.textContent="⚙";btn.title="Opciones";btn.onclick=()=>{const f=p.classList.toggle("folded");btn.textContent=f?"⚙":"✕";btn.title=f?"Opciones":"Cerrar";};p.insertBefore(btn,p.firstChild);});
  (function(){const s=document.getElementById("satUI");if(!s)return;const title=document.createElement("div");title.className="oh";title.textContent="🛰 SATGUS · NORAD 62713";s.appendChild(title);
   const obj=document.getElementById("secObjeto");if(obj)s.appendChild(obj);
   const lh=document.getElementById("lectHdr");if(lh)s.appendChild(lh);
