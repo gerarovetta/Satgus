@@ -558,13 +558,13 @@ body.zodiac-mode #zodUI{display:flex}
 <input type="range" id="oMorph" min="0" max="100" value="0">
 <div class="ml"><span>Círculo anual</span><b id="oMlab">Círculo</b><span>Analema 8</span></div>
 </div><canvas id="ana3d"></canvas><div id="ana3dUI">
-<div class="oh">Analema 3D · círculo ⟷ ∞</div>
+<div class="oh">Analema 3D · Tierra plana</div>
 <div class="oseg" id="aWhich"><button data-w="sun">Sol</button><button data-w="moon">Luna</button><button data-w="both" class="on">Ambos</button></div>
 <label class="oswitch"><input type="checkbox" id="aAuto" checked><span>Morph automático</span></label>
 <label class="oswitch"><input type="checkbox" id="aSpin" checked><span>Giro de cámara</span></label>
-<label class="oswitch"><input type="checkbox" id="aShadow" checked><span>Sombra en meridiano</span></label>
+<label class="oswitch"><input type="checkbox" id="aShadow" checked><span>Sombra en el suelo</span></label>
 <input type="range" id="aMorph" min="0" max="100" value="0">
-<div class="ml"><span>Círculo</span><span>Analema ∞</span></div>
+<div class="ml"><span>Arco del día</span><span>Analema</span></div>
 </div><canvas id="domo"></canvas><div id="domoUI">
 <div class="oh">Domo 3D · planetario</div>
 <label class="oswitch"><input type="checkbox" id="dSpin" checked><span>Giro de cámara</span></label>
@@ -1405,74 +1405,56 @@ const OSERIF='"Cormorant Garamond",Georgia,serif';
 function eqPoint(aDeg,dDeg){const a=aDeg*_D2R,d=dDeg*_D2R,cd=Math.cos(d);return[cd*Math.cos(a),Math.sin(d),cd*Math.sin(a)];}
 const Ana3D={
   running:false,raf:0,dpr:1,w:0,h:0,_key:null,
-  yaw:-0.72,pitch:0.34,zoom:1,dragging:false,px:0,py:0,pinch:0,
+  yaw:-0.6,pitch:0.5,zoom:1,dragging:false,px:0,py:0,pinch:0,
   which:"both",autoMorph:true,spin:true,shadow:true,morph:0,_t:0,
   date:null,dirty:true,data:null,
   setDate(d){const k=d.toISOString().slice(0,13);if(k!==this._key){this._key=k;this.date=new Date(d.getTime());this.dirty=true;}},
   start(){if(this.running)return;this.running=true;this.resize();this.loop();},
   stop(){this.running=false;cancelAnimationFrame(this.raf);},
   resize(){this.dpr=Math.min(devicePixelRatio||1,2);const m=aCanvas.parentElement.getBoundingClientRect();this.w=aCanvas.width=Math.max(2,Math.round(m.width*this.dpr));this.h=aCanvas.height=Math.max(2,Math.round(m.height*this.dpr));},
-  project(x,y,z){const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw);const X=x*cy-z*sy,Z=x*sy+z*cy;const cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);const Y=y*cp-Z*sp,Zp=y*sp+Z*cp;const f=Math.min(this.w,this.h)*0.30*this.zoom;return{x:this.w/2+X*f,y:this.h/2-Y*f,depth:Zp};},
-  buildBody(kind,d){
-    const N=kind==="sun"?366:31,half=Math.floor(N/2),arr=[];
-    for(let i=0;i<N;i++){let dt;if(kind==="sun")dt=new Date(Date.UTC(d.getUTCFullYear(),0,1+i,12,0,0));else dt=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),12,0,0)+(i-half)*86400000);
-      const b=kind==="sun"?getSun(dt):getMoon(dt);arr.push({a:b.ra,dec:b.dec,lon:b.eclLon});}
-    const un=[arr[0].a];for(let i=1;i<N;i++){let df=arr[i].a-arr[i-1].a;df=((df+540)%360)-180;un.push(un[i-1]+df);}
-    const slope=(un[N-1]-un[0])/(N-1),base=un[0];
-    for(let i=0;i<N;i++){arr[i].au=un[i];arr[i].am=base+slope*i;}
-    arr.half=half;arr.now=(kind==="sun")?Math.round((d-Date.UTC(d.getUTCFullYear(),0,1,12,0,0))/86400000):half;
+  project(x,y,z){const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw);const X=x*cy-z*sy,Z=x*sy+z*cy;const cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);const Y=y*cp-Z*sp,Zp=y*sp+Z*cp;const f=Math.min(this.w,this.h)*0.34*this.zoom;return{x:this.w/2+X*f,y:this.h/2-Y*f,depth:Zp};},
+  dir(alt,az){const A=alt*Math.PI/180,Z=az*Math.PI/180,ca=Math.cos(A);return[Math.sin(Z)*ca,Math.sin(A),Math.cos(Z)*ca];},
+  buildBody(kind,d){const u=userLocation;if(!u)return null;
+    const isSun=kind==="sun",N=isSun?183:120,periodDays=isSun?365:27.32,lonOff=(12-u.lon/15)*3600000,y0=Date.UTC(d.getUTCFullYear(),0,1),d0=Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+    const arr=[];
+    for(let i=0;i<N;i++){const f=i/(N-1);
+      const dtA=new Date(y0+f*periodDays*86400000+lonOff),bA=isSun?getSun(dtA):getMoon(dtA),aaA=altAz(bA.ra,bA.dec,u,dtA);
+      const dtD=new Date(d0+f*86400000),bD=isSun?getSun(dtD):getMoon(dtD),aaD=altAz(bD.ra,bD.dec,u,dtD);
+      arr.push({annual:this.dir(aaA.alt,aaA.az),alon:bA.eclLon,aalt:aaA.alt,day:this.dir(aaD.alt,aaD.az),dlon:bD.eclLon,dalt:aaD.alt});}
     return arr;
   },
   compute(){const d=this.date||getRenderDate();this.data={sun:this.buildBody("sun",d),moon:this.buildBody("moon",d)};this.dirty=false;},
   bodies(){return this.which==="both"?["sun","moon"]:[this.which];},
   draw(){
     const c=aCtx,dpr=this.dpr,m=this.morph;c.clearRect(0,0,this.w,this.h);
-    // fondo estelar
-    c.globalAlpha=1;
-    const jobs=[];
-    // esfera: ecuador celeste + polos + meridiano de referencia
-    const eq=[];for(let a=0;a<=360;a+=5)eq.push(this.project(...eqPoint(a,0)));
-    jobs.push({d:-9,f:()=>{c.beginPath();eq.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle="rgba(103,199,255,.45)";c.lineWidth=1.4*dpr;c.stroke();
-      const pn=this.project(0,1,0),ps=this.project(0,-1,0);[pn,ps].forEach(p=>{c.beginPath();c.arc(p.x,p.y,2.5*dpr,0,7);c.fillStyle="rgba(236,227,206,.5)";c.fill();});
-      c.fillStyle="rgba(103,199,255,.6)";c.font=(10*dpr)+"px "+OSANS;c.textAlign="left";c.fillText("ecuador celeste",eq[9].x+4*dpr,eq[9].y);}});
-    // panel del meridiano (pantalla "cielo a hora fija") en el plano X-Y
-    const corners=[[0.42,-0.62,0],[1.18,-0.62,0],[1.18,0.62,0],[0.42,0.62,0]].map(p=>this.project(...p));
-    jobs.push({d:-8,f:()=>{c.beginPath();corners.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fillStyle="rgba(95,184,166,.07)";c.fill();c.strokeStyle="rgba(95,184,166,.28)";c.lineWidth=1*dpr;c.stroke();
-      const lab=this.project(0.8,0.66,0);c.fillStyle="rgba(95,184,166,.7)";c.font=(10*dpr)+"px "+OSANS;c.textAlign="center";c.fillText("meridiano · hora fija",lab.x,lab.y);}});
+    if(!this.data||!this.data.sun){c.fillStyle="rgba(236,227,206,.7)";c.font="italic "+(15*dpr)+"px "+OSERIF;c.textAlign="center";c.fillText("Cargá tu ubicación para ver el analema en tu cielo",this.w/2,this.h/2);return;}
+    const P=v=>this.project(v[0],v[1],v[2]),D=(al,az)=>P(this.dir(al,az));
+    // suelo: disco (Tierra plana, y=0)
+    const rim=[];for(let a=0;a<=360;a+=6)rim.push(this.project(Math.sin(a*Math.PI/180),0,Math.cos(a*Math.PI/180)));
+    c.beginPath();rim.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.fillStyle="rgba(95,184,166,.06)";c.fill();c.strokeStyle="rgba(201,151,63,.5)";c.lineWidth=1.4*dpr;c.stroke();
+    for(let a=0;a<360;a+=30){const p0=this.project(0,0,0),p1=this.project(Math.sin(a*Math.PI/180),0,Math.cos(a*Math.PI/180));c.beginPath();c.moveTo(p0.x,p0.y);c.lineTo(p1.x,p1.y);c.strokeStyle="rgba(201,151,63,.1)";c.lineWidth=1*dpr;c.stroke();}
+    [30,60].forEach(al=>{const rr=[];for(let a=0;a<=360;a+=8)rr.push(D(al,a));c.beginPath();rr.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();c.strokeStyle="rgba(103,199,255,.16)";c.lineWidth=1*dpr;c.stroke();});
+    c.fillStyle="rgba(236,227,206,.82)";c.font=(12*dpr)+"px "+OSANS;c.textAlign="center";
+    [["N",0],["E",90],["S",180],["O",270]].forEach(([t,az])=>{const p=this.project(1.09*Math.sin(az*Math.PI/180),0,1.09*Math.cos(az*Math.PI/180));c.fillText(t,p.x,p.y+4*dpr);});
+    const o=this.project(0,0,0);c.beginPath();c.arc(o.x,o.y,3*dpr,0,7);c.fillStyle="rgba(240,180,80,.9)";c.fill();
     const COL={sun:"#ffd166",moon:"#d7e2f2"};
-    for(const kind of this.bodies()){
-      const arr=this.data[kind],col=COL[kind];
-      // círculo real de referencia (siempre visible): "el movimiento real es un círculo"
-      const ref=arr.map(s=>this.project(...eqPoint(s.au,s.dec)));
-      jobs.push({d:-6,f:()=>{c.beginPath();ref.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=col+"33";c.lineWidth=1.3*dpr;c.stroke();}});
-      // círculo real (m=0) → analema (m=1): rotar por -m*am
-      const pts=arr.map(s=>{const P=eqPoint(s.au-m*s.am,s.dec);return{P,proj:this.project(...P),lon:s.lon};});
-      // sombra sobre el meridiano (proyección z=0)
-      if(this.shadow){jobs.push({d:-7,f:()=>{for(let i=1;i<pts.length;i++){const A=this.project(pts[i-1].P[0],pts[i-1].P[1],0),B=this.project(pts[i].P[0],pts[i].P[1],0);c.beginPath();c.moveTo(A.x,A.y);c.lineTo(B.x,B.y);c.strokeStyle=col+"3a";c.lineWidth=1.5*dpr;c.stroke();}}});}
-      // curva morphable coloreada por signo
-      jobs.push({d:0,f:()=>{for(let i=1;i<pts.length;i++){const sign=Math.floor(normDeg(pts[i].lon)/30);c.beginPath();c.moveTo(pts[i-1].proj.x,pts[i-1].proj.y);c.lineTo(pts[i].proj.x,pts[i].proj.y);c.strokeStyle=ozc(sign);c.lineWidth=(kind==="sun"?3.4:2.6)*dpr;c.lineCap="round";c.stroke();}}});
-      // cuenta viajera + sol/luna medio + conector
-      const ci=Math.floor(this._t*(arr.length-1))%arr.length,s=arr[ci];
-      const real=eqPoint(s.au-m*s.am,s.dec),mean=eqPoint((1-m)*s.am + m*0,0); // el "medio" se pliega al meridiano (α→0) igual que la curva
-      const pr=this.project(...real),pm=this.project(...mean);
-      jobs.push({d:pr.depth+1,f:()=>{
-        c.beginPath();c.moveTo(pm.x,pm.y);c.lineTo(pr.x,pr.y);c.strokeStyle=col+"88";c.lineWidth=1.4*dpr;c.setLineDash([3*dpr,3*dpr]);c.stroke();c.setLineDash([]);
-        c.beginPath();c.arc(pm.x,pm.y,3*dpr,0,7);c.fillStyle="rgba(236,227,206,.5)";c.fill();
-        const g=c.createRadialGradient(pr.x-2,pr.y-2,1,pr.x,pr.y,(kind==="sun"?9:7)*dpr);g.addColorStop(0,"#fff");g.addColorStop(.3,col);g.addColorStop(1,oShade(col,-45));
-        c.beginPath();c.arc(pr.x,pr.y,(kind==="sun"?9:7)*dpr,0,7);c.fillStyle=g;c.fill();
-        c.fillStyle="rgba(236,227,206,.92)";c.textAlign="left";c.font=(13*dpr)+"px "+OGLYPH;c.fillText(kind==="sun"?"\u2609":"\u263D",pr.x+11*dpr,pr.y+4*dpr);
-      }});
+    for(const kind of this.bodies()){const arr=this.data[kind];if(!arr)continue;const col=COL[kind];
+      const pts=arr.map(s=>{const vx=s.day[0]+(s.annual[0]-s.day[0])*m,vy=s.day[1]+(s.annual[1]-s.day[1])*m,vz=s.day[2]+(s.annual[2]-s.day[2])*m,L=Math.hypot(vx,vy,vz)||1;return{v:[vx/L,vy/L,vz/L],proj:P([vx/L,vy/L,vz/L]),alt:s.dalt+(s.aalt-s.dalt)*m,lon:m<0.5?s.dlon:s.alon};});
+      if(this.shadow){for(let i=1;i<pts.length;i++){const A=this.project(pts[i-1].v[0],0,pts[i-1].v[2]),B=this.project(pts[i].v[0],0,pts[i].v[2]);c.beginPath();c.moveTo(A.x,A.y);c.lineTo(B.x,B.y);c.strokeStyle=col+"2e";c.lineWidth=1.4*dpr;c.stroke();}}
+      for(let i=1;i<pts.length;i++){const sign=Math.floor(normDeg(pts[i].lon)/30);c.beginPath();c.moveTo(pts[i-1].proj.x,pts[i-1].proj.y);c.lineTo(pts[i].proj.x,pts[i].proj.y);c.strokeStyle=(pts[i].alt<0)?oShade(ozc(sign),-30)+"55":ozc(sign);c.lineWidth=(kind==="sun"?3.2:2.4)*dpr;c.lineCap="round";c.stroke();}
+      const ci=Math.floor(this._t*(arr.length-1))%arr.length,s=pts[ci],foot=this.project(s.v[0],0,s.v[2]);
+      c.beginPath();c.moveTo(s.proj.x,s.proj.y);c.lineTo(foot.x,foot.y);c.strokeStyle=col+"66";c.lineWidth=1.2*dpr;c.setLineDash([3*dpr,3*dpr]);c.stroke();c.setLineDash([]);
+      const g=c.createRadialGradient(s.proj.x-2,s.proj.y-2,1,s.proj.x,s.proj.y,(kind==="sun"?9:7)*dpr);g.addColorStop(0,"#fff");g.addColorStop(.3,col);g.addColorStop(1,oShade(col,-45));
+      c.beginPath();c.arc(s.proj.x,s.proj.y,(kind==="sun"?9:7)*dpr,0,7);c.fillStyle=g;c.fill();
+      c.fillStyle="rgba(236,227,206,.92)";c.textAlign="left";c.font=(13*dpr)+"px "+OGLYPH;c.fillText(kind==="sun"?"\u2609":"\u263D",s.proj.x+11*dpr,s.proj.y+4*dpr);
     }
-    jobs.sort((a,b)=>a.d-b.d).forEach(j=>j.f());
-    // rótulos
-    c.textAlign="center";c.fillStyle="rgba(236,227,206,.85)";c.font="italic "+(15*dpr)+"px "+OSERIF;
-    c.fillText("Movimiento real: círculo (eclíptica 23.4°)  ·  visto a hora fija desde la Tierra: analema ∞",this.w/2,this.h-40*dpr);
+    c.textAlign="center";c.fillStyle="rgba(236,227,206,.85)";c.font="italic "+(14*dpr)+"px "+OSERIF;
+    c.fillText("Tierra plana y estática · el Sol traza un 8 en tu cielo a la misma hora del año",this.w/2,this.h-40*dpr);
     c.fillStyle="rgba(201,151,63,.9)";c.font=(11*dpr)+"px "+OSANS;
-    c.fillText(m<0.05?"marco espacial — círculo":(m>0.95?"marco terrestre (hora fija) — analema 8":"plegando…"),this.w/2,this.h-20*dpr);
+    c.fillText(m<0.05?"arco del día · el Sol cruza tu cielo":(m>0.95?"analema · misma hora (mediodía local), todo el año":"plegando…"),this.w/2,this.h-20*dpr);
   },
-  loop(){if(!this.running)return;if(this.autoMorph){this._t+=0.0016;this.morph=0.5-0.5*Math.cos(this._t*0.7);const el=document.getElementById("aMorph");if(el)el.value=Math.round(this.morph*100);}else{this._t+=0.0016;}
+  loop(){if(!this.running)return;this._t+=0.0016;if(this.autoMorph){this.morph=0.5-0.5*Math.cos(this._t*0.7);const el=document.getElementById("aMorph");if(el)el.value=Math.round(this.morph*100);}
     if(this.spin&&!this.dragging)this.yaw+=0.0012;
-    if(!this._manualPitch)this.pitch=0.74-0.44*this.morph; // círculo → mirada cenital ; 8 → mirada lateral
     if(this.dirty||!this.data)this.compute();this.draw();this.raf=requestAnimationFrame(()=>this.loop());}
 };
 aCanvas.addEventListener("pointerdown",e=>{Ana3D.dragging=true;Ana3D.px=e.clientX;Ana3D.py=e.clientY;aCanvas.setPointerCapture(e.pointerId);});
@@ -1596,7 +1578,7 @@ function render(){
   if(userLocation){const inFoot=ang(userLocation,sat)<beta,dark=ang(userLocation,sun)>96,sunlit=ang(sat,sun)<108;document.getElementById("visible").textContent=(inFoot&&dark&&sunlit)?"posible":(inFoot?"sobre el horizonte, pero no en oscuridad":"fuera de alcance")}
  }else{["satpos","alt","speed","period","footprint"].forEach(id=>document.getElementById(id).textContent="—")}
 
- if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day"||viewMode==="domo")&&!userLocation)viewMode="map";
+ if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day"||viewMode==="domo"||viewMode==="ana3d")&&!userLocation)viewMode="map";
  const mapOn=viewMode==="map"||viewMode==="satellite";
  document.body.classList.toggle("satellite-mode",viewMode==="satellite");
  [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",mapOn?null:"none"));
@@ -1770,7 +1752,7 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("astrosBtn").onclick=showVisibility;
  document.getElementById("astroBtn").onclick=showAstroData;
  const modeBtns={map:"mMap",satellite:"mSat",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay",orbes:"mOrbs",ana3d:"mAna3D",domo:"mDomo"};
- function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
+ function setMode(m){if((m==="sky"||m==="analemma"||m==="domo"||m==="ana3d")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
   const prim={map:0,sky:1,zodiac:2,domo:3},bn=document.querySelectorAll("#bnav .bn");bn.forEach(x=>x.classList.remove("on"));if(m in prim)bn[prim[m]].classList.add("on");else{const more=document.getElementById("bnMore");if(more)more.classList.add("on");}
   const ms=document.getElementById("moreSheet");if(ms)ms.classList.remove("open");
   render();}
