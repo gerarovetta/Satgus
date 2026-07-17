@@ -8,138 +8,578 @@
 <script src="https://unpkg.com/topojson-client@3"></script>
 <script src="https://unpkg.com/satellite.js@5/dist/satellite.min.js"></script>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 :root{
-  --bg:#05070b;--panel:#101722;--ocean:#07111d;--land:#2b4a3f;--ice:#dceeff;
-  --grid:rgba(255,255,255,.18);--text:#e9eef7;--muted:#9fb0c7;
-  --sat:#ff5a36;--sun:#ffd166;--moon:#dce6f2;--user:#4cc9f0;--ecl:#b06cff;--eq:#74d3ff;--trop:#ffcc66;
+  /* --- Instrument palette: prussian night, parchment ink, antique bronze --- */
+  --bg:#080b16;            /* deep void, indigo not black */
+  --bg-2:#0c1020;
+  --panel:#0d1122;         /* aside face */
+  --panel-2:#11162b;       /* inputs / raised */
+  --line:rgba(201,151,63,.22);   /* engraved brass hairline */
+  --line-soft:rgba(216,206,178,.10);
+  --brass:#c9973f;         /* engraved chrome / structure */
+  --brass-lo:#8f6d33;
+  --parchment:#ece3ce;     /* primary ink */
+  --text:#ece3ce;
+  --muted:#9a9db3;         /* dimmed ink */
+  --muted-2:#6f7291;
+
+  /* --- Map base (engraved chart) --- */
+  --ocean:#0b1428;
+  --land:#284b45;          /* verdigris landmass */
+  --ice:#cfe0e6;
+  --grid:rgba(201,151,63,.20);   /* brass graticule */
+
+  /* --- Celestial bodies (semantic, harmonised) --- */
+  --sat:#ff6a3d;           /* SATGUS — the hot tracked signal */
+  --sun:#ffd166;           /* luminous gold */
+  --moon:#d7e2f2;          /* silver-blue */
+  --user:#5fb8a6;          /* verdigris observer */
+  --ecl:#b58cff;           /* amethyst ecliptic / zodiac / nodes */
+  --eq:#67c7ff;            /* sky cyan equator */
+  --trop:#f0bd6b;          /* warm tropic */
+
+  --ok:#7fd8a0; --warn:#f0b25a;
+  /* symbol stack: fonts that ship the astrological/astronomical glyphs (♈–♓, ☉☽☿♀♂♃♄, ☊☋, ⚸, ℞) on each OS */
+  --glyph:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2","Noto Sans Symbols","Symbola","DejaVu Sans",system-ui,sans-serif;
+  --sans:"Space Grotesk",system-ui,-apple-system,"Segoe UI","Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",sans-serif;
+  --serif:"Cormorant Garamond",Georgia,"Times New Roman","Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",serif;
+  --mono:"Space Mono",ui-monospace,SFMono-Regular,Menlo,"Segoe UI Symbol","Apple Symbols",monospace;
 }
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(circle,#142033 0%,var(--bg) 65%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif}
-.app{min-height:100vh;display:grid;grid-template-columns:420px 1fr}
-aside{background:rgba(16,23,34,.95);border-right:1px solid rgba(255,255,255,.1);padding:20px;overflow:auto}
-main{position:relative;display:grid;place-items:center;padding:14px;overflow:hidden}
-.mapctrl{position:absolute;top:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:5}
-.mapctrl button{margin:0;width:46px;height:46px;padding:0;border-radius:12px;background:rgba(16,23,34,.9);border:1px solid rgba(255,255,255,.18);color:var(--text);font-size:20px;font-weight:700;line-height:1;cursor:pointer;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.4)}
-.mapctrl button:active{background:rgba(255,255,255,.15)}
-.mapctrl .zlvl{width:46px;height:26px;font-size:12px;background:rgba(16,23,34,.9);border:1px solid rgba(255,255,255,.18);border-radius:10px;display:grid;place-items:center;color:var(--muted);font-family:ui-monospace,monospace}
+body{
+  margin:0;color:var(--text);
+  font-family:var(--sans);
+  background:
+    radial-gradient(1200px 900px at 78% 12%, rgba(91,184,166,.06), transparent 60%),
+    radial-gradient(1000px 800px at 20% 90%, rgba(181,140,255,.06), transparent 55%),
+    radial-gradient(circle at 50% 40%, #10182e 0%, var(--bg) 62%, var(--bg-2) 100%);
+  -webkit-font-smoothing:antialiased;
+}
+.app{min-height:100vh;display:grid;grid-template-columns:64px minmax(0,340px) 1fr}
+.app.pc{grid-template-columns:64px 0 1fr}
+.app.pc aside{display:none}
+.rail{background:linear-gradient(180deg,#0b0e1c,#080b16);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 0 14px;overflow-y:auto}
+.railbrand{color:var(--brass);font-size:20px;margin-bottom:6px}
+.rail .modebtn{width:52px;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:12px;background:none;border:1px solid transparent;color:var(--muted);cursor:pointer;padding:0;font-family:var(--sans)}
+.rail .modebtn .ico{font-size:17px;line-height:1}
+.rail .modebtn .lbl{font-size:8px;font-weight:600;letter-spacing:.01em;white-space:nowrap}
+.rail .modebtn:hover{color:var(--parchment);background:rgba(201,151,63,.07)}
+.rail .modebtn.active{color:var(--brass);background:var(--panel);border-color:var(--line)}
+.railspace{flex:1;min-height:8px}
+.railtoggle{width:42px;height:36px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--brass);cursor:pointer;font-size:15px}
+.railtoggle:hover{border-color:var(--brass)}
+.bottomnav{display:none;position:fixed;left:0;right:0;bottom:0;height:62px;z-index:55;background:linear-gradient(180deg,#0b0e1cf7,#080b16);border-top:1px solid var(--line);justify-content:space-around;align-items:center;backdrop-filter:blur(8px)}
+.bottomnav .bn{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:0;color:var(--muted);font:600 9.5px var(--sans);cursor:pointer;padding:4px 8px}
+.bottomnav .bn .i{font-size:19px;line-height:1}
+.bottomnav .bn.on{color:var(--brass)}
+.moresheet{display:none;position:fixed;left:0;right:0;bottom:62px;z-index:56;background:linear-gradient(180deg,#11162bf7,#0b0e1cfc);border-top:1px solid var(--line);border-radius:16px 16px 0 0;padding:10px 14px 16px;box-shadow:0 -14px 34px rgba(0,0,0,.5);transform:translateY(120%);transition:transform .25s}
+.moresheet.open{transform:none}
+.moresheet .grip{width:40px;height:4px;border-radius:3px;background:var(--line);margin:2px auto 12px}
+.moresheet .moregrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.moresheet .moregrid button,.moresheet .morectrl{background:var(--panel);border:1px solid var(--line);color:var(--parchment);border-radius:10px;padding:11px 10px;font:600 13px var(--sans);cursor:pointer;text-align:left}
+.moresheet .morectrl{width:100%;margin-top:10px;color:var(--brass);border-color:var(--brass)}
+.panelscrim{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:59}
+.asideclose{display:none;position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;background:var(--panel);border:1px solid var(--line);color:var(--parchment);font-size:15px;cursor:pointer;z-index:2}
+.floatpanel .pfoldbtn{display:none}
+.locpill{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:57;width:max-content;max-width:58vw;background:linear-gradient(180deg,#11162be6,#0b0e1cf2);border:1px solid var(--brass);color:var(--brass);border-radius:22px;padding:8px 15px;font:600 12.5px var(--sans);cursor:pointer;backdrop-filter:blur(6px);box-shadow:0 6px 20px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locpill:hover{background:linear-gradient(180deg,rgba(201,151,63,.2),rgba(201,151,63,.08))}
+.locpop{position:fixed;top:52px;left:50%;transform:translateX(-50%);z-index:58;width:min(330px,92vw);background:linear-gradient(180deg,#11162bf5,#0b0e1cfc);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 16px 44px rgba(0,0,0,.55);display:none}
+.locpop.open{display:block}
+.locpop .lh{font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--brass);margin-bottom:9px}
+.locpop .locsearch{margin:0 0 9px}
+.locpop .locgps{width:100%;padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--parchment);cursor:pointer;font:600 12.5px var(--sans)}
+.locpop .locgps:hover{border-color:var(--brass);color:var(--brass)}
+#satUI{position:absolute;left:22px;top:22px;width:308px;max-height:calc(100vh - 44px);overflow-y:auto;background:linear-gradient(180deg,#11162be8,#0b0e1cf5);border:1px solid var(--line);border-radius:14px;padding:14px;display:none;z-index:40;backdrop-filter:blur(7px)}
+body.satellite-mode #satUI{display:block}
+#satUI .oh{font-family:var(--serif);color:var(--brass);font-size:18px;font-weight:600;margin:0 0 8px}
+#satUI .sec-h{margin-top:6px}
+#satUI #passes{margin-top:8px}@media(max-width:900px){
+  .floatpanel .pfoldbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;padding:0;background:var(--panel);border:1px solid var(--brass);color:var(--brass);border-radius:50%;font-size:16px;line-height:1;cursor:pointer;margin:0;align-self:flex-start;box-shadow:0 3px 12px rgba(0,0,0,.4)}
+  .floatpanel.folded{width:auto!important;max-width:none!important;padding:0!important;background:none!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important}
+  .floatpanel.folded>*:not(.pfoldbtn){display:none!important}
+  .floatpanel:not(.folded){max-height:72vh;overflow-y:auto}
+}
+@media(min-width:901px){.app{height:100vh}aside{min-height:0}}
+body.orbes-mode main{height:100vh}
+
+/* ---------------- Aside: the instrument face ---------------- */
+aside{
+  position:relative;
+  background:linear-gradient(180deg, rgba(17,22,43,.96), rgba(11,14,28,.98));
+  border-right:1px solid var(--line);
+  padding:26px 24px 34px;overflow:auto;
+  box-shadow:inset -24px 0 40px -32px rgba(0,0,0,.9);
+}
+aside::-webkit-scrollbar{width:9px}
+aside::-webkit-scrollbar-thumb{background:rgba(201,151,63,.28);border-radius:9px}
+aside::-webkit-scrollbar-track{background:transparent}
+
+/* Masthead */
+.masthead{margin-bottom:6px}
+h1{
+  font-family:var(--serif);font-weight:600;
+  font-size:40px;line-height:.95;margin:0;
+  letter-spacing:.34em;text-indent:.34em;
+  color:var(--parchment);
+}
+h1 .spark{color:var(--brass);font-size:.62em;vertical-align:.22em;margin-right:.12em;letter-spacing:0}
+h2{
+  font-family:var(--mono);font-weight:400;text-transform:uppercase;
+  font-size:11px;letter-spacing:.22em;margin:10px 0 0;color:var(--brass);
+}
+
+/* Signature: engraved degree rule */
+.rule{
+  --tickw:14px;height:14px;margin:16px 0 18px;position:relative;
+  border-top:1px solid var(--line);
+  background-image:repeating-linear-gradient(90deg,
+     var(--line) 0, var(--line) 1px, transparent 1px, transparent var(--tickw));
+  background-size:100% 6px;background-repeat:no-repeat;background-position:top left;
+  -webkit-mask-image:linear-gradient(90deg,#000 0 82%,transparent);
+          mask-image:linear-gradient(90deg,#000 0 82%,transparent);
+}
+.rule.mini{margin:14px 0 12px}
+
+p{color:var(--muted);font-size:13px;line-height:1.55;margin:0 0 4px}
+
+/* Section headers — glyph-led, content-true */
+.sec{margin-top:26px}
+.sec-h{
+  display:flex;align-items:center;gap:11px;margin:0 0 12px;
+}
+.sec-h .g{
+  font-size:15px;color:var(--brass);width:24px;height:24px;flex:none;
+  display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;
+  background:radial-gradient(circle at 40% 30%, rgba(201,151,63,.14), transparent 70%);
+}
+.sec-h .t{
+  font-family:var(--mono);text-transform:uppercase;font-size:11px;
+  letter-spacing:.24em;color:var(--muted);white-space:nowrap;
+}
+.sec-h .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+label{display:block;margin:12px 0 6px;color:var(--muted);font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;font-family:var(--mono)}
+textarea,input{
+  width:100%;background:var(--panel-2);color:var(--parchment);
+  border:1px solid var(--line-soft);border-radius:9px;padding:10px 11px;
+  font-family:var(--mono);font-size:12px;transition:border-color .18s,box-shadow .18s}
+input[type="datetime-local"]{color:var(--parchment)}
+textarea{height:56px;resize:vertical;line-height:1.4}
+textarea:focus,input:focus{outline:none;border-color:var(--brass);
+  box-shadow:0 0 0 3px rgba(201,151,63,.15)}
+
+/* Buttons */
+button{
+  margin-top:10px;width:100%;padding:11px 13px;border:1px solid transparent;
+  border-radius:9px;background:var(--sat);color:#150a06;font-weight:600;
+  font-family:var(--sans);font-size:13.5px;letter-spacing:.01em;cursor:pointer;
+  transition:transform .12s ease, filter .15s ease, background .15s;}
+button:hover{filter:brightness(1.06)}
+button:active{transform:translateY(1px)}
+button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.secondary{background:transparent;color:var(--parchment);border-color:var(--line)}
+.secondary:hover{background:rgba(201,151,63,.08);filter:none}
+.user{background:transparent;color:var(--user);border-color:rgba(95,184,166,.5)}
+.user:hover{background:rgba(95,184,166,.10);filter:none}
+
+.date-controls{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px;margin-top:10px}
+.date-controls button{margin-top:0;padding:9px 4px;font-size:12px}
+.date-controls input{height:40px}
+
+/* View tabs — a segmented instrument selector */
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:4px}
+.modebtn{
+  margin:0;padding:10px 4px;font-size:12px;font-weight:500;letter-spacing:.02em;
+  background:var(--panel-2);color:var(--muted);border:1px solid var(--line-soft);border-radius:8px}
+.modebtn:hover{color:var(--parchment);background:rgba(201,151,63,.06);filter:none}
+.modebtn.active{
+  background:linear-gradient(180deg, rgba(201,151,63,.20), rgba(201,151,63,.08));
+  color:var(--brass);border-color:var(--brass);box-shadow:0 0 0 1px rgba(201,151,63,.25) inset}
+
+/* Toggles — switches keyed to the body colour they reveal */
+.toggles{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:6px}
+.toggle{
+  display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;
+  background:var(--panel-2);border:1px solid var(--line-soft);
+  font-size:12.5px;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s;
+  font-family:var(--sans);text-transform:none;letter-spacing:0}
+.toggle:hover{border-color:var(--line);color:var(--parchment)}
+.toggle input{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;
+  flex:none;border-radius:20px;background:#1b2036;border:1px solid var(--line-soft);
+  position:relative;cursor:pointer;transition:background .18s}
+.toggle input::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;
+  border-radius:50%;background:var(--muted-2);transition:transform .18s,background .18s}
+.toggle input:checked{background:rgba(201,151,63,.28);border-color:var(--brass)}
+.toggle input:checked::after{transform:translateX(14px);background:var(--brass)}
+.toggle input:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.toggle.wide{grid-column:1 / -1}
+
+/* Status + notes = ephemeris slips */
+.status,.note{
+  margin-top:14px;padding:11px 13px;border-radius:9px;font-size:12.5px;line-height:1.5;
+  background:var(--panel-2);border:1px solid var(--line-soft);color:var(--muted)}
+.status{border-left:2px solid var(--brass)}
+.status.ok,.ok{color:var(--ok)} .status.warn,.note.warn,.warn{color:var(--warn);border-left-color:var(--warn)}
+.note b{color:var(--parchment);font-weight:600}
+
+/* Legend */
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:16px;
+  font-size:12px;color:var(--muted)}
+.legend span{display:flex;gap:8px;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none;
+  box-shadow:0 0 7px 1px currentColor}
+.dash{width:16px;height:0;border-top:2px dashed;display:inline-block;flex:none}
+
+/* Ephemeris readout table */
+.data{margin-top:16px;display:grid;gap:0;font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+  border-bottom:1px solid var(--line-soft);padding:8px 0}
+.row:last-child{border-bottom:0}
+.key{color:var(--muted);font-size:12px;letter-spacing:.02em}
+.value{font-family:var(--mono);text-align:right;color:var(--parchment);font-size:12px}
+
+/* ---------------- Map controls: brass instrument knobs ---------------- */
+main{position:relative;display:grid;place-items:center;padding:16px;overflow:hidden}
+.mapctrl{position:absolute;top:22px;right:22px;display:flex;flex-direction:column;gap:9px;z-index:5}
+.mapctrl button{
+  margin:0;width:44px;height:44px;padding:0;border-radius:50%;
+  background:radial-gradient(circle at 38% 30%, #1a2038, #0c1020);
+  border:1px solid var(--line);color:var(--parchment);font-size:19px;font-weight:600;
+  line-height:1;cursor:pointer;display:grid;place-items:center;
+  box-shadow:0 3px 12px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.04)}
+.mapctrl button:hover{border-color:var(--brass);color:var(--brass);filter:none;transform:none}
+.mapctrl button:active{transform:translateY(1px)}
+.mapctrl .zlvl{width:44px;height:24px;font-size:11px;
+  background:transparent;border:0;display:grid;place-items:center;
+  color:var(--brass);font-family:var(--mono);letter-spacing:.04em}
 .zoomRoot{cursor:grab}.zoomRoot:active{cursor:grabbing}
+
 body.map-full .app{grid-template-columns:1fr}body.map-full aside{display:none}
 body.map-full svg{width:min(96vw,96vh);height:min(96vw,96vh);max-width:none;max-height:none}
-h1{font-size:22px;margin:0 0 4px}h2{font-size:14px;margin:0 0 14px;color:var(--muted)}
-p{color:var(--muted);font-size:14px;line-height:1.42}
-label{display:block;margin:13px 0 5px;color:var(--muted);font-size:13px}
-textarea,input{width:100%;background:#07101a;color:var(--text);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px;font-family:ui-monospace,monospace;font-size:12px}
-textarea{height:58px;resize:vertical}
-button{margin-top:10px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:var(--sat);color:#fff;font-weight:700;cursor:pointer}
-.secondary{background:#223047}.user{background:#127499}
-.date-controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.date-controls button{margin-top:0}.date-controls input{height:39px}
-.toggles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
-.toggle{display:flex;align-items:center;gap:7px;padding:8px;border-radius:10px;background:rgba(255,255,255,.06);font-size:13px;color:var(--muted)}
-.toggle input{width:auto}
-.status,.note{margin-top:12px;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);color:var(--muted);font-size:13px}.ok{color:#65d87a}.warn{color:#ffb84d}
-.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;font-size:13px;color:var(--muted)}
-.legend span{display:flex;gap:7px;align-items:center}.dot{width:10px;height:10px;border-radius:50%;display:inline-block}.dash{width:14px;height:0;border-top:2px dashed;display:inline-block}
-.data{margin-top:14px;display:grid;gap:7px;font-size:14px}.row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:7px}
-.key{color:var(--muted)}.value{font-family:ui-monospace,monospace;text-align:right}
-svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;filter:drop-shadow(0 0 28px rgba(0,0,0,.45))}
+
+svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
+  filter:drop-shadow(0 0 40px rgba(0,0,0,.55))}
+
+/* ---------------- SVG chart layers (engraved) ---------------- */
 .mapLayer{clip-path:url(#mapClip)}
-.sphere{fill:var(--ocean);stroke:rgba(255,255,255,.62);stroke-width:1.2}
-.night{fill:rgba(0,0,0,.47)}.terminator{fill:none;stroke:rgba(255,255,255,.36);stroke-width:1.1;stroke-dasharray:4 4}
-.grid{fill:none;stroke:var(--grid);stroke-width:.7}.land{fill:var(--land);stroke:rgba(255,255,255,.4);stroke-width:.5}.antarctica{fill:var(--ice);stroke:rgba(255,255,255,.55);stroke-width:.55}.boundary{fill:none;stroke:rgba(255,255,255,.2);stroke-width:.35}
-.orbit{fill:none;stroke:var(--sat);stroke-width:2;stroke-dasharray:6 5}.footprint{fill:rgba(255,90,54,.07);stroke:rgba(255,90,54,.55);stroke-width:1.3;stroke-dasharray:5 4}.analemma{fill:none;stroke:var(--sun);stroke-width:1.4;stroke-dasharray:3 5}.ecliptic{fill:none;stroke:var(--ecl);stroke-width:1.4}.zband{fill:none;stroke:var(--ecl);stroke-width:16;opacity:.08}.milkyWay{fill:none;stroke:rgba(190,210,255,.22);stroke-width:28;stroke-linecap:round}
-.eq{fill:none;stroke:var(--eq);stroke-width:1.6}.trop{fill:none;stroke:var(--trop);stroke-width:1.1;stroke-dasharray:5 4}.horizon{fill:rgba(76,201,240,.08);stroke:rgba(76,201,240,.45);stroke-width:1.2;stroke-dasharray:4 4}
-.glow{opacity:.22}.satDot{fill:#fff;stroke:var(--sat);stroke-width:4}.sunDot{fill:var(--sun);stroke:#fff2aa;stroke-width:2}.moonDot{fill:var(--moon);stroke:white;stroke-width:2}.userDot{fill:var(--user);stroke:white;stroke-width:2.5}.planetDot{stroke:white;stroke-width:1.5}
-.starDot{fill:white;opacity:.86}.starLine{fill:none;stroke:rgba(255,255,255,.34);stroke-width:.8}.starName{fill:rgba(255,255,255,.74);font-size:11px;font-weight:650;paint-order:stroke;stroke:#000;stroke-width:3}
-.label{fill:var(--text);font-size:13px;font-weight:700;paint-order:stroke;stroke:#000;stroke-width:3}.smallLabel{fill:rgba(255,255,255,.86);font-size:12px;font-weight:650;paint-order:stroke;stroke:#000;stroke-width:3}.constLabel{fill:rgba(255,255,255,.72);font-size:12px;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3}.symbol{font-size:22px;text-anchor:middle;fill:rgba(255,255,255,.78);paint-order:stroke;stroke:#000;stroke-width:3}.north{fill:white;font-size:13px;text-anchor:middle}
-@media(max-width:900px){.app{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid rgba(255,255,255,.1)}svg{width:96vw;height:96vw}}
-.cardinal{fill:#bfe3ff;font-size:16px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#000;stroke-width:3}
-.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.modebtn{margin:0;padding:9px 4px;font-size:12px;font-weight:700;background:#223047}
-.modebtn.active{background:var(--sat)}
+.sphere{fill:var(--ocean);stroke:rgba(201,151,63,.55);stroke-width:1.2}
+.night{fill:rgba(0,0,0,.5)}
+.terminator{fill:none;stroke:rgba(216,206,178,.34);stroke-width:1.1;stroke-dasharray:4 4}
+.grid{fill:none;stroke:var(--grid);stroke-width:.6}
+.land{fill:var(--land);stroke:rgba(216,206,178,.28);stroke-width:.5}
+.antarctica{fill:var(--ice);stroke:rgba(255,255,255,.5);stroke-width:.55}
+.boundary{fill:none;stroke:rgba(216,206,178,.16);stroke-width:.35}
+.orbit{fill:none;stroke:var(--sat);stroke-width:2;stroke-dasharray:6 5}
+.footprint{fill:rgba(255,106,61,.07);stroke:rgba(255,106,61,.55);stroke-width:1.3;stroke-dasharray:5 4}
+.analemma{fill:none;stroke:var(--sun);stroke-width:1.4;stroke-dasharray:3 5}
+.ecliptic{fill:none;stroke:var(--ecl);stroke-width:1.4}
+.zband{fill:none;stroke:var(--ecl);stroke-width:16;opacity:.08}
+.milkyWay{fill:none;stroke:rgba(190,205,255,.20);stroke-width:28;stroke-linecap:round}
+.eq{fill:none;stroke:var(--eq);stroke-width:1.6}
+.trop{fill:none;stroke:var(--trop);stroke-width:1.1;stroke-dasharray:5 4}
+.horizon{fill:rgba(95,184,166,.08);stroke:rgba(95,184,166,.5);stroke-width:1.2;stroke-dasharray:4 4}
+.glow{opacity:.22}
+.satDot{fill:#fff;stroke:var(--sat);stroke-width:4}
+.sunDot{fill:var(--sun);stroke:#fff2aa;stroke-width:2}
+.moonDot{fill:var(--moon);stroke:white;stroke-width:2}
+.userDot{fill:var(--user);stroke:white;stroke-width:2.5}
+.planetDot{stroke:white;stroke-width:1.5}
+.starDot{fill:white;opacity:.86}
+.starLine{fill:none;stroke:rgba(216,206,178,.3);stroke-width:.8}
+.starName{fill:rgba(236,227,206,.78);font-size:11px;font-weight:650;font-family:var(--sans);paint-order:stroke;stroke:#000;stroke-width:3}
+.label{fill:var(--text);font-size:13px;font-weight:700;font-family:var(--sans);paint-order:stroke;stroke:#000;stroke-width:3}
+.smallLabel{fill:rgba(236,227,206,.9);font-size:12px;font-weight:650;font-family:var(--sans);paint-order:stroke;stroke:#000;stroke-width:3}
+.constLabel{fill:rgba(216,206,178,.68);font-size:12px;text-anchor:middle;font-family:var(--serif);font-style:italic;paint-order:stroke;stroke:#000;stroke-width:3}
+.symbol{font-family:var(--glyph);font-size:22px;text-anchor:middle;fill:rgba(236,227,206,.8);paint-order:stroke;stroke:#000;stroke-width:3}
+.north{fill:var(--brass);font-size:14px;font-weight:700;text-anchor:middle;font-family:var(--serif)}
+.cardinal{fill:var(--brass);font-size:16px;font-weight:700;text-anchor:middle;font-family:var(--serif);paint-order:stroke;stroke:#000;stroke-width:3}
 .analemmaCurve{fill:none;stroke:var(--sun);stroke-width:2.2}
-.wheelRing{fill:none;stroke:rgba(255,255,255,.4);stroke-width:1.2}
-.wheelSpoke{stroke:rgba(255,255,255,.16);stroke-width:.8}
-.wheelGlyph{font-size:20px;text-anchor:middle;fill:rgba(255,255,255,.75);paint-order:stroke;stroke:#000;stroke-width:3}
-.gridline{stroke:rgba(255,255,255,.12);stroke-width:.8}
-.gridlabel{fill:rgba(255,255,255,.6);font-size:11px;text-anchor:middle}
+.wheelRing{fill:none;stroke:rgba(201,151,63,.4);stroke-width:1.2}
+.wheelSpoke{stroke:rgba(216,206,178,.14);stroke-width:.8}
+.wheelGlyph{font-family:var(--glyph);font-size:20px;text-anchor:middle;fill:rgba(236,227,206,.78);paint-order:stroke;stroke:#000;stroke-width:3}
+.gridline{stroke:rgba(216,206,178,.12);stroke-width:.8}
+.gridlabel{fill:rgba(216,206,178,.6);font-size:11px;text-anchor:middle;font-family:var(--mono)}
 .eclAxis{stroke:var(--ecl);stroke-width:1.4}
 .trace{fill:none;stroke-width:2}
+
+/* ---- Light mode (b): paneles + lectura en pergamino; lienzos siguen oscuros ---- */
+body.light aside,body.light .rail,body.light #orbesUI,body.light #domoUI,body.light #satUI,body.light #zodUI,body.light #revUI,body.light .locpill,body.light .locpop,body.light .moresheet,body.light .bottomnav{
+  --panel:#fbf5e6;--panel-2:#f0e6cf;--parchment:#2c2620;--text:#2c2620;--muted:#6f6144;--muted-2:#9a8a66;--line:rgba(150,110,45,.34);--line-soft:rgba(120,95,45,.16);--brass:#9a6b1f;--brass-lo:#7a5218;color:#2c2620}
+body.light aside{background:linear-gradient(180deg,#fbf5e6,#f2e8d0);box-shadow:inset -24px 0 40px -32px rgba(120,90,40,.2)}
+body.light .rail{background:linear-gradient(180deg,#f2e8d0,#e9dcbe)}
+body.light #orbesUI,body.light #domoUI,body.light #satUI,body.light #zodUI,body.light #revUI{background:linear-gradient(180deg,rgba(251,245,230,.97),rgba(242,232,208,.98))}
+body.light .locpill{background:linear-gradient(180deg,#fbf5e6,#f2e8d0);border-color:#9a6b1f;color:#7a5218}
+body.light .locpop,body.light .moresheet{background:linear-gradient(180deg,#fbf5e6,#f2e8d0)}
+body.light .bottomnav{background:linear-gradient(180deg,rgba(251,245,230,.96),rgba(242,232,208,.98))}
+body.light textarea,body.light input{background:#f0e6cf;color:#2c2620}
+body.light .toggle input{background:#ddd0af}
+body.light .toggle input::after{background:#b3a279}
+body.light #orbesUI .oseg button,body.light #domoUI .oseg button,body.light #satUI .oseg button,body.light #zodUI .oseg button,body.light #revUI .oseg button{background:#ece0c4;color:#6f6144}
+body.light .floatpanel .pfoldbtn{background:#fbf5e6}
+body.light .railtoggle{background:#ece0c4}
+body.light .moresheet .moregrid button,body.light .moresheet .morectrl,body.light .locpop .locgps{background:#ece0c4;color:#2c2620}
+body.light .bottomnav .bn{color:#8a7c5e}
+body.light .bottomnav .bn.on{color:#9a6b1f}
+body.light .rail .modebtn{color:#6f6144}
+body.light .rail .modebtn.active{color:#9a6b1f;background:#fbf5e6}
+body.light main{background:#ece1c6}
+body.light #map,body.light #orbes,body.light #domo{background:radial-gradient(circle at 50% 42%,#0e1430,#070a14);border-radius:18px;box-shadow:0 14px 44px rgba(120,90,40,.22)}
+.sec-h{cursor:pointer;user-select:none}
+.sec-h .chev{margin-left:8px;color:var(--brass);transition:transform .2s;font-size:10px;flex:none}
+.sec.collapsed .sec-h .chev{transform:rotate(-90deg)}
+.sec.collapsed>*:not(.sec-h){display:none!important}
+@media(max-width:900px){
+  .aside-intro{display:none}
+  .app{grid-template-columns:1fr}
+  .rail{display:none}
+  aside{position:fixed;top:0;left:0;bottom:0;width:min(88vw,360px);z-index:60;transform:translateX(-103%);transition:transform .25s;overflow-y:auto;border-right:1px solid var(--line);border-bottom:0}
+  .app.showpanel aside{transform:none}
+  .app.showpanel .panelscrim{display:block}
+  .asideclose{display:block}
+  .bottomnav{display:flex}
+  .moresheet{display:block}
+  main{padding-bottom:70px}
+  body.zodiac-mode main{padding-bottom:70px}
+  svg{width:94vw;height:94vw}
+  h1{font-size:30px}
+  body.zodiac-mode main{display:block;height:auto;min-height:auto;overflow:visible;padding:12px}
+  body.zodiac-mode #map{width:94vw;height:94vw;margin:0 auto;display:block}
+  body.zodiac-mode #zodUI{position:static;width:auto;max-width:100%;max-height:none;overflow:visible;margin:14px auto 30px}
+  body.solarreturn-mode #revUI{position:static;width:auto;max-width:100%;max-height:none;overflow:visible;margin:14px auto 30px}
+  body.zodiac-mode .mapctrl{top:auto;bottom:14px;right:14px;flex-direction:row}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.locsearch{display:flex;gap:6px;margin-top:8px}
+.locsearch input{flex:1;min-width:0;background:#11162b;border:1px solid var(--line-soft);border-radius:8px;color:var(--parchment);padding:9px 10px;font:13px var(--sans)}
+.locsearch input::placeholder{color:var(--muted-2)}
+.locsearch input:focus{outline:none;border-color:var(--brass)}
+.locsearch button{flex:none;width:auto;margin-top:0;padding:9px 14px;background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border:1px solid var(--brass);border-radius:8px;cursor:pointer;font:600 13px var(--sans)}
+#orbes{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:2;touch-action:none;cursor:grab}
+#orbes:active{cursor:grabbing}
+body.orbes-mode #orbes{display:block}
+body.orbes-mode #map{display:none}
+body.orbes-mode #zin,body.orbes-mode #zout,body.orbes-mode #zreset,body.orbes-mode #zlvl{display:none}
+#orbesUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:9px;width:238px;max-width:calc(100% - 44px);
+  background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
+  backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+body.orbes-mode #orbesUI{display:flex}#orbesUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
+#orbesUI .oseg{display:flex;gap:6px}
+#orbesUI .oseg button{flex:1;margin:0;padding:7px 5px;font:500 11.5px var(--sans);background:#11162b;color:var(--muted);
+  border:1px solid var(--line-soft);border-radius:7px;cursor:pointer}
+#orbesUI .oseg button.on{background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border-color:var(--brass)}
+#orbesUI .oswitch{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans)}
+#orbesUI .oswitch input{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;flex:none;border-radius:20px;
+  background:#1b2036;border:1px solid var(--line-soft);position:relative;cursor:pointer;transition:background .18s}
+#orbesUI .oswitch input::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--muted-2);transition:.18s}
+#orbesUI .oswitch input:checked{background:rgba(201,151,63,.28);border-color:var(--brass)}
+#orbesUI .oswitch input:checked::after{transform:translateX(14px);background:var(--brass)}
+#orbesUI input[type=range]{width:100%;accent-color:var(--brass);margin-top:2px}
+#orbesUI .ml{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted-2)}
+#orbesUI .ml b{color:var(--parchment);font-family:var(--mono);font-size:10.5px}
+/* ---------------- Analema 3D mode ---------------- */
+#ana3d{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:2;touch-action:none;cursor:grab}
+#ana3d:active{cursor:grabbing}
+body.ana3d-mode #ana3d{display:block}
+body.ana3d-mode #map{display:none}
+body.ana3d-mode main{height:100vh}
+body.ana3d-mode #zin,body.ana3d-mode #zout,body.ana3d-mode #zreset,body.ana3d-mode #zlvl{display:none}
+#ana3dUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:9px;width:238px;max-width:calc(100% - 44px);
+  background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
+  backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+body.ana3d-mode #ana3dUI{display:flex}
+#ana3dUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
+#ana3dUI .oseg{display:flex;gap:6px}
+#ana3dUI .oseg button{flex:1;margin:0;padding:7px 5px;font:500 11.5px var(--sans);background:#11162b;color:var(--muted);border:1px solid var(--line-soft);border-radius:7px;cursor:pointer}
+#ana3dUI .oseg button.on{background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border-color:var(--brass)}
+#ana3dUI .oswitch{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans)}
+#ana3dUI .oswitch input{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;flex:none;border-radius:20px;background:#1b2036;border:1px solid var(--line-soft);position:relative;cursor:pointer;transition:background .18s}
+#ana3dUI .oswitch input::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--muted-2);transition:.18s}
+#ana3dUI .oswitch input:checked{background:rgba(201,151,63,.28);border-color:var(--brass)}
+#ana3dUI .oswitch input:checked::after{transform:translateX(14px);background:var(--brass)}
+#ana3dUI input[type=range]{width:100%;accent-color:var(--brass);margin-top:2px}
+#ana3dUI .ml{display:flex;justify-content:space-between;font-size:10px;color:var(--muted-2)}
+/* ---------------- Domo 3D mode ---------------- */
+#domo{position:absolute;inset:0;width:100%;height:100%;display:none;z-index:2;touch-action:none;cursor:grab}
+#domo:active{cursor:grabbing}
+body.domo-mode #domo{display:block}
+body.domo-mode #map{display:none}
+body.domo-mode main{height:100vh}
+body.domo-mode #zin,body.domo-mode #zout,body.domo-mode #zreset,body.domo-mode #zlvl{display:none}
+#domoUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:9px;width:238px;max-width:calc(100% - 44px);
+  background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
+  backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+body.domo-mode #domoUI{display:flex}
+#zodUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:9px;width:238px;max-width:calc(100% - 44px);
+  background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
+  backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+body.zodiac-mode #zodUI{display:flex}
+#zodUI{max-height:calc(100vh - 44px);overflow-y:auto}
+#revUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:8px;width:300px;max-width:calc(100% - 44px);max-height:calc(100vh - 44px);overflow-y:auto;
+  background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
+  backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+body.solarreturn-mode #revUI{display:flex}
+#revUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
+#revUI .oseg{display:flex;gap:6px}
+#revUI .oseg button{flex:1;margin:0;padding:7px 5px;font:500 11.5px var(--sans);background:#11162b;color:var(--muted);border:1px solid var(--line-soft);border-radius:7px;cursor:pointer}
+#revUI .oseg button.on{background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border-color:var(--brass)}
+#revUI .zinfo{font-family:var(--sans);font-size:11px;line-height:1.5;color:var(--muted);border-top:1px solid var(--line-soft);padding-top:9px;margin-top:4px}
+.revhdr{background:rgba(201,151,63,.10);border:1px solid rgba(201,151,63,.32);border-radius:8px;padding:9px 11px;margin-bottom:9px;color:var(--parchment);font-size:12px}
+.revhdr b{color:var(--brass)}
+#zodUI .ztab{width:100%;border-collapse:collapse;margin:3px 0 8px}
+#zodUI .ztab td{padding:1px 4px 1px 0;font-size:10.5px;color:var(--parchment);vertical-align:top;white-space:nowrap}
+#zodUI .ztab td.dg{color:var(--brass);font-size:9.5px}
+#zodUI .ztab td.ho{color:var(--muted-2);text-align:right}
+#zodUI .lectwrap{border-top:1px solid var(--line-soft);margin-top:8px;padding-top:8px}
+#zodUI .lect .lq{font-family:var(--serif);font-style:italic;font-size:11.5px;color:var(--brass);opacity:.92;margin:4px 0 8px;line-height:1.45}
+#zodUI .lect p{margin:4px 0 8px;font-size:11px;line-height:1.5;color:var(--parchment)}
+#zodUI .lecttab td.lx{color:var(--muted);font-size:10px;line-height:1.4;white-space:normal;padding-bottom:6px}
+#zodUI .lecttab td.lx .dg{color:var(--brass);font-size:9.5px}
+#zodUI .lect p.pl{border-left:2px solid rgba(201,151,63,.4);padding-left:8px;margin:6px 0}
+#zodUI .lect p.pl b{color:var(--parchment)}
+#zodUI .lect p.hs{font-size:10.5px;margin:5px 0;color:var(--muted)}
+#zodUI .lect p.hs b{color:var(--brass)}
+#zodUI .lect p.hs .ang{color:var(--muted-2);font-style:italic}
+#zodUI .lect p.syn{font-size:12px;line-height:1.55;color:var(--parchment);background:rgba(201,151,63,.06);border:1px solid rgba(201,151,63,.25);border-radius:8px;padding:8px 10px;margin:4px 0 10px}
+#zodUI .lect p.syn b{color:var(--brass)}
+#zodUI .lect p.ax{font-size:10.5px;line-height:1.45;margin:4px 0;color:var(--muted)}
+#zodUI .lect p.ax b{color:var(--parchment)}
+#zodUI .lect p.ax .ag{font-size:12px}
+#zodUI .lect p.ax .am{color:var(--muted-2);font-size:9.5px}
+#zodUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
+#zodUI .oseg{display:flex;gap:6px}
+#zodUI .oseg button{flex:1;margin:0;padding:7px 5px;font:500 11.5px var(--sans);background:#11162b;color:var(--muted);border:1px solid var(--line-soft);border-radius:7px;cursor:pointer}
+#zodUI .oseg button.on{background:linear-gradient(180deg,rgba(201,151,63,.22),rgba(201,151,63,.07));color:var(--brass);border-color:var(--brass)}
+#zodUI .oswitch{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans)}
+#zodUI .oswitch input{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;flex:none;border-radius:20px;background:#1b2036;border:1px solid var(--line-soft);position:relative;cursor:pointer;transition:background .18s}
+#zodUI .oswitch input::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--muted-2);transition:.18s}
+#zodUI .oswitch input:checked{background:rgba(201,151,63,.28);border-color:var(--brass)}
+#zodUI .oswitch input:checked::after{transform:translateX(14px);background:var(--brass)}
+#zodUI .zinfo{font-family:var(--sans);font-size:11px;line-height:1.5;color:var(--muted);border-top:1px solid var(--line-soft);padding-top:9px;margin-top:2px}
+#zodUI .zexport,#revUI .zexport{display:flex;gap:6px;margin-top:10px}
+#zodUI .zexport button,#revUI .zexport button{flex:1;padding:8px 6px;font:600 11.5px var(--sans);background:linear-gradient(180deg,rgba(201,151,63,.2),rgba(201,151,63,.06));color:var(--brass);border:1px solid var(--brass);border-radius:8px;cursor:pointer}
+#zodUI .zexport button:last-child,#revUI .zexport button:last-child{flex:none;padding:8px 12px}
+#zodUI .zinfo b{color:var(--brass);font-weight:600}
+#domoUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
+#domoUI .oswitch{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--muted);cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-family:var(--sans)}
+#domoUI .oswitch input{appearance:none;-webkit-appearance:none;margin:0;width:32px;height:18px;flex:none;border-radius:20px;background:#1b2036;border:1px solid var(--line-soft);position:relative;cursor:pointer;transition:background .18s}
+#domoUI .oswitch input::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--muted-2);transition:.18s}
+#domoUI .oswitch input:checked{background:rgba(201,151,63,.28);border-color:var(--brass)}
+#domoUI .oswitch input:checked::after{transform:translateX(14px);background:var(--brass)}
 </style>
 </head>
 <body>
 <div class="app">
+<nav class="rail" id="rail">
+  <div class="railbrand">✦</div>
+  <button id="mMap" class="modebtn active"><span class="ico">◐</span><span class="lbl">Mapa</span></button>
+  <button id="mSat" class="modebtn"><span class="ico">🛰</span><span class="lbl">Satélite</span></button>
+  <button id="mSky" class="modebtn"><span class="ico">✦</span><span class="lbl">Cielo</span></button>
+  <button id="mAna" class="modebtn"><span class="ico">◊</span><span class="lbl">Analema</span></button>
+  <button id="mZod" class="modebtn"><span class="ico">⊙</span><span class="lbl">Zodíaco</span></button>
+  <button id="mChart" class="modebtn"><span class="ico">◈</span><span class="lbl">Carta</span></button>
+  <button id="mRev" class="modebtn"><span class="ico">☉↻</span><span class="lbl">Revolución</span></button>
+  <button id="mWave" class="modebtn"><span class="ico">∿</span><span class="lbl">Onda</span></button>
+  <button id="mDay" class="modebtn"><span class="ico">☀</span><span class="lbl">Día</span></button>
+  <button id="mOrbs" class="modebtn"><span class="ico">◉</span><span class="lbl">Órbes</span></button>
+  <button id="mDomo" class="modebtn"><span class="ico">⌂</span><span class="lbl">Domo 3D</span></button>
+  <div class="railspace"></div>
+  <button id="themeToggle" class="railtoggle" title="Tema claro / oscuro">🌞</button>
+  <button id="panelToggle" class="railtoggle" title="Ocultar / mostrar panel">⟨</button>
+</nav>
 <aside>
-<h1>SATGUS</h1><h2>NORAD 62713 · versión estable</h2>
-<p>Mapa polar estilo Gleason con SATGUS, Sol, Luna, planetas, estrellas principales, Vía Láctea, Ecuador, trópicos y selector de fecha.</p>
-
-<label>Nombre</label><input id="satName" value="SATGUS">
-<label>TLE línea 1</label><textarea id="tle1"></textarea>
-<label>TLE línea 2</label><textarea id="tle2"></textarea>
-
-<button id="load">Cargar TLE SATGUS</button>
-<button id="apply" class="secondary">Actualizar TLE manual</button>
-<button id="locate" class="user">Tomar mi ubicación</button>
-
-<label>Fecha/hora para ver cielo y satélite</label>
-<div class="date-controls">
-  <input id="dateTime" type="datetime-local">
-  <button id="useDate" class="secondary">Ver fecha</button>
-  <button id="nowMode" class="secondary">Volver a ahora</button>
+<button id="asideClose" class="asideclose" title="Cerrar">✕</button>
+<div class="masthead">
+  <h1><span class="spark">✦</span>SATGUS</h1>
+  <h2>NORAD 62713 · efemérides estables</h2>
 </div>
+<div class="rule"></div>
+<p class="aside-intro">Mapa polar azimutal estilo Gleason: SATGUS, Sol, Luna, planetas, estrellas principales, Vía Láctea, eclíptica, ecuador y trópicos, con selector de fecha.</p>
 
-<button id="passBtn" class="user">Próximos pases sobre mi ubicación</button>
-<div id="passes" class="note" style="display:none"></div>
-<button id="astrosBtn" class="secondary">Astros visibles (mi ubicación)</button>
-<div id="astros" class="note" style="display:none"></div>
-<button id="astroBtn" class="secondary">Astro-datos (posiciones, dignidades, Luna…)</button>
-<div id="astroData" class="note" style="display:none"></div>
-<div class="modes">
-<button id="mMap" class="modebtn active">Mapa</button>
-<button id="mSky" class="modebtn">Cielo</button>
-<button id="mAna" class="modebtn">Analema</button>
-<button id="mZod" class="modebtn">Zodíaco</button>
-<button id="mChart" class="modebtn">Carta</button>
-<button id="mWave" class="modebtn">Onda</button>
-<button id="mDay" class="modebtn">Día</button>
-</div>
-<label class="toggle" style="margin-top:8px"><input type="checkbox" id="chartRing" checked>Carta circular (si no, en tira)</label>
+<section class="sec" id="secObjeto">
+  <div class="sec-h"><span class="g">◈</span><span class="t">Objeto</span><span class="ln"></span></div>
+  <label>Nombre</label><input id="satName" value="SATGUS">
+  <label>TLE línea 1</label><textarea id="tle1"></textarea>
+  <label>TLE línea 2</label><textarea id="tle2"></textarea>
+  <button id="load">Cargar TLE SATGUS</button>
+  <button id="apply" class="secondary">Actualizar TLE manual</button>
+</section>
 
-<div class="toggles">
-<label class="toggle"><input type="checkbox" id="showNight" checked>Día/noche</label>
-<label class="toggle"><input type="checkbox" id="showMoon" checked>Luna</label>
-<label class="toggle"><input type="checkbox" id="showZodiac" checked>Constelaciones</label>
-<label class="toggle"><input type="checkbox" id="showAnalemma" checked>Analema local</label>
-<label class="toggle"><input type="checkbox" id="showPlanets" checked>Planetas</label>
-<label class="toggle"><input type="checkbox" id="showStars" checked>Estrellas</label>
-<label class="toggle"><input type="checkbox" id="showMilkyWay" checked>Vía Láctea</label>
-<label class="toggle"><input type="checkbox" id="showVisibleSky">Cielo visible</label>
-<label class="toggle"><input type="checkbox" id="showLines" checked>Ecuador/trópicos</label>
-<label class="toggle"><input type="checkbox" id="showFootprint" checked>Huella satélite</label>
-</div>
+<section class="sec">
+  <div class="sec-h"><span class="g">⊕</span><span class="t">Observador</span><span class="ln"></span></div>
+  <button id="locate" class="user">Tomar mi ubicación</button>
+  <div class="locsearch"><input id="cityInput" list="cityList" placeholder="…o buscá tu ciudad (ej. Rocha)"><button id="cityGo">Ir</button></div>
+  <datalist id="cityList"></datalist>
+  <label>Fecha/hora para ver cielo y satélite</label>
+  <div class="date-controls">
+    <input id="dateTime" type="datetime-local">
+    <button id="useDate" class="secondary">Ver fecha</button>
+    <button id="nowMode" class="secondary">Ahora</button>
+  </div>
+</section>
 
-<div id="status" class="status">Cargando TLE...</div>
+<section class="sec">
+  <div class="sec-h"><span class="g">☉</span><span class="t">Efemérides</span><span class="ln"></span></div>
+  <button id="passBtn" class="user">Próximos pases sobre mi ubicación</button>
+  <div id="passes" class="note" style="display:none"></div>
+  <button id="astrosBtn" class="secondary">Astros visibles (mi ubicación)</button>
+  <div id="astros" class="note" style="display:none"></div>
+  <button id="astroBtn" class="secondary">Astro-datos · posiciones, dignidades, Luna…</button>
+  <div id="astroData" class="note" style="display:none"></div>
+</section>
+
+<section class="sec">
+  <div class="sec-h"><span class="g">◐</span><span class="t">Opciones de vista</span><span class="ln"></span></div>
+  <label class="toggle wide"><input type="checkbox" id="chartRing" checked>Carta circular (si no, en tira)</label>
+  <label class="toggle wide"><input type="checkbox" id="analemmaTrue">Analema a escala 1:1 (si no, ensanchado)</label>
+  <label class="toggle wide"><input type="checkbox" id="analemmaMoon">Analema lunar ☾ (si no, solar ☉)</label>
+  <label class="toggle wide"><input type="checkbox" id="analemmaClean">Figura ∞ limpia · dec × ec. tiempo (si no, observada)</label>
+</section>
+
+<section class="sec">
+  <div class="sec-h"><span class="g">✷</span><span class="t">Capas</span><span class="ln"></span></div>
+  <div class="toggles">
+    <label class="toggle"><input type="checkbox" id="showNight" checked>Día/noche</label>
+    <label class="toggle"><input type="checkbox" id="showMoon" checked>Luna</label>
+    <label class="toggle"><input type="checkbox" id="showZodiac" checked>Constelaciones</label>
+    <label class="toggle"><input type="checkbox" id="showAnalemma" checked>Analema local</label>
+    <label class="toggle"><input type="checkbox" id="showPlanets" checked>Planetas</label>
+    <label class="toggle"><input type="checkbox" id="showStars" checked>Estrellas</label>
+    <label class="toggle"><input type="checkbox" id="showMilkyWay" checked>Vía Láctea</label>
+    <label class="toggle"><input type="checkbox" id="showVisibleSky">Cielo visible</label>
+    <label class="toggle"><input type="checkbox" id="showLines" checked>Ecuador/trópicos</label>
+    <label class="toggle"><input type="checkbox" id="showFootprint" checked>Huella satélite</label>
+  </div>
+</section>
+
+<div id="status" class="status">Cargando TLE…</div>
+
+<div class="rule mini"></div>
 <div class="legend">
-<span><i class="dot" style="background:var(--sat)"></i>SATGUS</span><span><i class="dash" style="border-color:var(--sat)"></i>Órbita/huella</span>
-<span><i class="dot" style="background:var(--sun)"></i>Sol</span><span><i class="dot" style="background:var(--moon)"></i>Luna</span>
-<span><i class="dot" style="background:var(--user)"></i>Ubicación</span><span><i class="dash" style="border-color:var(--ecl)"></i>Eclíptica</span>
-<span><i class="dot" style="background:white"></i>Estrellas</span><span><i class="dot" style="background:rgba(190,210,255,.7)"></i>Vía Láctea</span>
+  <span><i class="dot" style="background:var(--sat);color:var(--sat)"></i>SATGUS</span><span><i class="dash" style="border-color:var(--sat)"></i>Órbita/huella</span>
+  <span><i class="dot" style="background:var(--sun);color:var(--sun)"></i>Sol</span><span><i class="dot" style="background:var(--moon);color:var(--moon)"></i>Luna</span>
+  <span><i class="dot" style="background:var(--user);color:var(--user)"></i>Ubicación</span><span><i class="dash" style="border-color:var(--ecl)"></i>Eclíptica</span>
+  <span><i class="dot" style="background:#fff;color:#fff"></i>Estrellas</span><span><i class="dot" style="background:rgba(190,205,255,.7);color:rgba(190,205,255,.7)"></i>Vía Láctea</span>
 </div>
 
-<div class="data">
-<div class="row"><span class="key">UTC</span><span id="utc" class="value">—</span></div>
-<div class="row"><span class="key">SATGUS lat/lon</span><span id="satpos" class="value">—</span></div>
-<div class="row"><span class="key">Altitud</span><span id="alt" class="value">—</span></div>
-<div class="row"><span class="key">Velocidad</span><span id="speed" class="value">—</span></div>
-<div class="row"><span class="key">Período orbital</span><span id="period" class="value">—</span></div>
-<div class="row"><span class="key">Huella (radio)</span><span id="footprint" class="value">—</span></div>
-<div class="row"><span class="key">Sol</span><span id="sunpos" class="value">—</span></div>
-<div class="row"><span class="key">Sol en</span><span id="sunconst" class="value">—</span></div>
-<div class="row"><span class="key">Luna</span><span id="moonpos" class="value">—</span></div>
-<div class="row"><span class="key">Fase lunar</span><span id="moonphase" class="value">—</span></div>
-<div class="row"><span class="key">Mi ubicación</span><span id="userpos" class="value">no cargada</span></div>
-<div class="row"><span class="key">Visibilidad</span><span id="visible" class="value">—</span></div>
+<div class="rule mini"></div>
+<div class="sec-h" id="lectHdr"><span class="g">☽</span><span class="t">Lecturas</span><span class="ln"></span></div>
+<div class="data" id="satData">
+  <div class="row"><span class="key">UTC</span><span id="utc" class="value">—</span></div>
+  <div class="row"><span class="key">SATGUS lat/lon</span><span id="satpos" class="value">—</span></div>
+  <div class="row"><span class="key">Altitud</span><span id="alt" class="value">—</span></div>
+  <div class="row"><span class="key">Velocidad</span><span id="speed" class="value">—</span></div>
+  <div class="row"><span class="key">Período orbital</span><span id="period" class="value">—</span></div>
+  <div class="row"><span class="key">Huella (radio)</span><span id="footprint" class="value">—</span></div>
+  <div class="row"><span class="key">Sol</span><span id="sunpos" class="value">—</span></div>
+  <div class="row"><span class="key">Sol en</span><span id="sunconst" class="value">—</span></div>
+  <div class="row"><span class="key">Luna</span><span id="moonpos" class="value">—</span></div>
+  <div class="row"><span class="key">Fase lunar</span><span id="moonphase" class="value">—</span></div>
+  <div class="row"><span class="key">Mi ubicación</span><span id="userpos" class="value">no cargada</span></div>
+  <div class="row"><span class="key">Visibilidad</span><span id="visible" class="value">—</span></div>
 </div>
-<div class="note">Mapa base embebido (siempre disponible, incluso sin internet); mejora a 50m si hay red, con la Antártida separada. Posiciones geocéntricas aparentes referidas al equinoccio de fecha (Sol con ecuación del centro; planetas keplerianos con tiempo-luz, precesión, nutación y aberración; Luna topocéntrica en el cielo/tabla). Zodíaco tropical de fecha. Estrellas en J2000. El satélite usa SGP4 real. Precisión típica: minutos de arco en planetas, algo más en la Luna.</div>
+<div class="note" style="margin-top:16px">Mapa base embebido (siempre disponible, incluso sin internet); mejora a 50 m si hay red, con la Antártida separada. Posiciones geocéntricas aparentes referidas al equinoccio de fecha (Sol con ecuación del centro; planetas keplerianos con tiempo-luz, precesión, nutación y aberración; Luna topocéntrica en el cielo/tabla). Zodíaco tropical de fecha. Estrellas en J2000. El satélite usa SGP4 real. Precisión típica: minutos de arco en planetas, algo más en la Luna.</div>
 </aside>
 <main><div class="mapctrl">
 <button id="zin" title="Acercar" aria-label="Acercar">+</button>
@@ -147,7 +587,70 @@ svg{width:min(92vw,92vh);height:min(92vw,92vh);max-width:980px;max-height:980px;
 <button id="zout" title="Alejar" aria-label="Alejar">−</button>
 <button id="zreset" title="Restablecer vista" aria-label="Restablecer">⌂</button>
 <button id="zfull" title="Mapa grande / mostrar panel" aria-label="Pantalla del mapa">⛶</button>
-</div><svg id="map" viewBox="0 0 900 900" role="img" aria-label="Mapa polar azimutal con SATGUS, Sol, Luna y cielo"><title>SATGUS 62713 — tracker polar</title><desc>Proyección azimutal equidistante centrada en el polo norte, con la huella del satélite y objetos celestes.</desc></svg></main>
+</div><svg id="map" viewBox="0 0 900 900" role="img" aria-label="Mapa polar azimutal con SATGUS, Sol, Luna y cielo"><title>SATGUS 62713 — tracker polar</title><desc>Proyección azimutal equidistante centrada en el polo norte, con la huella del satélite y objetos celestes.</desc></svg><canvas id="orbes"></canvas><div id="orbesUI">
+<div class="oh">Órbes · orden caldeo (geocéntrico)</div>
+<div class="oseg" id="oPreset"><button data-p="ladder" class="on">Escalera</button><button data-p="orbs">Concéntrico</button></div>
+<label class="oswitch"><input type="checkbox" id="oSpin" checked><span>Giro automático</span></label>
+<div class="oh" style="margin-top:4px">Firmamento estelar</div>
+<div class="oseg" id="oFirm"><button data-f="plano" class="on">Plano</button><button data-f="domo">Domo</button><button data-f="esfera">Esfera</button></div>
+<div class="oh" style="margin-top:4px">Analema · círculo ⟷ 8</div>
+<div class="oseg" id="oWhich"><button data-w="sun">Sol</button><button data-w="moon">Luna</button><button data-w="both" class="on">Ambos</button></div>
+<input type="range" id="oMorph" min="0" max="100" value="0">
+<div class="ml"><span>Círculo anual</span><b id="oMlab">Círculo</b><span>Analema 8</span></div>
+</div><canvas id="domo"></canvas><div id="domoUI">
+<div class="oh">Domo 3D · planetario</div>
+<label class="oswitch"><input type="checkbox" id="dSpin" checked><span>Giro de cámara</span></label>
+<label class="oswitch"><input type="checkbox" id="dConst" checked><span>Constelaciones</span></label>
+<label class="oswitch"><input type="checkbox" id="dEcl" checked><span>Eclíptica + ecuador</span></label>
+</div><div id="zodUI">
+<div class="oh">Carta del momento</div>
+<label class="oswitch"><input type="checkbox" id="zAsp" checked><span>Aspectos</span></label>
+<label class="oswitch"><input type="checkbox" id="zDign" checked><span>Dignidades</span></label>
+<label class="oswitch"><input type="checkbox" id="zElem" checked><span>Elemento / modalidad</span></label>
+<label class="oswitch"><input type="checkbox" id="zHouse" checked><span>Ascendente + casas</span></label>
+<div class="oseg" id="zHsys"><button data-h="whole" class="on">Signos</button><button data-h="equal">Iguales</button><button data-h="porphyry">Porfirio</button></div>
+<label class="oswitch"><input type="checkbox" id="zRot" checked><span>Rotar al Ascendente</span></label>
+<label class="oswitch"><input type="checkbox" id="zLect" checked><span>Lectura helenística</span></label>
+<div id="zodInfo" class="zinfo"></div>
+<div class="zexport"><button id="zDlHtml">Descargar carta (HTML)</button><button id="zDlTxt">Texto</button></div>
+</div><div id="revUI">
+<div class="oh">Revolución solar</div>
+<label>Nacimiento · fecha y hora</label>
+<input type="datetime-local" id="revBirthDT">
+<label>Nacimiento · ciudad</label>
+<input type="text" id="revBirthCity" list="cityList" placeholder="ej. Fray Bentos">
+<label>Año de la revolución</label>
+<input type="number" id="revYear" placeholder="2026">
+<label>Ubicación de la revolución</label>
+<div class="oseg" id="revLocMode"><button data-l="here" class="on">Donde estás</button><button data-l="natal">Lugar natal</button></div>
+<input type="text" id="revCity" list="cityList" placeholder="…u otra ciudad (opcional)">
+<button id="revCalc">Calcular revolución</button>
+<div id="revInfo" class="zinfo"></div>
+<div class="zexport"><button id="revDlHtml">Descargar revolución (HTML)</button><button id="revDlTxt">Texto</button></div>
+</div><div id="satUI"></div></main>
+<nav class="bottomnav" id="bnav">
+  <button data-m="map" class="bn"><span class="i">◐</span>Mapa</button>
+  <button data-m="sky" class="bn"><span class="i">✦</span>Cielo</button>
+  <button data-m="zodiac" class="bn"><span class="i">⊙</span>Carta</button>
+  <button data-m="domo" class="bn"><span class="i">⌂</span>Domo</button>
+  <button id="bnMore" class="bn"><span class="i">⋯</span>Más</button>
+</nav>
+<div class="moresheet" id="moreSheet">
+  <div class="grip"></div>
+  <div class="moregrid">
+    <button data-m="satellite">🛰 Satélite</button><button data-m="analemma">◊ Analema</button><button data-m="chart">◈ Carta (trazas)</button><button data-m="solarreturn">☉↻ Revolución</button><button data-m="wave">∿ Onda</button>
+    <button data-m="day">☀ Día</button><button data-m="orbes">◉ Órbes</button>
+  </div>
+  <button id="openPanel" class="morectrl">⚙ Controles y ajustes</button>
+  <button id="themeToggleM" class="morectrl">🌞 Tema claro</button>
+</div>
+<div class="panelscrim" id="scrim"></div>
+</div>
+<button id="locPill" class="locpill">📍 Ubicación</button>
+<div id="locPop" class="locpop">
+  <div class="lh">Ubicación</div>
+  <div class="locsearch"><input id="locPopInput" list="cityList" placeholder="Buscá tu ciudad (ej. Rocha)"><button id="locPopGo">Ir</button></div>
+  <button id="locPopGPS" class="locgps">📡 Usar mi ubicación (GPS)</button>
 </div>
 
 <script>
@@ -165,7 +668,7 @@ const labelLayer=root.append("g").attr("class","mapLayer");
 const zoom=d3.zoom().scaleExtent([1,14]).on("zoom",ev=>{root.attr("transform",ev.transform);const z=document.getElementById("zlvl");if(z)z.textContent=ev.transform.k.toFixed(1)+"×";});
 const skyLayer=root.append("g");
 
-let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null,viewMode="map",chartRing=true,skyInfo="";
+let satrec=null,currentName="SATGUS",userLocation=null,fixedDate=null,viewMode="map",chartRing=true,analemmaTrue=false,skyInfo="";
 
 const FALLBACK_TLE={
  name:"SATGUS",
@@ -441,55 +944,399 @@ function eqTimeMin(date){const T=Tt(date),s=getSun(date),eps=(meanObliquity(T)+n
 function renderAnalemma(date){
  skyLayer.selectAll("*").remove();
  const u=userLocation,y=date.getUTCFullYear();
+ const lunar=document.getElementById("analemmaMoon").checked;
+ const clean=document.getElementById("analemmaClean").checked; // figura des-rotada (declinación × ecuación del tiempo / residuo AR)
  const hourUTC=12-u.lon/15,hh=Math.floor((hourUTC+24)%24),mm=Math.round((((hourUTC+24)%24)-hh)*60);
- const daily=[];for(let n=0;n<=365;n++){const dt=new Date(Date.UTC(y,0,1+n,hh,mm,0)),s=getSun(dt),aa=altAz(s.ra,s.dec,u,dt);daily.push({dt,alt:aa.alt,az:aa.az,dec:s.dec,eclLon:s.eclLon});}
+ // --- muestreo diario a hora local fija ---
+ const daily=[],half=15;
+ if(lunar){const base=Date.UTC(y,date.getUTCMonth(),date.getUTCDate(),hh,mm,0);
+  for(let n=0;n<30;n++){const dt=new Date(base+(n-half)*86400000),b=getMoon(dt),aa=altAz(b.ra,b.dec,u,dt);daily.push({dt,alt:aa.alt,az:aa.az,dec:b.dec,ra:b.ra,eclLon:b.eclLon});}
+ }else{for(let n=0;n<=365;n++){const dt=new Date(Date.UTC(y,0,1+n,hh,mm,0)),s=getSun(dt),aa=altAz(s.ra,s.dec,u,dt);daily.push({dt,alt:aa.alt,az:aa.az,dec:s.dec,ra:s.ra,eclLon:s.eclLon});}}
  let iMax=0,iMin=0;daily.forEach((p,i)=>{if(p.dec>daily[iMax].dec)iMax=i;if(p.dec<daily[iMin].dec)iMin=i;});
- const refAz=daily[iMax].az,unwrap=az=>{let d=az-refAz;return ((d+540)%360)-180;};
- // límites del 8 (puntos sobre el horizonte) y proyección que llena la pantalla
- let xmin=1e9,xmax=-1e9,amin=1e9,amax=-1e9;daily.forEach(p=>{if(p.alt<0)return;const x=unwrap(p.az);xmin=Math.min(xmin,x);xmax=Math.max(xmax,x);amin=Math.min(amin,p.alt);amax=Math.max(amax,p.alt);});
- if(xmax-xmin<1){xmin-=1;xmax+=1;}
+ const refAz=daily[iMax].az;
+ // eje horizontal
+ if(clean){ // residuo de ascensión recta respecto al movimiento medio (≡ ecuación del tiempo para el Sol)
+  const un=[daily[0].ra];for(let i=1;i<daily.length;i++){let d=daily[i].ra-daily[i-1].ra;d=((d+540)%360)-180;un.push(un[i-1]+d);}
+  const slope=(un[daily.length-1]-un[0])/(daily.length-1);daily.forEach((p,i)=>p.x=-(un[i]-(un[0]+slope*i)));
+ }else if(lunar){daily[0].x=0;for(let i=1;i<daily.length;i++){let d=daily[i].az-daily[i-1].az;d=((d+540)%360)-180;daily[i].x=daily[i-1].x+d;}const cx=daily[iMax].x;daily.forEach(p=>p.x-=cx);}
+ else{daily.forEach(p=>p.x=((p.az-refAz+540)%360)-180);}
+ const xOfAz=az=>((az-refAz+540)%360)-180;
+ // eje vertical: observada=altitud ; limpia=declinación
+ daily.forEach(p=>p.yv=clean?p.dec:p.alt);
+ const useAll=clean||lunar; // observada solar recorta bajo el horizonte; el resto muestra todo
+ let xmin=1e9,xmax=-1e9,ymin=1e9,ymax=-1e9;daily.forEach(p=>{if(!useAll&&p.alt<0)return;xmin=Math.min(xmin,p.x);xmax=Math.max(xmax,p.x);ymin=Math.min(ymin,p.yv);ymax=Math.max(ymax,p.yv);});
+ if(xmax-xmin<1){xmin-=1;xmax+=1;}if(ymax-ymin<1){ymin-=1;ymax+=1;}
  const W=900,H=900,mx=150,myTop=96,myBot=84;
- const sx=(W-2*mx)/(xmax-xmin),sy=(H-myTop-myBot)/(amax-amin);
- const proj=(alt,az)=>[mx+(unwrap(az)-xmin)*sx,(H-myBot)-(alt-amin)*sy];
- // referencias: meridiano (culminación) + líneas de altura
- const mp=mx+(0-xmin)*sx;skyLayer.append("line").attr("class","gridline").attr("x1",mp).attr("y1",myTop).attr("x2",mp).attr("y2",H-myBot).attr("stroke-dasharray","4 5");
- [amin,(amin+amax)/2,amax].forEach(al=>{const yv=(H-myBot)-(al-amin)*sy;skyLayer.append("line").attr("class","gridline").attr("x1",mx).attr("y1",yv).attr("x2",W-mx).attr("y2",yv);skyLayer.append("text").attr("class","gridlabel").attr("x",mx-8).attr("y",yv+3).attr("text-anchor","end").text("alt "+al.toFixed(0)+"°");});
- // curva coloreada por signo del Sol
- for(let i=1;i<daily.length;i++){const a=daily[i-1],b=daily[i];if(a.alt<0||b.alt<0)continue;const pa=proj(a.alt,a.az),pb=proj(b.alt,b.az),sign=Math.floor(normDeg(b.eclLon)/30);
-  skyLayer.append("line").attr("x1",pa[0]).attr("y1",pa[1]).attr("x2",pb[0]).attr("y2",pb[1]).attr("stroke","hsl("+(sign*30)+",72%,63%)").attr("stroke-width",4).attr("stroke-linecap","round");}
- for(let i=1;i<daily.length;i++){const sp=Math.floor(normDeg(daily[i-1].eclLon)/30),s=Math.floor(normDeg(daily[i].eclLon)/30);if(s!==sp&&daily[i].alt>0){const xy=proj(daily[i].alt,daily[i].az);skyLayer.append("text").attr("class","wheelGlyph").attr("font-size",18).attr("x",xy[0]+11).attr("y",xy[1]+6).text(zodiac[s].sym);}}
- const eqx=[];for(let i=1;i<daily.length;i++)if((daily[i-1].dec<0)!==(daily[i].dec<0))eqx.push(i);
- const mk=(p,label,col)=>{if(p.alt<0)return;const xy=proj(p.alt,p.az);skyLayer.append("circle").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",5).attr("fill",col);skyLayer.append("text").attr("class","smallLabel").attr("x",xy[0]+9).attr("y",xy[1]+4).text(label);};
- mk(daily[iMax],"solsticio "+daily[iMax].dt.toLocaleDateString([], {month:"short"}),"#ffd166");
- mk(daily[iMin],"solsticio "+daily[iMin].dt.toLocaleDateString([], {month:"short"}),"#8fb7ff");
- eqx.forEach(i=>mk(daily[i],"equinoccio "+daily[i].dt.toLocaleDateString([], {month:"short"}),"#b06cff"));
- [[0,1,"1 ene"],[1,2,"2 feb"],[4,1,"1 may"],[7,1,"1 ago"],[10,1,"1 nov"],[11,25,"25 dic"]].forEach(([mo,da,lab])=>{const dt=new Date(Date.UTC(y,mo,da,hh,mm,0)),s=getSun(dt),aa=altAz(s.ra,s.dec,u,dt);if(aa.alt>0){const xy=proj(aa.alt,aa.az);skyLayer.append("circle").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",3).attr("fill","#8fe3c0");skyLayer.append("text").attr("class","gridlabel").attr("x",xy[0]+6).attr("y",xy[1]+3).text(lab);}});
- const dt0=new Date(Date.UTC(y,date.getUTCMonth(),date.getUTCDate(),hh,mm,0)),s0=getSun(dt0),aa0=altAz(s0.ra,s0.dec,u,dt0);
- if(aa0.alt>0){const xy=proj(aa0.alt,aa0.az);skyLayer.append("circle").attr("class","sunDot").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",8);skyLayer.append("text").attr("class","label").attr("x",xy[0]+11).attr("y",xy[1]-8).text("hoy");}
- skyLayer.append("text").attr("class","constLabel").attr("x",W/2).attr("y",46).text("Analema solar · "+String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")+" UTC · color = signo del Sol · horizontal ensanchada");
- skyLayer.append("text").attr("class","smallLabel").attr("x",W/2).attr("y",H-34).attr("text-anchor","middle").text("Ecuación del tiempo hoy: "+eqTimeMin(dt0).toFixed(1)+" min · Declinación ☉: "+s0.dec.toFixed(1)+"°");
+ const availW=W-2*mx,availH=H-myTop-myBot;
+ const sxFull=availW/(xmax-xmin),syFull=availH/(ymax-ymin);
+ // analemmaTrue: misma escala en ambos ejes (grados↔px) y figura centrada → aspecto angular real.
+ let sx,sy,ox,oyBot;
+ if(analemmaTrue){const s=Math.min(sxFull,syFull);sx=sy=s;ox=mx+(availW-(xmax-xmin)*s)/2;oyBot=(H-myBot)-(availH-(ymax-ymin)*s)/2;}
+ else{sx=sxFull;sy=syFull;ox=mx;oyBot=H-myBot;}
+ const projX=x=>ox+(x-xmin)*sx,projY=yv=>oyBot-(yv-ymin)*sy;
+ const proj=(yv,x)=>[projX(x),projY(yv)];
+ const yLab=clean?"dec":"alt";
+ // referencias: vertical media/culminación + líneas horizontales
+ const mp=projX(0);skyLayer.append("line").attr("class","gridline").attr("x1",mp).attr("y1",projY(ymax)).attr("x2",mp).attr("y2",projY(ymin)).attr("stroke-dasharray","4 5");
+ [ymin,(ymin+ymax)/2,ymax].forEach(al=>{const yy=projY(al);skyLayer.append("line").attr("class","gridline").attr("x1",mx).attr("y1",yy).attr("x2",W-mx).attr("y2",yy);skyLayer.append("text").attr("class","gridlabel").attr("x",mx-8).attr("y",yy+3).attr("text-anchor","end").text(yLab+" "+al.toFixed(0)+"°");});
+ if(ymin<0&&ymax>0){const yz=projY(0);skyLayer.append("line").attr("class","horizon").attr("x1",mx).attr("y1",yz).attr("x2",W-mx).attr("y2",yz);skyLayer.append("text").attr("class","gridlabel").attr("x",W-mx).attr("y",yz-5).attr("text-anchor","end").text(clean?"ecuador":"horizonte");}
+ // curva coloreada por signo (tramos bajo el horizonte, atenuados; en modo limpio no hay horizonte)
+ for(let i=1;i<daily.length;i++){const a=daily[i-1],b=daily[i];if(!useAll&&(a.alt<0||b.alt<0))continue;const pa=proj(a.yv,a.x),pb=proj(b.yv,b.x),sign=Math.floor(normDeg(b.eclLon)/30),below=!clean&&(a.alt<0||b.alt<0);
+  skyLayer.append("line").attr("x1",pa[0]).attr("y1",pa[1]).attr("x2",pb[0]).attr("y2",pb[1]).attr("stroke","hsl("+(sign*30)+",72%,63%)").attr("stroke-width",4).attr("stroke-linecap","round").attr("opacity",below?0.3:1);}
+ for(let i=1;i<daily.length;i++){const sp=Math.floor(normDeg(daily[i-1].eclLon)/30),s=Math.floor(normDeg(daily[i].eclLon)/30);if(s!==sp&&(useAll||daily[i].alt>0)){const xy=proj(daily[i].yv,daily[i].x);skyLayer.append("text").attr("class","wheelGlyph").attr("font-size",lunar?15:18).attr("opacity",(!clean&&daily[i].alt<0)?0.4:1).attr("x",xy[0]+11).attr("y",xy[1]+6).text(zodiac[s].sym);}}
+ const mk=(p,label,col)=>{if(!useAll&&p.alt<0)return;const xy=proj(p.yv,p.x),dim=!clean&&p.alt<0;skyLayer.append("circle").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",5).attr("fill",col).attr("opacity",dim?0.5:1);skyLayer.append("text").attr("class","smallLabel").attr("opacity",dim?0.6:1).attr("x",xy[0]+9).attr("y",xy[1]+4).text(label);};
+ const scaleTag=analemmaTrue?"escala 1:1 (real)":"horizontal ensanchada";
+ if(lunar){
+  mk(daily[iMax],"dec máx N "+daily[iMax].dt.toLocaleDateString([],{day:"2-digit",month:"short"}),"#d7e2f2");
+  mk(daily[iMin],"dec máx S "+daily[iMin].dt.toLocaleDateString([],{day:"2-digit",month:"short"}),"#8fb7ff");
+  const h0=daily[half],xy=proj(h0.yv,h0.x);skyLayer.append("circle").attr("class","moonDot").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",8).attr("opacity",(!clean&&h0.alt<0)?0.6:1);skyLayer.append("text").attr("class","label").attr("x",xy[0]+11).attr("y",xy[1]-8).text("hoy");
+  const b0=getMoon(daily[half].dt),s0=getSun(daily[half].dt);
+  skyLayer.append("text").attr("class","constLabel").attr("x",W/2).attr("y",46).text("Analema lunar · "+(clean?"figura ∞ · declinación × residuo AR":String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")+" UTC")+" · mes sinódico · signo de la Luna · "+scaleTag);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",W/2).attr("y",H-34).attr("text-anchor","middle").text(moonPhaseName(s0.eclLon,b0.eclLon)+" · Declinación ☾: "+b0.dec.toFixed(1)+"°");
+ }else{
+  mk(daily[iMax],"solsticio "+daily[iMax].dt.toLocaleDateString([], {month:"short"}),"#ffd166");
+  mk(daily[iMin],"solsticio "+daily[iMin].dt.toLocaleDateString([], {month:"short"}),"#8fb7ff");
+  const eqx=[];for(let i=1;i<daily.length;i++)if((daily[i-1].dec<0)!==(daily[i].dec<0))eqx.push(i);
+  eqx.forEach(i=>mk(daily[i],"equinoccio "+daily[i].dt.toLocaleDateString([], {month:"short"}),"#b06cff"));
+  if(!clean)[[0,1,"1 ene"],[1,2,"2 feb"],[4,1,"1 may"],[7,1,"1 ago"],[10,1,"1 nov"],[11,25,"25 dic"]].forEach(([mo,da,lab])=>{const dt=new Date(Date.UTC(y,mo,da,hh,mm,0)),s=getSun(dt),aa=altAz(s.ra,s.dec,u,dt);if(aa.alt>0){const xy=proj(aa.alt,xOfAz(aa.az));skyLayer.append("circle").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",3).attr("fill","#8fe3c0");skyLayer.append("text").attr("class","gridlabel").attr("x",xy[0]+6).attr("y",xy[1]+3).text(lab);}});
+  const dt0=new Date(Date.UTC(y,date.getUTCMonth(),date.getUTCDate(),hh,mm,0)),s0=getSun(dt0),aa0=altAz(s0.ra,s0.dec,u,dt0);
+  if(clean){
+   // "hoy" en modo limpio: usar el punto del día actual (índice más cercano)
+   let bi=0,bd=1e9;daily.forEach((p,i)=>{const dd=Math.abs(p.dt-dt0);if(dd<bd){bd=dd;bi=i;}});const xy=proj(daily[bi].yv,daily[bi].x);skyLayer.append("circle").attr("class","sunDot").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",8);skyLayer.append("text").attr("class","label").attr("x",xy[0]+11).attr("y",xy[1]-8).text("hoy");}
+  else if(aa0.alt>0){const xy=proj(aa0.alt,xOfAz(aa0.az));skyLayer.append("circle").attr("class","sunDot").attr("cx",xy[0]).attr("cy",xy[1]).attr("r",8);skyLayer.append("text").attr("class","label").attr("x",xy[0]+11).attr("y",xy[1]-8).text("hoy");}
+  skyLayer.append("text").attr("class","constLabel").attr("x",W/2).attr("y",46).text("Analema solar · "+(clean?"figura ∞ · declinación × ecuación del tiempo":String(hh).padStart(2,"0")+":"+String(mm).padStart(2,"0")+" UTC")+" · signo del Sol · "+scaleTag);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",W/2).attr("y",H-34).attr("text-anchor","middle").text("Ecuación del tiempo hoy: "+eqTimeMin(dt0).toFixed(1)+" min · Declinación ☉: "+s0.dec.toFixed(1)+"°");
+ }
 }
 
 // ---- Modo ZODÍACO: rueda con Sol, Luna y planetas por signo y grado ----
-function renderZodiacWheel(date){
+// ===== Carta del momento: aspectos, dignidades, elemento/modalidad, Ascendente + casas =====
+const ELEM=["Fuego","Tierra","Aire","Agua"],ELEMC=["#e8734a","#6fae7a","#e6c34a","#5aa0d6"];
+const MODAL=["Cardinal","Fijo","Mutable"];
+const ZASPECTS=[
+ {name:"Conjunción",sym:"\u260C",ang:0,orb:8,col:"#c9973f"},
+ {name:"Sextil",sym:"\u26B9",ang:60,orb:5,col:"#5fb8a6"},
+ {name:"Cuadratura",sym:"\u25A1",ang:90,orb:7,col:"#e0564e"},
+ {name:"Trígono",sym:"\u25B3",ang:120,orb:7,col:"#6db6ff"},
+ {name:"Oposición",sym:"\u260D",ang:180,orb:8,col:"#e0564e"}
+];
+function chartBodies(date){
+ const b=[{name:"Sol",sym:"\u2609",lon:getSun(date).eclLon,c:"#ffd166",dg:"Sol",def:null,lum:true},
+          {name:"Luna",sym:"\u263E",lon:getMoon(date).eclLon,c:"#dce6f2",dg:"Luna",def:null,lum:true}];
+ planetDefs.forEach(pl=>b.push({name:pl.name,sym:pl.sym,lon:planetPosition(pl,date).eclLon,c:pl.color,dg:pl.name,def:pl,lum:false}));
+ return b;
+}
+function aspectsBetween(bodies){
+ const out=[];
+ for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){
+  let d=Math.abs(normDeg(bodies[i].lon-bodies[j].lon));if(d>180)d=360-d;
+  for(const A of ZASPECTS){const orb=A.orb+((bodies[i].lum||bodies[j].lum)?2:0);if(Math.abs(d-A.ang)<=orb){out.push({i,j,asp:A,orb:Math.abs(d-A.ang)});break;}}
+ }
+ return out;
+}
+function ascMC(date,u){
+ const D2R=Math.PI/180,eps=23.439291*D2R,ramc=normDeg(gmstDeg(date)+u.lon)*D2R,phi=u.lat*D2R;
+ const mc=Math.atan2(Math.sin(ramc),Math.cos(ramc)*Math.cos(eps));
+ const asc=Math.atan2(Math.cos(ramc),-(Math.sin(ramc)*Math.cos(eps)+Math.tan(phi)*Math.sin(eps)));
+ return{asc:normDeg(asc/D2R),mc:normDeg(mc/D2R)};
+}
+function houseCusps(asc,mc,system){const c=new Array(12);
+ if(system==="equal"){for(let i=0;i<12;i++)c[i]=normDeg(asc+i*30);return c;}
+ if(system==="porphyry"){const ic=normDeg(mc+180),dc=normDeg(asc+180);
+  const q1=normDeg(asc-mc),q2=normDeg(ic-asc),q3=normDeg(dc-ic),q4=normDeg(mc-dc);
+  c[9]=normDeg(mc);c[0]=normDeg(asc);c[3]=ic;c[6]=dc;
+  c[10]=normDeg(mc+q1/3);c[11]=normDeg(mc+2*q1/3);
+  c[1]=normDeg(asc+q2/3);c[2]=normDeg(asc+2*q2/3);
+  c[4]=normDeg(ic+q3/3);c[5]=normDeg(ic+2*q3/3);
+  c[7]=normDeg(dc+q4/3);c[8]=normDeg(dc+2*q4/3);return c;}
+ const base=Math.floor(normDeg(asc)/30)*30;for(let i=0;i<12;i++)c[i]=normDeg(base+i*30);return c;} // whole
+function angularity(h){return(h===0||h===3||h===6||h===9)?"angular":((h===1||h===4||h===7||h===10)?"sucedente":"cadente");}
+const JOY={"Mercurio":0,"Luna":2,"Venus":4,"Marte":5,"Sol":8,"Júpiter":10,"Saturno":11};
+function zGet(id){const e=document.getElementById(id);return e?e.checked:false;}
+
+// ===== Lectura helenística (offline): secta, 5 dignidades, condición solar, Lotes, regente =====
+const PL7=["Sol","Luna","Mercurio","Venus","Marte","Júpiter","Saturno"];
+const PGLY={"Sol":"\u2609","Luna":"\u263D","Mercurio":"\u263F","Venus":"\u2640","Marte":"\u2642","Júpiter":"\u2643","Saturno":"\u2644"};
+const RULER=["Marte","Venus","Mercurio","Luna","Sol","Mercurio","Venus","Marte","Júpiter","Saturno","Saturno","Júpiter"]; // regente de cada signo
+// triplicidades doroteanas por elemento [fuego,tierra,aire,agua] → {día,noche,participa}
+const TRIP=[{d:"Sol",n:"Júpiter",p:"Saturno"},{d:"Venus",n:"Luna",p:"Marte"},{d:"Saturno",n:"Mercurio",p:"Júpiter"},{d:"Venus",n:"Marte",p:"Luna"}];
+// términos egipcios: por signo, [regente, hasta grado]
+const BOUNDS=[
+ [["Júpiter",6],["Venus",12],["Mercurio",20],["Marte",25],["Saturno",30]],
+ [["Venus",8],["Mercurio",14],["Júpiter",22],["Saturno",27],["Marte",30]],
+ [["Mercurio",6],["Júpiter",12],["Venus",17],["Marte",24],["Saturno",30]],
+ [["Marte",7],["Venus",13],["Mercurio",19],["Júpiter",26],["Saturno",30]],
+ [["Júpiter",6],["Venus",11],["Saturno",18],["Mercurio",24],["Marte",30]],
+ [["Mercurio",7],["Venus",17],["Júpiter",21],["Marte",28],["Saturno",30]],
+ [["Saturno",6],["Mercurio",14],["Júpiter",21],["Venus",28],["Marte",30]],
+ [["Marte",7],["Venus",11],["Mercurio",19],["Júpiter",24],["Saturno",30]],
+ [["Júpiter",12],["Venus",17],["Mercurio",21],["Saturno",26],["Marte",30]],
+ [["Mercurio",7],["Júpiter",14],["Venus",22],["Saturno",26],["Marte",30]],
+ [["Mercurio",7],["Venus",13],["Júpiter",20],["Marte",25],["Saturno",30]],
+ [["Venus",12],["Júpiter",16],["Mercurio",19],["Marte",28],["Saturno",30]]
+];
+const CHALD=["Marte","Sol","Venus","Mercurio","Luna","Saturno","Júpiter"]; // orden de las faces
+function faceRuler(sign,deg){return CHALD[((sign*3+Math.floor(deg/10))%7+7)%7];}
+const HOUSEM=["el cuerpo, la vida y el timón del ser","los bienes y el sustento","hermanos, aprendizajes y viajes cortos","el hogar, los padres y las raíces","los hijos, la creación y el placer","el trabajo, la servidumbre y la enfermedad","la pareja y los otros","la muerte, el miedo y lo compartido","el dios, la filosofía y los viajes largos","la acción, la vocación y la reputación","los amigos, los dones y las esperanzas","el retiro, lo oculto y el sacrificio"];
+const SIGNSTYLE=["impulso que inicia","arraigo que sostiene","curiosidad que conecta","cuidado que protege","brillo que crea","discernimiento que afina","vínculo que equilibra","intensidad que transforma","búsqueda que se expande","estructura que perdura","visión que libera","entrega que disuelve"];
+const PLFUNC={"Sol":"la identidad y el propósito","Luna":"el alma sensible y el cuerpo","Mercurio":"la mente y la palabra","Venus":"el deseo y la unión","Marte":"la fuerza y el corte","Júpiter":"la expansión y la fe","Saturno":"el límite y el tiempo"};
+
+function chartSect(date,u){const s=getSun(date),aa=altAz(s.ra,s.dec,u,date);return aa.alt>0;} // true=diurna
+function essentialDignities(name,lon,day){
+ const sign=Math.floor(normDeg(lon)/30),deg=normDeg(lon)%30,elem=sign%4,D=DIGN[name],out=[],deb=[];let score=0;
+ if(D){if(D.dom.includes(sign)){out.push("domicilio");score+=5;}if(D.exa===sign){out.push("exaltación");score+=4;}if(D.det.includes(sign)){deb.push("exilio");score-=5;}if(D.fal===sign){deb.push("caída");score-=4;}}
+ const tr=TRIP[elem];if(tr.d===name||tr.n===name||tr.p===name){out.push("triplicidad");score+=3;}
+ let bd=null;for(const bnd of BOUNDS[sign]){if(deg<bnd[1]){bd=bnd[0];break;}}if(bd===name){out.push("término");score+=2;}
+ if(faceRuler(sign,deg)===name){out.push("decano");score+=1;}
+ return{out,deb,score,bound:bd};
+}
+function solarCondition(lon,sunLon){let d=Math.abs(normDeg(lon-sunLon));if(d>180)d=360-d;
+ if(d<0.283)return"cazimi (en el corazón del Sol)";if(d<8.5)return"combusto";if(d<15)return"bajo los rayos";return"";}
+function computeLots(asc,sun,moon,day){const F=day?normDeg(asc+moon-sun):normDeg(asc+sun-moon);const S=day?normDeg(asc+sun-moon):normDeg(asc+moon-sun);return{fortuna:F,espiritu:S};}
+
+function almutenOfDegree(lon,day){const sign=Math.floor(normDeg(lon)/30),deg=normDeg(lon)%30,elem=sign%4,sc={};PL7.forEach(n=>sc[n]=0);
+ PL7.forEach(n=>{if(DIGN[n].dom.includes(sign))sc[n]+=5;if(DIGN[n].exa===sign)sc[n]+=4;});
+ const tr=TRIP[elem];sc[day?tr.d:tr.n]+=3;
+ let bd=null;for(const b of BOUNDS[sign]){if(deg<b[1]){bd=b[0];break;}}if(bd)sc[bd]+=2;sc[faceRuler(sign,deg)]+=1;
+ let best=null,bs=-1;PL7.forEach(n=>{if(sc[n]>bs){bs=sc[n];best=n;}});return best;}
+function receptions(by){const out=[];for(let i=0;i<PL7.length;i++)for(let j=i+1;j<PL7.length;j++){const A=PL7[i],B=PL7[j],sA=Math.floor(normDeg(by[A])/30),sB=Math.floor(normDeg(by[B])/30);
+  const aByB=DIGN[B].dom.includes(sA)?"domicilio":(DIGN[B].exa===sA?"exaltación":null),bByA=DIGN[A].dom.includes(sB)?"domicilio":(DIGN[A].exa===sB?"exaltación":null);
+  if(aByB&&bByA)out.push(PGLY[A]+" y "+PGLY[B]+" en recepción mutua (por "+(aByB===bByA?aByB:aByB+"/"+bByA)+")");}return out;}
+function configurations(by){const P=PL7.map(n=>({sym:PGLY[n],lon:by[n]}));const out=[];
+ const sep=(a,b)=>{let d=Math.abs(normDeg(P[a].lon-P[b].lon));return d>180?360-d:d;},is=(a,b,ang,orb)=>Math.abs(sep(a,b)-ang)<=orb;
+ const bysign={};P.forEach(b=>{const s=Math.floor(normDeg(b.lon)/30);(bysign[s]=bysign[s]||[]).push(b.sym);});
+ Object.keys(bysign).forEach(s=>{if(bysign[s].length>=3)out.push("Stellium en "+zodiac[s].name+" — "+bysign[s].join(" "));});
+ for(let i=0;i<7;i++)for(let j=i+1;j<7;j++)for(let k=j+1;k<7;k++)if(is(i,j,120,7)&&is(i,k,120,7)&&is(j,k,120,7))out.push("Gran trígono — "+P[i].sym+" "+P[j].sym+" "+P[k].sym);
+ for(let i=0;i<7;i++)for(let j=i+1;j<7;j++){if(!is(i,j,180,8))continue;for(let k=0;k<7;k++){if(k===i||k===j)continue;if(is(k,i,90,7)&&is(k,j,90,7))out.push("T-cuadrada — "+P[i].sym+" op "+P[j].sym+", ápex "+P[k].sym);}}
+ return[...new Set(out)];}
+
+const RN=["I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII"];
+const HOUSESHORT=["el ser y el cuerpo","los recursos","la palabra y lo cercano","el hogar y las raíces","la creación y el placer","la labor y la salud","los otros y la pareja","la crisis y lo compartido","lo divino y el sentido","la vocación","los dones y los amigos","el retiro y lo oculto"];
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function dignPhrase(dg){const map={domicilio:"en su domicilio, señor de sí mismo",exaltación:"exaltado, huésped de honor",triplicidad:"sostenido por su triplicidad",término:"en sus propios términos",decano:"en su decano"};
+ const good=dg.out.map(d=>map[d]||d),bad=dg.deb.map(d=>d==="caída"?"en caída, sin apoyo":"en exilio, en tierra ajena");
+ if(good.length&&bad.length)return good.join(", ")+", aunque "+bad.join(" y ")+" — mezcla de fuerza y merma";
+ if(good.length)return good.join(", ");if(bad.length)return bad.join(" y ");return "peregrino, sin dignidad ni tacha en su asiento";}
+function narratePlanet(nm,lon,house,day,roles,sunL,retro){const sign=Math.floor(normDeg(lon)/30),dg=essentialDignities(nm,lon,day),parts=[dignPhrase(dg)];
+ const sc=nm==="Sol"?"":solarCondition(lon,sunL);
+ if(sc.indexOf("cazimi")>=0)parts.push("en el corazón del Sol —cazimi—, encendido");else if(sc==="combusto")parts.push("combusto, velado por el fuego solar");else if(sc==="bajo los rayos")parts.push("bajo los rayos, a media luz");
+ let sect="";if(nm===roles.lum)sect="luminar que rige la secta";else if(nm===roles.benS)sect="benéfico en su secta, su bien fluye con largueza";else if(nm===roles.malS)sect="maléfico de secta, su rigor se atempera";else if(nm===roles.malC)sect="maléfico fuera de secta, su filo se endurece";else if((day&&(nm==="Venus"||nm==="Marte"))||(!day&&(nm==="Júpiter"||nm==="Saturno")))sect="fuera de su secta, más medido";
+ if(sect)parts.push(sect);
+ const ang=angularity(house);parts.push(ang==="angular"?"angular, con brío para manifestarse":(ang==="sucedente"?"sucedente, que sostiene y acumula":"cadente, de trasfondo"));
+ if(JOY[nm]===house)parts.push("y se alegra de morar en su propia casa de gozo");
+ let s="<p class='pl'>"+PGLY[nm]+" <b>"+nm+"</b>: "+PLFUNC[nm]+", se reviste de "+SIGNSTYLE[sign]+" en "+zodiac[sign].name+" y obra en la casa "+(house+1)+" —"+HOUSEM[house]+"—. "+cap(parts.join("; "))+".";
+ if(retro)s+=" Retrógrado, su obra se vuelve hacia dentro.";return s+"</p>";}
+function narrateHouse(i,cusps,by,occ){const sign=Math.floor(normDeg(cusps[i])/30),lord=RULER[sign],lh=bodyHouse(by[lord],cusps);
+ let s="<p class='hs'><b>"+RN[i]+"</b> · "+HOUSEM[i]+" <span class='ang'>("+angularity(i)+")</span>: en "+zodiac[sign].name+", su señor "+PGLY[lord]+" "+lord+" mora en la casa "+(lh+1)+", de modo que "+HOUSESHORT[i]+" se entreteje con "+HOUSESHORT[lh]+".";
+ if(occ[i].length)s+=" Habitan aquí "+occ[i].join(" ")+".";return s+"</p>";}
+
+function planetStrength(nm,lon,house,day,sunL,retro){let s=essentialDignities(nm,lon,day).score;
+ const ang=angularity(house);s+=ang==="angular"?4:(ang==="sucedente"?1:-2);
+ const diu=["Sol","Júpiter","Saturno"];if(nm!=="Mercurio")s+=((day&&diu.includes(nm))||(!day&&!diu.includes(nm)))?2:-2;
+ const sc=nm==="Sol"?"":solarCondition(lon,sunL);if(sc.indexOf("cazimi")>=0)s+=5;else if(sc==="combusto")s-=5;else if(sc==="bajo los rayos")s-=2;
+ if(retro)s-=2;if(JOY[nm]===house)s+=2;return s;}
+
+const ASPREL={"Conjunción":{v:"se une a",t:"funden sus naturalezas en un solo impulso"},"Sextil":{v:"colabora con",t:"se abre una oportunidad que pide ser tomada"},"Cuadratura":{v:"tensiona con",t:"hay fricción que exige obra y ajuste"},"Trígono":{v:"fluye con",t:"el don se da con facilidad, casi sin esfuerzo"},"Oposición":{v:"se enfrenta a",t:"dos fuerzas se miran y piden equilibrio"}};
+function narrateAspects(bs){const asps=aspectsBetween(bs).sort((a,b)=>a.orb-b.orb);let s="<b>Aspectos</b>";
+ if(!asps.length)return s+"<p class='ax'>Sin aspectos mayores entre los siete: cada uno obra por su cuenta.</p>";
+ asps.forEach(ap=>{const A=bs[ap.i],B=bs[ap.j],R=ASPREL[ap.asp.name],tight=ap.orb<=1.5?", ajustado":(ap.orb>=5?", amplio":"");
+  s+="<p class='ax'><span class='ag' style='color:"+ap.asp.col+"'>"+A.sym+" "+ap.asp.sym+" "+B.sym+"</span> <b>"+A.name+"</b> "+R.v+" <b>"+B.name+"</b> <span class='am'>("+ap.asp.name.toLowerCase()+", "+ap.orb.toFixed(1)+"\u00b0"+tight+")</span>: "+PLFUNC[A.name]+" · "+PLFUNC[B.name]+" — "+R.t+".</p>";});
+ return s;}
+
+function composeReading(date,u){
+ if(!u)return"<i>La lectura helenística necesita tu ubicación (Ascendente y secta).</i>";
+ const AM=ascMC(date,u),day=chartSect(date,u),ascSign=Math.floor(normDeg(AM.asc)/30);
+ const bs=chartBodies(date),by={};bs.forEach(b=>by[b.name]=b.lon);
+ const sunL=by["Sol"],moonL=by["Luna"];
+ const sys=hsysNow(),cusps=houseCusps(AM.asc,AM.mc,sys);
+ const lum=day?"Sol":"Luna",benSecta=day?"Júpiter":"Venus",malSecta=day?"Saturno":"Marte",malContra=day?"Marte":"Saturno";
+ const ruler=RULER[ascSign],rulerLon=by[ruler],rulerSign=Math.floor(normDeg(rulerLon)/30),rulerHouse=bodyHouse(rulerLon,cusps);
+ const lots=computeLots(AM.asc,sunL,moonL,day);
+ let h="<div class='lect'>";
+ h+="<p class='lq'>El alma desciende por las esferas y de cada una toma una vestidura; esta carta es el reflejo de ese instante en el orden del cosmos.</p>";
+ // síntesis jerárquica (pesa la carta)
+ const scored=PL7.map(nm=>{const pd=planetDefs.find(p=>p.name===nm),retro=pd?isRetro(pd,date):false;return{nm,score:planetStrength(nm,by[nm],bodyHouse(by[nm],cusps),day,sunL,retro)};}).sort((a,b)=>b.score-a.score);
+ const strongP=scored[0],weakP=scored[scored.length-1],almS=almutenOfDegree(AM.asc,day);
+ const elc=[0,0,0,0],moc=[0,0,0];PL7.forEach(nm=>{const s=Math.floor(normDeg(by[nm])/30);elc[s%4]++;moc[s%3]++;});
+ const elMax=elc.indexOf(Math.max(...elc)),elMin=elc.indexOf(Math.min(...elc)),moMax=moc.indexOf(Math.max(...moc)),cfgS=configurations(by);
+ h+="<b>Síntesis</b><p class='syn'>Carta <b>"+(day?"diurna":"nocturna")+"</b>, gobernada por "+PGLY[lum]+" "+lum+". El timón es "+PGLY[ruler]+" "+ruler+" (regente del Ascendente"+(almS===ruler?" y almuten del grado —doble foco—":", con "+PGLY[almS]+" "+almS+" como almuten del grado")+"). El más apto para obrar es "+PGLY[strongP.nm]+" "+strongP.nm+"; el más afligido, "+PGLY[weakP.nm]+" "+weakP.nm+". Predomina "+ELEM[elMax]+(elc[elMin]===0?", y falta "+ELEM[elMin]:"")+"; el tono es "+MODAL[moMax].toLowerCase()+"."+(cfgS.length?" Y manda una figura: "+cfgS[0]+".":"")+"</p>";
+ h+="<b>Panorama</b><br>Carta <b>"+(day?"diurna":"nocturna")+"</b> — el luminar de secta es "+PGLY[lum]+" "+lum+". El benéfico de secta es "+PGLY[benSecta]+" "+benSecta+"; el maléfico más áspero (fuera de secta) es "+PGLY[malContra]+" "+malContra+".<br>";
+ h+="Ascendente en <b>"+zodiac[ascSign].name+"</b>: su regente "+PGLY[ruler]+" "+ruler+" es el timonel de la carta, en "+zodiac[rulerSign].name+" (casa "+(rulerHouse+1)+" — "+HOUSEM[rulerHouse]+").";
+ const rd=essentialDignities(ruler,rulerLon,day);
+ let rline;if(rd.out.length)rline="Con dignidad por "+rd.out.join(", ")+(rd.deb.length?(", aunque en "+rd.deb.join(", ")+" — mezcla de fuerza y dificultad."):" — fuerza para obrar.");else if(rd.deb.length)rline="En "+rd.deb.join(", ")+": obra con dificultad.";else rline="Peregrino: sin dignidad propia.";
+ h+=" "+rline;
+ const alm=almutenOfDegree(AM.asc,day);h+=" El <b>almuten</b> del grado ascendente (mayor dignidad allí) es "+PGLY[alm]+" "+alm+(alm===ruler?" — coincide con el regente, señal de foco.":", que matiza al regente.");
+ h+="</p>";
+ // planetas (narrado)
+ const roles={lum:lum,benS:benSecta,malS:malSecta,malC:malContra};
+ h+="<b>Los siete</b>";
+ PL7.forEach(nm=>{const pd=planetDefs.find(p=>p.name===nm),retro=pd?isRetro(pd,date):false;h+=narratePlanet(nm,by[nm],bodyHouse(by[nm],cusps),day,roles,sunL,retro);});
+ // las doce casas (narrado)
+ const occ={};for(let i=0;i<12;i++)occ[i]=[];
+ PL7.forEach(nm=>{occ[bodyHouse(by[nm],cusps)].push(PGLY[nm]);});
+ h+="<b>Las doce casas</b>";
+ for(let i=0;i<12;i++)h+=narrateHouse(i,cusps,by,occ);
+ // aspectos narrados
+ h+=narrateAspects(bs);
+ // configuraciones y recepciones
+ const cfg=configurations(by),rec=receptions(by);
+ if(cfg.length||rec.length){h+="<b>Configuraciones</b><div class='lx' style='margin:3px 0 8px'>";
+  if(cfg.length)h+=cfg.join("<br>");else h+="<i>Sin patrones mayores.</i>";
+  if(rec.length)h+="<br>"+rec.join("<br>");
+  h+="</div>";}
+ // lotes
+ const fh=bodyHouse(lots.fortuna,cusps),eh=bodyHouse(lots.espiritu,cusps);
+ h+="<b>Lotes</b><table class='ztab'><tr><td>\u2297 Fortuna</td><td>"+fmtSign(lots.fortuna)+"</td><td class='ho'>c"+(fh+1)+"</td></tr><tr><td>Espíritu</td><td>"+fmtSign(lots.espiritu)+"</td><td class='ho'>c"+(eh+1)+"</td></tr></table>";
+ h+="<p class='lq'>Fortuna es el cuerpo y lo que la vida trae; Espíritu es el alma y lo que uno obra. Entre ambos, el retorno.</p>";
+ h+="<p>La Fortuna cae en la casa "+(fh+1)+" ("+HOUSEM[fh]+"): allí se concentra la suerte del cuerpo y la vida.</p>";
+ h+="</div>";return h;
+}
+function hsysNow(){const e=document.querySelector("#zHsys button.on");return e?e.dataset.h:"whole";}
+function bodyHouseFromAsc(lon,asc,mc,system){return bodyHouse(lon,houseCusps(asc,mc,system));}
+function renderZodiacWheel(date,uOverride,infoId){
  skyLayer.selectAll("*").remove();
- const cx=width/2,cy=height/2,Rout=395,Rin=315,D2R=Math.PI/180;
+ const cx=width/2,cy=height/2,Rout=395,Rin=315,Rasp=246,D2R=Math.PI/180;
+ const optAsp=zGet("zAsp"),optDign=zGet("zDign"),optElem=zGet("zElem"),optHouse=zGet("zHouse"),optRot=zGet("zRot");
+ const hsegEl=document.querySelector("#zHsys button.on"),hsys=hsegEl?hsegEl.dataset.h:"whole";
+ const u=uOverride||userLocation;const haveAsc=optHouse&&u;
+ const AM=haveAsc?ascMC(date,u):null,rot=(optRot&&AM)?AM.asc:0;
+ const cusps=haveAsc?houseCusps(AM.asc,AM.mc,hsys):null;
+ const at=(lon,r)=>{const f=(180+lon-rot)*D2R;return[cx+r*Math.cos(f),cy-r*Math.sin(f)];};
+ // sectores por elemento
+ if(optElem){for(let s=0;s<12;s++){let d="M"+cx+","+cy;for(let a=s*30;a<=s*30+30;a+=3){const p=at(a,Rout);d+=(a===s*30?"":"L")+p[0].toFixed(1)+","+p[1].toFixed(1);}const p0=at(s*30,Rout);d="M"+cx+","+cy+"L"+p0[0].toFixed(1)+","+p0[1].toFixed(1);for(let a=s*30;a<=s*30+30;a+=3){const p=at(a,Rout);d+="L"+p[0].toFixed(1)+","+p[1].toFixed(1);}d+="Z";
+  skyLayer.append("path").attr("d",d).attr("fill",ELEMC[s%4]).attr("opacity",0.06).attr("stroke","none");}}
  skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rout);
  skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rin);
- const at=(lon,r)=>{const f=(180+lon)*D2R;return[cx+r*Math.cos(f),cy-r*Math.sin(f)];};
  for(let s=0;s<12;s++){const a=s*30,p1=at(a,Rin),p2=at(a,Rout);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);
-  const g=at(a+15,(Rin+Rout)/2);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+7).text(zodiac[s].sym);}
+  const g=at(a+15,(Rin+Rout)/2);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+7).attr("fill",optElem?ELEMC[s%4]:null).text(zodiac[s].sym);
+  if(optElem){const m=at(a+15,Rout-12);skyLayer.append("text").attr("class","gridlabel").attr("x",m[0]).attr("y",m[1]+3).attr("text-anchor","middle").attr("font-size",8).text(MODAL[s%3][0]);}}
  for(let a=0;a<360;a+=10){const p1=at(a,Rin-6),p2=at(a,Rin);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);}
- const bodies=[{sym:"☉",n:"Sol",lon:getSun(date).eclLon,c:"#ffd166"},{sym:"☾",n:"Luna",lon:getMoon(date).eclLon,c:"#dce6f2"}];
- planetDefs.forEach(pl=>bodies.push({sym:pl.sym,n:pl.name,lon:planetPosition(pl,date).eclLon,c:pl.color}));
- extraPoints(date).forEach(b=>bodies.push(b));
- bodies.forEach((b,i)=>{const r=Rin-30-(i%3)*30,p=at(b.lon,r),tick=at(b.lon,Rin);
+ // casas + ejes
+ if(haveAsc){
+  cusps.forEach((cu,i)=>{const p1=at(cu,0),p2=at(cu,Rin);const axis=(i===0||i===3||i===6||i===9);
+   skyLayer.append("line").attr("x1",cx).attr("y1",cy).attr("x2",p2[0]).attr("y2",p2[1]).attr("stroke",axis?"rgba(201,151,63,.85)":"rgba(201,151,63,.28)").attr("stroke-width",axis?2:1).attr("stroke-dasharray",axis?null:"3 4");
+   const mid=normDeg((cusps[i]+ (((cusps[(i+1)%12]-cusps[i])+360)%360)/2)),hp=at(mid,70);
+   skyLayer.append("text").attr("class","gridlabel").attr("x",hp[0]).attr("y",hp[1]+3).attr("text-anchor","middle").attr("opacity",.6).text(i+1);});
+  [["AC",AM.asc],["DC",normDeg(AM.asc+180)],["MC",AM.mc],["IC",normDeg(AM.mc+180)]].forEach(ax=>{const p=at(ax[1],Rout+14);skyLayer.append("text").attr("class","label").attr("x",p[0]).attr("y",p[1]+4).attr("text-anchor","middle").attr("fill","#c9973f").text(ax[0]);});}
+ // cuerpos
+ const bodies=chartBodies(date);extraPoints(date).forEach(b=>bodies.push({name:b.n,sym:b.sym,lon:b.lon,c:b.c,dg:null,def:null,lum:false}));
+ if(haveAsc){const dd=chartSect(date,u),lt=computeLots(AM.asc,getSun(date).eclLon,getMoon(date).eclLon,dd);bodies.push({name:"Fortuna",sym:"\u2297",lon:lt.fortuna,c:"#8fe3c0",dg:null,def:null,lum:false});}
+ // aspectos
+ if(optAsp){const bb=bodies.filter(b=>b.dg||b.name==="Sol"||b.name==="Luna");const asps=aspectsBetween(bb);
+  asps.forEach(ap=>{const p1=at(bb[ap.i].lon,Rasp),p2=at(bb[ap.j].lon,Rasp),exact=1-ap.orb/(ap.asp.orb+2);
+   skyLayer.append("line").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]).attr("stroke",ap.asp.col).attr("stroke-width",0.8+exact*2).attr("opacity",0.35+exact*0.5);});
+  skyLayer.append("circle").attr("cx",cx).attr("cy",cy).attr("r",Rasp).attr("fill","none").attr("stroke","rgba(255,255,255,.06)");}
+ bodies.forEach((b,i)=>{const sign=Math.floor(normDeg(b.lon)/30),r=Rin-34-(i%3)*26,p=at(b.lon,r),tick=at(b.lon,Rin);
   skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p[0]).attr("y1",p[1]).attr("x2",tick[0]).attr("y2",tick[1]).attr("stroke",b.c).attr("stroke-width",1);
+  if(optDign&&b.dg){const dg=dignity(b.dg,sign);if(dg){const good=/domicilio|exaltaci/.test(dg);skyLayer.append("circle").attr("cx",p[0]).attr("cy",p[1]).attr("r",10).attr("fill","none").attr("stroke",good?"#e6c34a":"#e0564e").attr("stroke-width",1.6).attr("opacity",.9);}}
   skyLayer.append("circle").attr("cx",p[0]).attr("cy",p[1]).attr("r",6).attr("fill",b.c).attr("stroke","#000").attr("stroke-width",1);
-  const deg=Math.floor(b.lon%30),mnt=Math.round((b.lon%1)*60);
-  skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]).attr("y",p[1]-11).attr("text-anchor","middle").text(b.sym+" "+deg+"°"+String(mnt).padStart(2,"0")+"′ "+zodiac[Math.floor(normDeg(b.lon)/30)].name.slice(0,3));});
- skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-4).text("Zodíaco tropical");
+  const retro=b.def&&isRetro(b.def,date),deg=Math.floor(b.lon%30),mnt=Math.round((b.lon%1)*60);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]).attr("y",p[1]-11).attr("text-anchor","middle").text(b.sym+(retro?" ℞":"")+" "+deg+"°"+String(mnt).padStart(2,"0")+"′ "+zodiac[sign].name.slice(0,3));});
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-4).text("Carta del momento");
  skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy+14).text(date.toISOString().slice(0,10));
+ // panel de lectura
+ const info=document.getElementById(infoId||"zodInfo");
+ if(info){const bs=chartBodies(date),el=[0,0,0,0],mo=[0,0,0];bs.forEach(b=>{const s=Math.floor(normDeg(b.lon)/30);el[s%4]++;mo[s%3]++;});
+  const asps=optAsp?aspectsBetween(bs):[];
+  let t="<b>Posiciones</b><table class='ztab'>";
+  bs.forEach(b=>{const s=Math.floor(normDeg(b.lon)/30),retro=b.def&&isRetro(b.def,date),dg=b.dg?dignity(b.dg,s).replace(" · ",""):"",ho=cusps?("c"+(bodyHouse(b.lon,cusps)+1)):"";
+   t+="<tr><td>"+b.sym+"</td><td>"+fmtSign(b.lon)+(retro?" ℞":"")+"</td><td class='dg'>"+dg+"</td><td class='ho'>"+ho+"</td></tr>";});
+  t+="</table>";
+  if(optAsp){t+="<b>Aspectos · "+asps.length+"</b><table class='ztab'>";
+   asps.forEach(ap=>{t+="<tr><td style='color:"+ap.asp.col+"'>"+bs[ap.i].sym+" "+ap.asp.sym+" "+bs[ap.j].sym+"</td><td>"+ap.asp.name+"</td><td class='ho'>"+ap.orb.toFixed(1)+"°</td></tr>";});
+   t+="</table>";}
+  t+="<b>Balance</b><table class='ztab'><tr><td>"+ELEM.map((e,k)=>e+" "+el[k]).join(" · ")+"</td></tr><tr><td>"+MODAL.map((m,k)=>m+" "+mo[k]).join(" · ")+"</td></tr></table>";
+  if(AM)t+="<b>Ejes</b><table class='ztab'><tr><td>AC</td><td>"+fmtSign(AM.asc)+"</td></tr><tr><td>MC</td><td>"+fmtSign(AM.mc)+"</td></tr></table>";
+  else if(optHouse)t+="<i>Ascendente: cargá tu ubicación</i>";
+  if(zGet("zLect"))t+="<div class='lectwrap'>"+composeReading(date,u)+"</div>";
+  info.innerHTML=t;}
+}
+function bodyHouse(lon,cusps){lon=normDeg(lon);for(let i=0;i<12;i++){const off=normDeg(lon-cusps[i]),span=normDeg(cusps[(i+1)%12]-cusps[i])||30;if(off<span)return i;}return 0;}
+
+// ---- Revolución solar (retorno solar) ----
+let revChart=null;
+function cityLookup(name){if(!name)return null;const q=name.trim().toLowerCase();if(!q)return null;let c=CITIES.find(o=>o.n.toLowerCase()===q);if(!c)c=CITIES.find(o=>o.n.toLowerCase().startsWith(q));return c?{lat:c.lat,lon:c.lon,n:c.n}:null;}
+function parseLocalToUTC(str,lon){if(!str)return null;const p=str.split("T");if(p.length<2)return null;const[Y,Mo,Da]=p[0].split("-").map(Number),[H,Mi]=p[1].split(":").map(Number);if(!Y||!Mo||!Da)return null;return new Date(Date.UTC(Y,Mo-1,Da,H||0,Mi||0)-(lon/15)*3600000);}
+function solarReturnDate(birthUTC,year){
+  const natal=getSun(birthUTC).eclLon;
+  const f=t=>{let d=getSun(t).eclLon-natal;d=((d%360)+540)%360-180;return d;};
+  let lo=new Date(Date.UTC(year,birthUTC.getUTCMonth(),birthUTC.getUTCDate())-2*864e5),hi=new Date(lo.getTime()+4*864e5);
+  let flo=f(lo),fhi=f(hi),tries=0;
+  while(flo*fhi>0&&tries<8){lo=new Date(lo.getTime()-864e5);hi=new Date(hi.getTime()+864e5);flo=f(lo);fhi=f(hi);tries++;}
+  for(let i=0;i<44;i++){const mid=new Date((lo.getTime()+hi.getTime())/2),fm=f(mid);if(flo*fm<=0){hi=mid;fhi=fm;}else{lo=mid;flo=fm;}}
+  return new Date((lo.getTime()+hi.getTime())/2);
+}
+function fmtUTC(d){const z=n=>String(n).padStart(2,"0");return d.getUTCFullYear()+"-"+z(d.getUTCMonth()+1)+"-"+z(d.getUTCDate())+" "+z(d.getUTCHours())+":"+z(d.getUTCMinutes())+" UTC";}
+function computeRS(){
+  const info=document.getElementById("revInfo");
+  const dtStr=document.getElementById("revBirthDT").value;
+  const year=parseInt(document.getElementById("revYear").value,10);
+  if(!dtStr||!year){info.innerHTML="<i>Cargá fecha y hora de nacimiento y el año de la revolución.</i>";return;}
+  const bc=cityLookup(document.getElementById("revBirthCity").value);
+  const blon=bc?bc.lon:(userLocation?userLocation.lon:0);
+  const birthUTC=parseLocalToUTC(dtStr,blon);
+  if(!birthUTC){info.innerHTML="<i>Fecha/hora de nacimiento inválida.</i>";return;}
+  const locSeg=document.querySelector("#revLocMode button.on"),locMode=locSeg?locSeg.dataset.l:"here";
+  const ov=cityLookup(document.getElementById("revCity").value);
+  let loc,label;
+  if(ov){loc={lat:ov.lat,lon:ov.lon};label=ov.n;}
+  else if(locMode==="natal"&&bc){loc={lat:bc.lat,lon:bc.lon};label=bc.n+" (natal)";}
+  else if(locMode==="here"&&userLocation){loc={lat:userLocation.lat,lon:userLocation.lon};label="donde estás";}
+  else if(bc){loc={lat:bc.lat,lon:bc.lon};label=bc.n+" (natal)";}
+  else if(userLocation){loc={lat:userLocation.lat,lon:userLocation.lon};label="donde estás";}
+  else{info.innerHTML="<i>Falta ubicación para la revolución: cargá tu ubicación, elegí «Lugar natal» con una ciudad reconocida, o escribí una ciudad abajo.</i>";return;}
+  const revDate=solarReturnDate(birthUTC,year);
+  let natal=null;
+  if(bc){const bloc={lat:bc.lat,lon:bc.lon},nAM=ascMC(birthUTC,bloc);natal={asc:nAM?nAM.asc:null,mc:nAM?nAM.mc:null,cusps:nAM?houseCusps(nAM.asc,nAM.mc,hsysNow()):null,bodies:chartBodies(birthUTC),loc:bloc,city:bc.n};}
+  revChart={date:revDate,loc:loc,label:label,year:year,natalLon:getSun(birthUTC).eclLon,natal:natal,birthYear:birthUTC.getUTCFullYear()};
+  setMode("solarreturn");
+}
+function renderRS(){
+  const info=document.getElementById("revInfo");
+  if(!revChart){if(info)info.innerHTML="<i>Cargá los datos de nacimiento y el año, y tocá <b>Calcular revolución</b>.</i>";skyLayer.selectAll("*").remove();return;}
+  renderZodiacWheel(revChart.date,revChart.loc,"revInfo");
+  const hdr="<div class='revhdr'><b>Revolución solar "+revChart.year+"</b><br>Retorno del Sol a "+fmtSign(revChart.natalLon)+"<br>"+fmtUTC(revChart.date)+"<br>Lugar: "+revChart.label+"</div>";
+  if(info)info.innerHTML=hdr+rsBlock(revChart.date,revChart.loc,revChart.year)+info.innerHTML;
+}
+function rsBlock(date,u,year){
+  if(!u)return"";
+  const AM=ascMC(date,u);if(!AM)return"";
+  const cusps=houseCusps(AM.asc,AM.mc,hsysNow());
+  const bodies=chartBodies(date);
+  const sName=i=>zodiac[((i%12)+12)%12].name;
+  const hOf=b=>bodyHouse(b.lon,cusps);
+  const ascSign=Math.floor(normDeg(AM.asc)/30);
+  let t="<div class='syn'><b>El año que se abre</b><br>";
+  t+="El Ascendente de la revolución asciende por <b>"+sName(ascSign)+"</b> — "+SIGNSTYLE[ascSign]+" —: ese es el temple con que se abre el ciclo, la puerta por donde entra el año.";
+  const lordName=RULER[ascSign],lord=bodies.find(b=>b.name===lordName);
+  if(lord){const lh=hOf(lord),ls=Math.floor(normDeg(lord.lon)/30),retro=lord.def&&isRetro(lord.def,date),ang=angularity(lh),dg=dignity(lordName,ls).replace(" · ","");
+    t+="<br><br><b>Señor del año:</b> "+(PGLY[lordName]||"")+" "+lordName+", regente de "+sName(ascSign)+", gobierna el año desde la <b>casa "+(lh+1)+"</b> ("+HOUSESHORT[lh]+") en "+sName(ls)+(retro?", retrógrado":"")+". "+(ang==="angular"?"Angular: el año tiene timonel firme; los asuntos de esa casa marcan el pulso.":ang==="sucedente"?"Sucedente: el año construye y sostiene lo de esa casa.":"Cadente: el timón obra entre bambalinas, en lo que no se ve.")+(dg?" Su condición esencial: "+dg+".":"");}
+  const moon=bodies.find(b=>b.name==="Luna");
+  if(moon){const mh=hOf(moon),ms=Math.floor(normDeg(moon.lon)/30);
+    t+="<br><br><b>La Luna del retorno</b> en "+sName(ms)+", casa "+(mh+1)+": marca el clima anímico y el ritmo mes a mes — la aguja emocional apunta a "+HOUSESHORT[mh]+".";}
+  const sun=bodies.find(b=>b.name==="Sol");
+  if(sun){const sh=hOf(sun);t+="<br><br><b>El Sol del año</b> ilumina la casa "+(sh+1)+" ("+HOUSESHORT[sh]+"): ahí se derrama la vitalidad y ahí buscás brillar durante el ciclo.";}
+  const angs=bodies.filter(b=>[0,3,6,9].indexOf(hOf(b))>=0);
+  if(angs.length)t+="<br><br><b>En los ángulos:</b> "+angs.map(b=>(PGLY[b.name]||"")+" "+b.name+" (casa "+(hOf(b)+1)+")").join(", ")+" — las fuerzas que el año pone al frente, las que más se hacen sentir.";
+  else t+="<br><br><b>Ángulos despejados:</b> ningún planeta abraza los ejes; el año no grita, obra por dentro.";
+  if(revChart.natal&&revChart.natal.asc!=null){
+    const nAscSign=Math.floor(normDeg(revChart.natal.asc)/30),age=revChart.year-revChart.birthYear,ph=((age%12)+12)%12,pSign=(nAscSign+ph)%12,pLord=RULER[pSign],pl=bodies.find(b=>b.name===pLord);
+    t+="<br><br><b>Profección anual (edad "+age+"):</b> el año se profecta a la <b>casa "+(ph+1)+"</b> ("+HOUSESHORT[ph]+"), en "+sName(pSign)+". Su regente, "+(PGLY[pLord]||"")+" "+pLord+", es el <i>señor del tiempo</i> del período"+(pl?", y en la revolución se aloja en la casa "+(hOf(pl)+1)+" ("+HOUSESHORT[hOf(pl)]+"): ahí conviene mirar lo que el año pide.":".");
+  }
+  if(revChart.natal&&revChart.natal.cusps){
+    const nc=revChart.natal.cusps,rsInNatal=bodyHouse(AM.asc,nc);
+    t+="<br><br><b>El Ascendente del retorno sobre tu carta natal</b> cae en tu casa "+(rsInNatal+1)+" ("+HOUSESHORT[rsInNatal]+"): el año ilumina ese sector.";
+    const targets=[{n:"Ascendente natal",lon:revChart.natal.asc},{n:"Mediocielo natal",lon:revChart.natal.mc}];
+    const nSun=revChart.natal.bodies.find(b=>b.name==="Sol"),nMoon=revChart.natal.bodies.find(b=>b.name==="Luna");
+    if(nSun)targets.push({n:"Sol natal",lon:nSun.lon});if(nMoon)targets.push({n:"Luna natal",lon:nMoon.lon});
+    const hits=[];
+    bodies.forEach(rb=>targets.forEach(tg=>{if(tg.lon==null)return;if(rb.name==="Sol"&&tg.n==="Sol natal")return;const d=Math.abs(((normDeg(rb.lon-tg.lon)+180)%360)-180);if(d<=3)hits.push((PGLY[rb.name]||"")+" "+rb.name+" \u2192 "+tg.n+" ("+d.toFixed(1)+"\u00b0)");}));
+    if(hits.length)t+="<br><br><b>Contactos con la natal (conjunciones \u22643\u00b0):</b> "+hits.join("; ")+". Los toques m\u00e1s vivos del a\u00f1o.";
+  }else if(!revChart.natal){
+    t+="<br><br><i>Para ver profecci\u00f3n y contactos con la natal, carg\u00e1 una ciudad de nacimiento reconocida.</i>";
+  }
+  t+="</div>";
+  return t;
 }
 
 // ---- Modo DÍA: largo del día y crepúsculos a lo largo del año ----
@@ -574,6 +1421,211 @@ function renderChartStrip(date){
   skyLayer.append("text").attr("class","smallLabel").attr("x",x+7).attr("y",yv-6).text(b.sym+" "+b.n);});
 }
 
+// ===== Órbes: vista 3D geocéntrica (orden caldeo) + analema círculo⟷8 =====
+const _D2R=Math.PI/180;
+const oCanvas=document.getElementById("orbes"),oCtx=oCanvas.getContext("2d");
+const OGLYPH='"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2","Noto Sans Symbols","Symbola","DejaVu Sans",system-ui,sans-serif';
+const OSANS='"Space Grotesk",system-ui,sans-serif';
+const ozc=i=>"hsl("+((((i%12)+12)%12)*30)+",70%,64%)";
+function oShade(hex,d){const n=parseInt(hex.slice(1),16);const r=Math.max(0,Math.min(255,(n>>16)+d)),g=Math.max(0,Math.min(255,((n>>8)&255)+d)),b=Math.max(0,Math.min(255,(n&255)+d));return"rgb("+r+","+g+","+b+")";}
+const OSTARS=[];for(let i=0;i<200;i++)OSTARS.push([Math.random(),Math.random(),Math.random()*1.3+0.3]);
+// Firmamento 3D: estrellas fijas repartidas uniforme sobre una esfera (más allá de Saturno). [ux,uy,uz,tam,fase]
+const STARDOME=[];for(let i=0;i<340;i++){const u=Math.random()*2-1,th=Math.random()*6.2831853,r=Math.sqrt(1-u*u);STARDOME.push([r*Math.cos(th),u,r*Math.sin(th),Math.random()*1.1+0.5,Math.random()]);}
+const Orbes={
+  running:false,raf:0,dpr:1,w:0,h:0,_key:null,
+  yaw:-0.6,pitch:0.42,zoom:1,dragging:false,px:0,py:0,pinch:0,
+  preset:"ladder",spin:true,which:"both",morph:0,starAngle:0,firm:"plano",
+  date:null,dirty:true,bodies:null,ana:{},
+  setDate(d){const key=d.toISOString().slice(0,16);if(key!==this._key){this._key=key;this.date=new Date(d.getTime());this.dirty=true;}},
+  start(){if(this.running)return;this.running=true;this.resize();this.loop();},
+  stop(){this.running=false;cancelAnimationFrame(this.raf);},
+  resize(){this.dpr=Math.min(devicePixelRatio||1,2);const m=oCanvas.parentElement.getBoundingClientRect();this.w=oCanvas.width=Math.max(2,Math.round(m.width*this.dpr));this.h=oCanvas.height=Math.max(2,Math.round(m.height*this.dpr));},
+  ringRadius(rank){return this.preset==="orbs"?0.24+rank*0.108:0.42;},
+  ringHeight(rank){return this.preset==="orbs"?0:-0.60+rank*0.185;},
+  groundY(){return this.preset==="orbs"?-0.02:-0.80;},
+  groundR(){return this.preset==="orbs"?1.02:0.60;},
+  world(rank,lonDeg){const a=lonDeg*_D2R,r=this.ringRadius(rank),y=this.ringHeight(rank);return[r*Math.cos(a),y,r*Math.sin(a)];},
+  project(x,y,z){const cy=Math.cos(this.yaw),sy=Math.sin(this.yaw);const X=x*cy-z*sy,Z=x*sy+z*cy;const cp=Math.cos(this.pitch),sp=Math.sin(this.pitch);const Y=y*cp-Z*sp,Zp=y*sp+Z*cp;const f=Math.min(this.w,this.h)*0.34*this.zoom;return{x:this.w/2+X*f,y:this.h/2-Y*f,depth:Zp,f:f};},
+  compute(){
+    const d=this.date||getRenderDate(),P=planetDefs,S=getSun(d),M=getMoon(d);
+    this.bodies=[
+      {name:"Luna",gly:"\u263D",col:"#d7e2f2",lon:M.eclLon,rank:0,kind:"moon"},
+      {name:P[0].name,gly:P[0].sym,col:P[0].color,lon:planetPosition(P[0],d).eclLon,rank:1},
+      {name:P[1].name,gly:P[1].sym,col:P[1].color,lon:planetPosition(P[1],d).eclLon,rank:2},
+      {name:"Sol",gly:"\u2609",col:"#ffd166",lon:S.eclLon,rank:3,kind:"sun"},
+      {name:P[2].name,gly:P[2].sym,col:P[2].color,lon:planetPosition(P[2],d).eclLon,rank:4},
+      {name:P[3].name,gly:P[3].sym,col:P[3].color,lon:planetPosition(P[3],d).eclLon,rank:5},
+      {name:P[4].name,gly:P[4].sym,col:P[4].color,lon:planetPosition(P[4],d).eclLon,rank:6}
+    ];
+    this.ana.sun=this.samples("sun",d);
+    this.ana.moon=this.samples("moon",d);
+    this.dirty=false;
+  },
+  samples(kind,d){
+    const N=kind==="sun"?365:29,half=Math.floor(N/2),arr=[];
+    for(let i=0;i<N;i++){const dt=new Date(d.getTime()+(i-half)*86400000),b=kind==="sun"?getSun(dt):getMoon(dt);arr.push({lon:b.eclLon,ra:b.ra,dec:b.dec});}
+    const un=[arr[0].ra];for(let i=1;i<N;i++){let df=arr[i].ra-arr[i-1].ra;df=((df+540)%360)-180;un.push(un[i-1]+df);}
+    const slope=(un[N-1]-un[0])/(N-1);for(let i=0;i<N;i++)arr[i].dRa=un[i]-(un[0]+slope*i);
+    return arr;
+  },
+  orb(p,r,col){const g=oCtx.createRadialGradient(p.x-r*0.3,p.y-r*0.3,r*0.1,p.x,p.y,r);g.addColorStop(0,"#fff");g.addColorStop(0.28,col);g.addColorStop(1,oShade(col,-45));oCtx.beginPath();oCtx.arc(p.x,p.y,r,0,7);oCtx.fillStyle=g;oCtx.fill();oCtx.beginPath();oCtx.arc(p.x,p.y,r*1.7,0,7);oCtx.fillStyle=col+"22";oCtx.fill();},
+  showAna(kind){return this.which==="both"||this.which===kind;},
+  draw(){
+    const c=oCtx,dpr=this.dpr;c.clearRect(0,0,this.w,this.h);
+    for(const s of OSTARS){c.globalAlpha=0.4+s[2]*0.22;c.fillStyle="#cdd6ee";c.fillRect(s[0]*this.w,s[1]*this.h,s[2]*dpr,s[2]*dpr);}c.globalAlpha=1;
+    // Firmamento de estrellas fijas más allá de Saturno: plano / domo / esfera, contra-rotante
+    {const A=-this.starAngle,ca=Math.cos(A),sa=Math.sin(A),orbs=this.preset==="orbs";
+     const Rs=orbs?1.30:0.98,spread=orbs?1.55:1.15,Yp=orbs?0.60:0.90,lift=orbs?0.05:0.32;
+     for(const s of STARDOME){let x,y,z;
+      if(this.firm==="plano"){x=s[0]*spread;y=Yp;z=s[2]*spread;}
+      else if(this.firm==="domo"){x=s[0]*Rs;y=Math.abs(s[1])*Rs*0.92+lift;z=s[2]*Rs;}
+      else{x=s[0]*Rs;y=s[1]*Rs;z=s[2]*Rs;}
+      const rx=x*ca-z*sa,rz=x*sa+z*ca,P=this.project(rx,y,rz),far=P.depth<=0;
+      const tw=0.62+0.38*Math.sin(this.starAngle*5+s[4]*6.2831853);
+      c.globalAlpha=(far?0.9:0.20)*tw;c.fillStyle="#eaf0ff";
+      const sz=Math.max(0.5,s[3]*dpr*(far?1:0.72)*(0.85+P.depth*0.12));
+      c.beginPath();c.arc(P.x,P.y,sz,0,7);c.fill();}
+     c.globalAlpha=1;}
+    const jobs=[];
+    {const gy=this.groundY(),gR=this.groundR(),N=72,ring=r=>{const o=[];for(let i=0;i<=N;i++){const a=i/N*6.283185;o.push(this.project(r*Math.cos(a),gy,r*Math.sin(a)));}return o;};
+     const outline=ring(gR),cen=this.project(0,gy,0);
+     jobs.push({d:cen.depth-0.5,f:()=>{
+       c.beginPath();outline.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();
+       c.fillStyle="rgba(40,75,69,.34)";c.fill();
+       [0.28,0.55,0.82,1].forEach(fr=>{const rr=ring(gR*fr);c.beginPath();rr.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle="rgba(95,184,166,"+(fr===1?".5":".22")+")";c.lineWidth=1*dpr;c.stroke();});
+       for(let a=0;a<360;a+=30){const e=this.project(gR*Math.cos(a*_D2R),gy,gR*Math.sin(a*_D2R));c.beginPath();c.moveTo(cen.x,cen.y);c.lineTo(e.x,e.y);c.strokeStyle="rgba(95,184,166,.14)";c.lineWidth=1*dpr;c.stroke();}
+       for(let a=0;a<360;a+=30){const t1=this.project(gR*Math.cos(a*_D2R),gy,gR*Math.sin(a*_D2R)),t0=this.project(gR*0.94*Math.cos(a*_D2R),gy,gR*0.94*Math.sin(a*_D2R));c.beginPath();c.moveTo(t0.x,t0.y);c.lineTo(t1.x,t1.y);c.strokeStyle="rgba(201,151,63,.42)";c.lineWidth=1*dpr;c.stroke();}
+       [[0,"\u2648"],[90,"\u264B"],[180,"\u264E"],[270,"\u2651"]].forEach(cg=>{const t=this.project(gR*1.07*Math.cos(cg[0]*_D2R),gy,gR*1.07*Math.sin(cg[0]*_D2R));c.fillStyle="rgba(201,151,63,.8)";c.font=(13*dpr)+"px "+OGLYPH;c.textAlign="center";c.fillText(cg[1],t.x,t.y+4*dpr);});
+       c.beginPath();c.arc(cen.x,cen.y,3.5*dpr,0,7);c.fillStyle="#5fb8a6";c.fill();
+       c.fillStyle="rgba(95,184,166,.9)";c.font=(11*dpr)+"px "+OSANS;c.textAlign="center";c.fillText("Tierra",cen.x,cen.y+16*dpr);
+     }});}
+    for(const b of this.bodies){
+      const ring=[];for(let a=0;a<=360;a+=5)ring.push(this.project(...this.world(b.rank,a)));
+      const anchor=this.project(...this.world(b.rank,b.lon));
+      const showA=b.kind&&this.showAna(b.kind);
+      jobs.push({d:anchor.depth-0.002,f:()=>{c.beginPath();ring.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle=showA?"rgba(255,209,102,.20)":"rgba(201,151,63,.15)";c.lineWidth=1*dpr;c.stroke();}});
+      const p=this.project(...this.world(b.rank,b.lon)),rad=(b.kind==="sun"?11:b.kind==="moon"?7:8)*dpr*this.zoom*(1+p.depth*0.22);
+      {const wp2=this.world(b.rank,b.lon),foot=this.project(wp2[0],this.groundY(),wp2[2]);jobs.push({d:p.depth-0.01,f:()=>{c.beginPath();c.moveTo(p.x,p.y);c.lineTo(foot.x,foot.y);c.strokeStyle=b.col+"33";c.lineWidth=1*dpr;c.setLineDash([2*dpr,3*dpr]);c.stroke();c.setLineDash([]);c.beginPath();c.arc(foot.x,foot.y,2*dpr,0,7);c.fillStyle=b.col+"55";c.fill();}});}
+      const sign=Math.floor((((b.lon%360)+360)%360)/30),deg=Math.floor(((b.lon%30)+30)%30);
+      jobs.push({d:p.depth,f:()=>{this.orb(p,rad,b.col);c.textAlign="left";
+        c.font=(14*dpr)+"px "+OGLYPH;c.fillStyle="rgba(236,227,206,.95)";c.fillText(b.gly,p.x+rad+5*dpr,p.y-1*dpr);
+        c.font=(11*dpr)+"px "+OSANS;c.fillStyle="rgba(236,227,206,.72)";c.fillText(b.name+"  "+zodiac[sign].sym+" "+deg+"\u00B0",p.x+rad+5*dpr,p.y+12*dpr);}});
+      if(showA){const sm=this.ana[b.kind];if(sm){
+        const r=this.ringRadius(b.rank),y=this.ringHeight(b.rank),a0=b.lon*_D2R,anc=[r*Math.cos(a0),y,r*Math.sin(a0)],tan=[-Math.sin(a0),0,Math.cos(a0)],k=r*0.010,m=this.morph;
+        const pts=sm.map(s=>{const C=this.world(b.rank,s.lon);const x=s.dRa*Math.cos(s.dec*_D2R)*k,yy=s.dec*k;const A=[anc[0]+tan[0]*x,anc[1]+yy,anc[2]+tan[2]*x];return{P:this.project(C[0]+(A[0]-C[0])*m,C[1]+(A[1]-C[1])*m,C[2]+(A[2]-C[2])*m),sign:Math.floor((((s.lon%360)+360)%360)/30)};});
+        jobs.push({d:p.depth+0.003,f:()=>{for(let i=1;i<pts.length;i++){c.beginPath();c.moveTo(pts[i-1].P.x,pts[i-1].P.y);c.lineTo(pts[i].P.x,pts[i].P.y);c.strokeStyle=ozc(pts[i].sign);c.lineWidth=(b.kind==="sun"?3:2.4)*dpr;c.lineCap="round";c.stroke();}}});
+      }}
+    }
+    jobs.sort((a,b)=>a.d-b.d).forEach(j=>j.f());
+  },
+  loop(){if(!this.running)return;if(this.spin&&!this.dragging)this.yaw+=0.0016;this.starAngle+=0.00110;if(this.dirty||!this.bodies)this.compute();this.draw();this.raf=requestAnimationFrame(()=>this.loop());}
+};
+oCanvas.addEventListener("pointerdown",e=>{Orbes.dragging=true;Orbes.px=e.clientX;Orbes.py=e.clientY;oCanvas.setPointerCapture(e.pointerId);});
+oCanvas.addEventListener("pointermove",e=>{if(!Orbes.dragging)return;Orbes.yaw+=(e.clientX-Orbes.px)*0.008;Orbes.pitch=Math.max(-1.3,Math.min(1.3,Orbes.pitch+(e.clientY-Orbes.py)*0.006));Orbes.px=e.clientX;Orbes.py=e.clientY;});
+oCanvas.addEventListener("pointerup",()=>Orbes.dragging=false);
+oCanvas.addEventListener("wheel",e=>{e.preventDefault();Orbes.zoom=Math.max(0.5,Math.min(2.6,Orbes.zoom*(e.deltaY>0?0.94:1.06)));},{passive:false});
+oCanvas.addEventListener("touchmove",e=>{if(e.touches.length===2){const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY,dd=Math.hypot(dx,dy);if(Orbes.pinch)Orbes.zoom=Math.max(0.5,Math.min(2.6,Orbes.zoom*dd/Orbes.pinch));Orbes.pinch=dd;e.preventDefault();}},{passive:false});
+oCanvas.addEventListener("touchend",()=>Orbes.pinch=0);
+document.getElementById("oPreset").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.preset=b.dataset.p;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
+document.getElementById("oFirm").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.firm=b.dataset.f;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
+document.getElementById("oWhich").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;Orbes.which=b.dataset.w;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
+document.getElementById("oSpin").onchange=e=>Orbes.spin=e.target.checked;
+document.getElementById("oMorph").oninput=e=>{Orbes.morph=e.target.value/100;document.getElementById("oMlab").textContent=Orbes.morph<0.5?"Círculo":(Orbes.morph<0.98?"…":"Analema 8");};
+if(window.ResizeObserver)new ResizeObserver(()=>{if(Orbes.running)Orbes.resize();}).observe(document.querySelector("main"));
+const OSERIF='"Cormorant Garamond",Georgia,serif';
+function eqPoint(aDeg,dDeg){const a=aDeg*_D2R,d=dDeg*_D2R,cd=Math.cos(d);return[cd*Math.cos(a),Math.sin(d),cd*Math.sin(a)];}
+// ===== Domo 3D inmersivo: planetario desde adentro — Tierra plana + bóveda visible =====
+const dCanvas=document.getElementById("domo"),dCtx=dCanvas.getContext("2d");
+const ECLo=23.4393;
+function skyDir(alt,az){const a=alt*_D2R,z=az*_D2R,ca=Math.cos(a);return[Math.sin(z)*ca,Math.sin(a),Math.cos(z)*ca];}
+function eclToEq(lonDeg){const l=lonDeg*_D2R,e=ECLo*_D2R;const dec=Math.asin(Math.sin(e)*Math.sin(l));const ra=Math.atan2(Math.cos(e)*Math.sin(l),Math.cos(l));return{ra:(ra/_D2R+360)%360,dec:dec/_D2R};}
+const EYE_H=0.12; // altura del ojo sobre el plano
+const Domo={
+  running:false,raf:0,dpr:1,w:0,h:0,_key:null,
+  viewAz:0,viewAlt:0.38,zoom:1,dragging:false,px:0,py:0,pinch:0,
+  spin:true,constel:true,eclEq:true,below:false,
+  date:null,dirty:true,S:null,_f:null,_r:null,_u:null,_foc:1,
+  setDate(d){const k=d.toISOString().slice(0,16);if(k!==this._key){this._key=k;this.date=new Date(d.getTime());this.dirty=true;}},
+  start(){if(this.running)return;this.running=true;this.resize();this.loop();},
+  stop(){this.running=false;cancelAnimationFrame(this.raf);},
+  resize(){this.dpr=Math.min(devicePixelRatio||1,2);const m=dCanvas.parentElement.getBoundingClientRect();this.w=dCanvas.width=Math.max(2,Math.round(m.width*this.dpr));this.h=dCanvas.height=Math.max(2,Math.round(m.height*this.dpr));},
+  setCam(){
+    const fa=[Math.sin(this.viewAz*_D2R)*Math.cos(this.viewAlt),Math.sin(this.viewAlt),Math.cos(this.viewAz*_D2R)*Math.cos(this.viewAlt)];
+    const up=[0,1,0];
+    let rx=fa[2]*up[1]-fa[1]*up[2],ry=fa[0]*up[2]-fa[2]*up[0],rz=fa[1]*up[0]-fa[0]*up[1];// f×up
+    let rl=Math.hypot(rx,ry,rz)||1;rx/=rl;ry/=rl;rz/=rl;
+    let ux=fa[1]*rz-fa[2]*ry,uy=fa[2]*rx-fa[0]*rz,uz=fa[0]*ry-fa[1]*rx;// f×r (up)
+    this._f=fa;this._r=[rx,ry,rz];this._u=[ux,uy,uz];
+    const fov=Math.max(0.42,Math.min(2.1,1.42/this.zoom));this._foc=(Math.min(this.w,this.h)/2)/Math.tan(fov/2);
+  },
+  proj(v){const zc=v[0]*this._f[0]+v[1]*this._f[1]+v[2]*this._f[2];if(zc<=0.02)return null;
+    const xc=v[0]*this._r[0]+v[1]*this._r[1]+v[2]*this._r[2],yc=v[0]*this._u[0]+v[1]*this._u[1]+v[2]*this._u[2];
+    return{x:this.w/2+(xc/zc)*this._foc,y:this.h/2-(yc/zc)*this._foc,zc};},
+  ground(rr,az){return[rr*Math.sin(az*_D2R),-EYE_H,rr*Math.cos(az*_D2R)];}, // punto del plano relativo al ojo
+  compute(){
+    const d=this.date||getRenderDate(),u=userLocation;if(!u){this.S=null;return;}
+    const star=majorStars.map(s=>{const aa=altAz(s.ra,s.dec,u,d);return{name:s.name,mag:s.mag,alt:aa.alt,az:aa.az,dir:skyDir(aa.alt,aa.az)};});
+    const by={};star.forEach(s=>by[s.name]=s);
+    const clines=[];constellations.forEach(c=>c.lines.forEach(pr=>{const a=by[pr[0]],b=by[pr[1]];if(a&&b)clines.push({a,b});}));
+    const clabels=constellations.map(c=>{const ns=[...new Set(c.lines.flat())].map(n=>by[n]).filter(Boolean);const up=ns.filter(s=>s.alt>3);if(up.length<Math.ceil(ns.length/2))return null;const s=up[0];return{name:c.name,dir:s.dir,alt:s.alt};}).filter(Boolean);
+    const eq=[],ec=[];for(let a=0;a<=360;a+=3){const A=altAz(a,0,u,d);eq.push({alt:A.alt,dir:skyDir(A.alt,A.az)});const e=eclToEq(a),E=altAz(e.ra,e.dec,u,d);ec.push({alt:E.alt,dir:skyDir(E.alt,E.az)});}
+    const su=getSun(d),sa=altAz(su.ra,su.dec,u,d),mo=moonTopo(d,u),ma=altAz(mo.ra,mo.dec,u,d),mE=getMoon(d);
+    const planets=planetDefs.map(p=>{const pp=planetPosition(p,d),aa=altAz(pp.ra,pp.dec,u,d);return{name:p.name,gly:p.sym,col:p.color,alt:aa.alt,az:aa.az,dir:skyDir(aa.alt,aa.az)};});
+    this.S={star,clines,clabels,eq,ec,
+      sun:{alt:sa.alt,az:sa.az,dir:skyDir(sa.alt,sa.az)},
+      moon:{alt:ma.alt,az:ma.az,dir:skyDir(ma.alt,ma.az),phase:moonPhaseName(su.eclLon,mE.eclLon)},planets};
+    this.dirty=false;
+  },
+  loop(){if(!this.running)return;if(this.spin&&!this.dragging)this.viewAz=(this.viewAz+0.05)%360;if(this.dirty||!this.S)this.compute();this.setCam();this.draw();this.raf=requestAnimationFrame(()=>this.loop());},
+  draw(){
+    const c=dCtx,dpr=this.dpr,S=this.S,z=this.zoom;c.clearRect(0,0,this.w,this.h);
+    if(!S){c.fillStyle="rgba(236,227,206,.6)";c.textAlign="center";c.font=(14*dpr)+"px "+OSANS;c.fillText("Cargá tu ubicación para ver el domo",this.w/2,this.h/2);return;}
+    // --- piso plano: relleno bajo el horizonte + grilla ---
+    const hor=[];for(let a=0;a<=360;a+=3){const p=this.proj(skyDir(0,a));if(p)hor.push(p);}
+    hor.sort((A,B)=>A.x-B.x);
+    if(hor.length>2){c.beginPath();c.moveTo(hor[0].x,this.h);hor.forEach(p=>c.lineTo(p.x,p.y));c.lineTo(hor[hor.length-1].x,this.h);c.closePath();
+      const g=c.createLinearGradient(0,this.h*0.5,0,this.h);g.addColorStop(0,"rgba(30,58,53,.30)");g.addColorStop(1,"rgba(40,75,69,.55)");c.fillStyle=g;c.fill();}
+    // depresión (anillos) + radios del plano
+    [8,20,40,65].forEach(dep=>{const rr=EYE_H/Math.tan(dep*_D2R),pts=[];for(let a=0;a<=360;a+=6){const p=this.proj(this.ground(rr,a));if(p)pts.push(p);}if(pts.length>1){c.beginPath();pts.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle="rgba(95,184,166,.14)";c.lineWidth=1*dpr;c.stroke();}});
+    for(let az=0;az<360;az+=30){const pts=[];[3,8,20,40,65].forEach(dep=>{const rr=EYE_H/Math.tan(dep*_D2R);const p=this.proj(this.ground(rr,az));if(p)pts.push(p);});if(pts.length>1){c.beginPath();pts.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle="rgba(95,184,166,.12)";c.lineWidth=1*dpr;c.stroke();}}
+    // horizonte
+    {const pts=[];for(let a=0;a<=360;a+=2){const p=this.proj(skyDir(0,a));if(p)pts.push(p);}c.beginPath();pts.forEach((p,k)=>k?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.strokeStyle="rgba(95,184,166,.55)";c.lineWidth=1.5*dpr;c.stroke();}
+    // cardinales
+    [["N",0],["E",90],["S",180],["O",270],["NE",45],["SE",135],["SO",225],["NO",315]].forEach(cd=>{const p=this.proj(skyDir(-1.5,cd[1]));if(p){c.fillStyle=cd[0].length===1?"rgba(201,151,63,.95)":"rgba(201,151,63,.5)";c.font=(cd[0].length===1?15:11)*dpr+"px "+OSERIF;c.textAlign="center";c.fillText(cd[0],p.x,p.y);}});
+    // --- cúpula: almicantarados + verticales ---
+    const dome="rgba(201,151,63,.15)";
+    [30,60].forEach(al=>{const pts=[];for(let a=0;a<=360;a+=4){const p=this.proj(skyDir(al,a));if(p)pts.push(p);else pts.push(null);}let started=false;c.beginPath();pts.forEach(p=>{if(!p){started=false;return;}if(!started){c.moveTo(p.x,p.y);started=true;}else c.lineTo(p.x,p.y);});c.strokeStyle=dome;c.lineWidth=1*dpr;c.stroke();});
+    for(let az=0;az<360;az+=45){const pts=[];for(let al=0;al<=90;al+=5){const p=this.proj(skyDir(al,az));if(p)pts.push(p);else pts.push(null);}let st=false;c.beginPath();pts.forEach(p=>{if(!p){st=false;return;}if(!st){c.moveTo(p.x,p.y);st=true;}else c.lineTo(p.x,p.y);});c.strokeStyle=dome;c.lineWidth=1*dpr;c.stroke();}
+    {const zp=this.proj(skyDir(89.9,0));if(zp){c.beginPath();c.arc(zp.x,zp.y,2*dpr,0,7);c.fillStyle="rgba(201,151,63,.5)";c.fill();c.fillStyle="rgba(201,151,63,.6)";c.font=(10*dpr)+"px "+OSANS;c.textAlign="center";c.fillText("cenit",zp.x,zp.y-6*dpr);}}
+    // --- eclíptica + ecuador ---
+    if(this.eclEq){const arc=(pset,col)=>{for(let i=1;i<pset.length;i++){const A=pset[i-1],B=pset[i];if((A.alt<0||B.alt<0)&&!this.below)continue;const a=this.proj(A.dir),b=this.proj(B.dir);if(!a||!b)continue;const bel=A.alt<0||B.alt<0;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle=col+(bel?"33":"cc");c.lineWidth=1.5*dpr;c.stroke();}};arc(S.eq,"#67c7ff");arc(S.ec,"#b58cff");}
+    // --- constelaciones ---
+    if(this.constel)S.clines.forEach(l=>{if((l.a.alt<0||l.b.alt<0)&&!this.below)return;const a=this.proj(l.a.dir),b=this.proj(l.b.dir);if(!a||!b)return;const bel=l.a.alt<0||l.b.alt<0;c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.strokeStyle="rgba(216,206,178,"+(bel?".12":".34")+")";c.lineWidth=0.9*dpr;c.stroke();});
+    // --- cuerpos ---
+    const jobs=[];
+    S.star.forEach(s=>{if(s.alt<0&&!this.below)return;const p=this.proj(s.dir);if(!p)return;const bel=s.alt<0;jobs.push({d:p.zc,f:()=>{c.globalAlpha=bel?0.3:1;c.beginPath();c.arc(p.x,p.y,Math.max(1.6,5-s.mag)*dpr*Math.min(1.6,z),0,7);c.fillStyle="#fff";c.fill();if(s.mag<1.15&&!bel){c.fillStyle="rgba(236,227,206,.8)";c.font=(11*dpr)+"px "+OSANS;c.textAlign="left";c.fillText(s.name,p.x+6*dpr,p.y-4*dpr);}c.globalAlpha=1;}});});
+    if(this.constel)S.clabels.forEach(l=>{if(l.alt<0&&!this.below)return;const p=this.proj(l.dir);if(!p)return;jobs.push({d:p.zc+0.01,f:()=>{c.fillStyle="rgba(216,206,178,.5)";c.font="italic "+(11*dpr)+"px "+OSERIF;c.textAlign="left";c.fillText(l.name,p.x+7*dpr,p.y+10*dpr);}});});
+    S.planets.forEach(pl=>{if(pl.alt<0&&!this.below)return;const p=this.proj(pl.dir);if(!p)return;const bel=pl.alt<0;jobs.push({d:p.zc,f:()=>{c.globalAlpha=bel?0.4:1;const rr=6*dpr*Math.min(1.7,z),g=c.createRadialGradient(p.x-2,p.y-2,1,p.x,p.y,rr);g.addColorStop(0,"#fff");g.addColorStop(.3,pl.col);g.addColorStop(1,oShade(pl.col,-45));c.beginPath();c.arc(p.x,p.y,rr,0,7);c.fillStyle=g;c.fill();c.fillStyle="rgba(236,227,206,.92)";c.textAlign="left";c.font=(12*dpr)+"px "+OGLYPH;c.fillText(pl.gly,p.x+rr+2*dpr,p.y-2*dpr);c.font=(10.5*dpr)+"px "+OSANS;c.fillText(pl.name,p.x+rr+2*dpr,p.y+10*dpr);c.globalAlpha=1;}});});
+    if(S.sun.alt>=0||this.below){const p=this.proj(S.sun.dir);if(p){const bel=S.sun.alt<0;jobs.push({d:p.zc,f:()=>{c.globalAlpha=bel?0.4:1;const rr=13*dpr*Math.min(1.7,z),g=c.createRadialGradient(p.x-2,p.y-2,1,p.x,p.y,rr);g.addColorStop(0,"#fff8e0");g.addColorStop(.4,"#ffd166");g.addColorStop(1,"#c9800e");c.beginPath();c.arc(p.x,p.y,rr,0,7);c.fillStyle=g;c.fill();c.fillStyle="rgba(236,227,206,.95)";c.textAlign="left";c.font=(13*dpr)+"px "+OGLYPH;c.fillText("\u2609",p.x+rr+2*dpr,p.y+4*dpr);c.globalAlpha=1;}});}}
+    if(S.moon.alt>=0||this.below){const p=this.proj(S.moon.dir);if(p){const bel=S.moon.alt<0;jobs.push({d:p.zc+0.001,f:()=>{c.globalAlpha=bel?0.4:1;const rr=10*dpr*Math.min(1.7,z),g=c.createRadialGradient(p.x-2,p.y-2,1,p.x,p.y,rr);g.addColorStop(0,"#fff");g.addColorStop(.5,"#d7e2f2");g.addColorStop(1,"#8b96ab");c.beginPath();c.arc(p.x,p.y,rr,0,7);c.fillStyle=g;c.fill();c.fillStyle="rgba(236,227,206,.92)";c.textAlign="left";c.font=(10.5*dpr)+"px "+OSANS;c.fillText("Luna · "+S.moon.phase,p.x+rr+2*dpr,p.y+3*dpr);c.globalAlpha=1;}});}}
+    jobs.sort((a,b)=>b.d-a.d).forEach(j=>j.f()); // lejos→cerca
+    // rótulo mirada
+    c.textAlign="center";c.fillStyle="rgba(201,151,63,.85)";c.font=(11*dpr)+"px "+OSANS;
+    c.fillText("mirando "+azName(this.viewAz)+" · "+(this.viewAz).toFixed(0)+"°  ·  altura "+(this.viewAlt/_D2R).toFixed(0)+"°",this.w/2,this.h-16*dpr);
+  }
+};
+dCanvas.addEventListener("pointerdown",e=>{Domo.dragging=true;Domo.px=e.clientX;Domo.py=e.clientY;dCanvas.setPointerCapture(e.pointerId);});
+dCanvas.addEventListener("pointermove",e=>{if(!Domo.dragging)return;const k=0.16/Domo.zoom;Domo.viewAz=(Domo.viewAz-(e.clientX-Domo.px)*k+360)%360;Domo.viewAlt=Math.max(-0.35,Math.min(1.45,Domo.viewAlt+(e.clientY-Domo.py)*0.004/Domo.zoom));Domo.px=e.clientX;Domo.py=e.clientY;});
+dCanvas.addEventListener("pointerup",()=>Domo.dragging=false);
+dCanvas.addEventListener("wheel",e=>{e.preventDefault();Domo.zoom=Math.max(0.6,Math.min(3.2,Domo.zoom*(e.deltaY>0?0.93:1.07)));},{passive:false});
+dCanvas.addEventListener("touchmove",e=>{if(e.touches.length===2){const dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY,dd=Math.hypot(dx,dy);if(Domo.pinch)Domo.zoom=Math.max(0.6,Math.min(3.2,Domo.zoom*dd/Domo.pinch));Domo.pinch=dd;e.preventDefault();}},{passive:false});
+dCanvas.addEventListener("touchend",()=>Domo.pinch=0);
+document.getElementById("dSpin").onchange=e=>Domo.spin=e.target.checked;
+document.getElementById("dConst").onchange=e=>Domo.constel=e.target.checked;
+document.getElementById("dEcl").onchange=e=>Domo.eclEq=e.target.checked;
+["zAsp","zDign","zElem","zHouse","zRot","zLect"].forEach(id=>{const el=document.getElementById(id);if(el)el.onchange=()=>{if(viewMode==="zodiac")render();};});
+document.getElementById("zHsys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));if(viewMode==="zodiac")render();});
+if(window.ResizeObserver)new ResizeObserver(()=>{if(Domo.running)Domo.resize();}).observe(document.querySelector("main"));
 function render(){
  const now=getRenderDate(),sun=getSun(now),moon=getMoon(now),sat=satPos(now);
  document.getElementById("utc").textContent=now.toISOString().replace("T"," ").slice(0,19);
@@ -591,14 +1643,25 @@ function render(){
   if(userLocation){const inFoot=ang(userLocation,sat)<beta,dark=ang(userLocation,sun)>96,sunlit=ang(sat,sun)<108;document.getElementById("visible").textContent=(inFoot&&dark&&sunlit)?"posible":(inFoot?"sobre el horizonte, pero no en oscuridad":"fuera de alcance")}
  }else{["satpos","alt","speed","period","footprint"].forEach(id=>document.getElementById(id).textContent="—")}
 
- if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day")&&!userLocation)viewMode="map";
- const mapOn=viewMode==="map";
+ if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day"||viewMode==="domo")&&!userLocation)viewMode="map";
+ const mapOn=viewMode==="map"||viewMode==="satellite";
+ const orbesOn=viewMode==="orbes",domoOn=viewMode==="domo";
+ document.body.classList.toggle("satellite-mode",viewMode==="satellite");
+ document.body.classList.toggle("orbes-mode",orbesOn);
+ document.body.classList.toggle("domo-mode",domoOn);
+ document.body.classList.toggle("zodiac-mode",viewMode==="zodiac");
+ document.body.classList.toggle("solarreturn-mode",viewMode==="solarreturn");
  [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",mapOn?null:"none"));
  skyLayer.style("display",mapOn?"none":null);
+ if(!orbesOn&&Orbes.running)Orbes.stop();
+ if(!domoOn&&Domo.running)Domo.stop();
+ if(orbesOn){skyLayer.style("display","none");Orbes.setDate(now);Orbes.start();return;}
+ if(domoOn){skyLayer.style("display","none");Domo.setDate(now);Domo.start();return;}
  if(!mapOn){
   if(viewMode==="sky")renderSky(now,sun,moon,sat);
   else if(viewMode==="analemma")renderAnalemma(now);
   else if(viewMode==="zodiac")renderZodiacWheel(now);
+  else if(viewMode==="solarreturn")renderRS();
   else if(viewMode==="chart")renderChart(now);
   else if(viewMode==="wave")renderWave(now);
   else if(viewMode==="day")renderDayLength(now);
@@ -696,7 +1759,41 @@ function showAstroData(){
   box.innerHTML=h;
  },30);
 }
-function locate(){if(!navigator.geolocation){setStatus("Este navegador no soporta geolocalización.");return}setStatus("Solicitando ubicación...");navigator.geolocation.getCurrentPosition(p=>{userLocation={lat:p.coords.latitude,lon:p.coords.longitude};setStatus("Ubicación cargada.","status ok");render();if(document.getElementById("passes").style.display!=="none")showPasses();},e=>setStatus("No se pudo obtener ubicación: "+e.message),{enableHighAccuracy:true,timeout:10000,maximumAge:60000})}
+function locate(){if(!navigator.geolocation){setStatus("Este navegador no soporta geolocalización.");return}setStatus("Solicitando ubicación...");navigator.geolocation.getCurrentPosition(p=>{userLocation={lat:p.coords.latitude,lon:p.coords.longitude};setStatus("Ubicación cargada.","status ok");updateLocPill("mi ubicación");render();if(document.getElementById("passes").style.display!=="none")showPasses();},e=>setStatus("No se pudo obtener ubicación: "+e.message),{enableHighAccuracy:true,timeout:10000,maximumAge:60000})}
+const CITIES=[
+ {n:"Rocha, UY",lat:-34.48,lon:-54.33},{n:"Montevideo, UY",lat:-34.90,lon:-56.19},{n:"Fray Bentos, UY",lat:-33.13,lon:-58.30},
+ {n:"Maldonado / Punta del Este, UY",lat:-34.91,lon:-54.96},{n:"Salto, UY",lat:-31.39,lon:-57.96},{n:"Paysandú, UY",lat:-32.32,lon:-58.08},
+ {n:"Colonia del Sacramento, UY",lat:-34.47,lon:-57.84},{n:"Mercedes, UY",lat:-33.25,lon:-58.03},{n:"Melo, UY",lat:-32.37,lon:-54.18},
+ {n:"Tacuarembó, UY",lat:-31.73,lon:-55.98},{n:"Rivera, UY",lat:-30.90,lon:-55.55},{n:"Durazno, UY",lat:-33.38,lon:-56.52},
+ {n:"Florida, UY",lat:-34.10,lon:-56.21},{n:"Minas, UY",lat:-34.38,lon:-55.24},{n:"Trinidad, UY",lat:-33.52,lon:-56.90},
+ {n:"San José de Mayo, UY",lat:-34.34,lon:-56.71},{n:"Canelones, UY",lat:-34.52,lon:-56.28},{n:"Artigas, UY",lat:-30.40,lon:-56.47},
+ {n:"Treinta y Tres, UY",lat:-33.23,lon:-54.38},{n:"Carmelo, UY",lat:-34.00,lon:-58.28},
+ {n:"Buenos Aires, AR",lat:-34.60,lon:-58.38},{n:"Córdoba, AR",lat:-31.42,lon:-64.18},{n:"Rosario, AR",lat:-32.95,lon:-60.64},
+ {n:"Mendoza, AR",lat:-32.89,lon:-68.84},{n:"Santiago, CL",lat:-33.45,lon:-70.67},{n:"Porto Alegre, BR",lat:-30.03,lon:-51.23},
+ {n:"São Paulo, BR",lat:-23.55,lon:-46.63},{n:"Lima, PE",lat:-12.05,lon:-77.04},{n:"Bogotá, CO",lat:4.71,lon:-74.07},
+ {n:"Ciudad de México, MX",lat:19.43,lon:-99.13},{n:"Madrid, ES",lat:40.42,lon:-3.70},{n:"Barcelona, ES",lat:41.39,lon:2.17},
+ {n:"Londres, UK",lat:51.51,lon:-0.13},{n:"París, FR",lat:48.86,lon:2.35},{n:"Nueva York, US",lat:40.71,lon:-74.01}
+];
+function setLocation(lat,lon,label){userLocation={lat,lon};setStatus("Ubicación: "+label+" ("+lat.toFixed(2)+", "+lon.toFixed(2)+")","status ok");updateLocPill(label);render();if(document.getElementById("passes").style.display!=="none")showPasses();}
+function updateLocPill(label){const el=document.getElementById("locPill");if(el)el.textContent="📍 "+(label||(userLocation?userLocation.lat.toFixed(2)+", "+userLocation.lon.toFixed(2):"Ubicación"));}
+async function geocodeCity(q){try{const r=await fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});const j=await r.json();if(j&&j.length)return{lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon),label:j[0].display_name.split(",").slice(0,2).join(",").trim()};}catch(e){}return null;}
+async function cityGo(){const q=(document.getElementById("cityInput").value||"").trim();if(!q){setStatus("Escribí una ciudad o elegila de la lista.");return;}
+ const ql=q.toLowerCase(),hit=CITIES.find(c=>c.n.toLowerCase()===ql)||CITIES.find(c=>c.n.toLowerCase().startsWith(ql))||CITIES.find(c=>c.n.toLowerCase().indexOf(ql)>=0);
+ if(hit){setLocation(hit.lat,hit.lon,hit.n);return;}
+ setStatus("Buscando \u201C"+q+"\u201D\u2026");const g=await geocodeCity(q);
+ if(g)setLocation(g.lat,g.lon,g.label);else setStatus("No encontré esa ciudad (¿internet?). Probá una de la lista.","status warn");}
+const EXPORT_CSS=":root{--bg:#080b16;--ink:#ece3ce;--brass:#c9973f;--muted:#9aa3bd}*{box-sizing:border-box}body{max-width:820px;margin:0 auto;padding:28px 22px 60px;background:var(--bg);color:var(--ink);font-family:Georgia,'Cormorant Garamond',serif;line-height:1.55}h1{font-size:26px;color:var(--brass);margin:0 0 4px}.meta{color:var(--muted);font-size:13px;margin:0 0 18px;font-family:ui-monospace,monospace}.wheel{background:#0b0f1e;border:1px solid rgba(201,151,63,.25);border-radius:12px;padding:8px;margin:0 0 20px}.wheel svg{width:100%;height:auto;display:block}.reading{font-size:15px}.reading b{color:var(--brass)}.wheelRing{fill:none;stroke:var(--brass);stroke-opacity:.5}.wheelSpoke{stroke:var(--brass);stroke-opacity:.3;stroke-width:1}.wheelGlyph{fill:var(--ink);text-anchor:middle;font-size:20px;font-family:'Segoe UI Symbol',serif}.smallLabel{fill:#cdd6ee;font-size:11px;font-family:system-ui,sans-serif}.constLabel{fill:var(--brass);text-anchor:middle;font-size:16px}.gridlabel{fill:#8894ad;font-size:10px;font-family:system-ui,sans-serif}.gridline{stroke:var(--brass);stroke-opacity:.15}.label{fill:var(--ink);font-size:12px;font-family:system-ui,sans-serif}.ztab{width:100%;border-collapse:collapse;margin:4px 0 14px;font-size:13px}.ztab td{padding:2px 10px 2px 0;vertical-align:top}.ztab td.ho{color:var(--muted);text-align:right}.ztab td.dg{color:var(--brass)}.lq{font-style:italic;color:var(--brass);opacity:.9}.syn{background:rgba(201,151,63,.08);border:1px solid rgba(201,151,63,.3);border-radius:8px;padding:10px 14px;margin:6px 0 14px}.pl{border-left:3px solid rgba(201,151,63,.5);padding-left:10px;margin:8px 0}.pl b{color:var(--ink)}.hs{font-size:13px;color:var(--muted);margin:5px 0}.hs b{color:var(--brass)}.hs .ang{font-style:italic;color:#8894ad}.ax{font-size:13px;color:var(--muted);margin:5px 0}.ax b{color:var(--ink)}.ax .am{color:#8894ad;font-size:11px}.ax .ag{font-size:14px}.lecttab td.lx{color:var(--muted);font-size:12px}.lecttab td.lx .dg{color:var(--brass)}hr{border:none;border-top:1px solid rgba(201,151,63,.2);margin:24px 0 10px}.foot{color:var(--muted);font-size:11px;font-family:ui-monospace,monospace}";
+function chartMeta(){const d=getRenderDate(),loc=userLocation?(userLocation.lat.toFixed(2)+", "+userLocation.lon.toFixed(2)):"sin ubicación",sys={whole:"Signos enteros",equal:"Iguales",porphyry:"Porfirio"}[hsysNow()]||"—";return{d,loc,sys,when:d.toLocaleString()};}
+function dlFile(name,content,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},200);}
+function exportChartHTML(){const info=document.getElementById("zodInfo");if(!info||!info.innerHTML){setStatus("Abrí el modo Zodíaco primero.","status warn");return;}const m=chartMeta();let wheel="";try{wheel='<div class="wheel"><svg viewBox="0 0 '+width+' '+height+'" xmlns="http://www.w3.org/2000/svg">'+skyLayer.node().outerHTML+'</svg></div>';}catch(e){}
+ const doc='<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Carta del momento — '+m.when+'</title><style>'+EXPORT_CSS+'</style></head><body><h1>Carta del momento</h1><p class="meta">'+m.when+' · '+m.loc+' · casas: '+m.sys+'</p>'+wheel+'<div class="reading">'+info.innerHTML+'</div><hr><p class="foot">Generado con SATGUS · astrología helenística (Firmicus · Valens · Doroteo)</p></body></html>';
+ dlFile("carta_"+m.d.toISOString().slice(0,10)+".html",doc,"text/html;charset=utf-8");setStatus("Carta descargada (HTML).","status ok");}
+function exportChartTXT(){const info=document.getElementById("zodInfo");if(!info||!info.innerText.trim()){setStatus("Abrí el modo Zodíaco primero.","status warn");return;}const m=chartMeta();const txt="CARTA DEL MOMENTO\n"+m.when+" · "+m.loc+" · casas: "+m.sys+"\n\n"+info.innerText+"\n\n— Generado con SATGUS · astrología helenística";dlFile("carta_"+m.d.toISOString().slice(0,10)+".txt",txt,"text/plain;charset=utf-8");setStatus("Carta descargada (texto).","status ok");}
+function rsMeta(){const r=revChart;if(!r)return null;const loc=r.label+" ("+r.loc.lat.toFixed(2)+", "+r.loc.lon.toFixed(2)+")",sys={whole:"Signos enteros",equal:"Iguales",porphyry:"Porfirio"}[hsysNow()]||"—";return{when:fmtUTC(r.date),loc,sys,year:r.year};}
+function exportRSHTML(){const info=document.getElementById("revInfo");if(!revChart||!info||!info.innerHTML){setStatus("Calcul\u00e1 una revoluci\u00f3n primero.","status warn");return;}const m=rsMeta();let wheel="";try{wheel='<div class="wheel"><svg viewBox="0 0 '+width+' '+height+'" xmlns="http://www.w3.org/2000/svg">'+skyLayer.node().outerHTML+'</svg></div>';}catch(e){}
+ const doc='<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Revoluci\u00f3n solar '+m.year+'</title><style>'+EXPORT_CSS+'</style></head><body><h1>Revoluci\u00f3n solar '+m.year+'</h1><p class="meta">'+m.when+' \u00b7 '+m.loc+' \u00b7 casas: '+m.sys+'</p>'+wheel+'<div class="reading">'+info.innerHTML+'</div><hr><p class="foot">Generado con SATGUS \u00b7 astrolog\u00eda helen\u00edstica (Firmicus \u00b7 Valens \u00b7 Doroteo)</p></body></html>';
+ dlFile("revolucion_"+m.year+".html",doc,"text/html;charset=utf-8");setStatus("Revoluci\u00f3n descargada (HTML).","status ok");}
+function exportRSTxt(){const info=document.getElementById("revInfo");if(!revChart||!info||!info.innerText.trim()){setStatus("Calcul\u00e1 una revoluci\u00f3n primero.","status warn");return;}const m=rsMeta();const txt="REVOLUCI\u00d3N SOLAR "+m.year+"\n"+m.when+" \u00b7 "+m.loc+" \u00b7 casas: "+m.sys+"\n\n"+info.innerText+"\n\n\u2014 Generado con SATGUS \u00b7 astrolog\u00eda helen\u00edstica";dlFile("revolucion_"+m.year+".txt",txt,"text/plain;charset=utf-8");setStatus("Revoluci\u00f3n descargada (texto).","status ok");}
 
 // Aviso si alguna librería externa no cargó
 if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="undefined"){
@@ -705,15 +1802,55 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("load").onclick=loadTLE;
  document.getElementById("apply").onclick=()=>{if(tleToSatrec())render()};
  document.getElementById("locate").onclick=locate;
+ document.getElementById("cityList").innerHTML=CITIES.map(c=>"<option value=\""+c.n+"\">").join("");
+ document.getElementById("cityGo").onclick=cityGo;
+ document.getElementById("cityInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();cityGo();}});
+ document.getElementById("cityInput").addEventListener("change",()=>{const v=document.getElementById("cityInput").value;if(CITIES.some(c=>c.n===v))cityGo();});
+ document.getElementById("zDlHtml").onclick=exportChartHTML;
+ document.getElementById("zDlTxt").onclick=exportChartTXT;
+ document.getElementById("revDlHtml").onclick=exportRSHTML;
+ document.getElementById("revDlTxt").onclick=exportRSTxt;
+ document.getElementById("locPill").onclick=()=>document.getElementById("locPop").classList.toggle("open");
+ document.getElementById("locPopGo").onclick=()=>{document.getElementById("cityInput").value=document.getElementById("locPopInput").value;cityGo();document.getElementById("locPop").classList.remove("open");};
+ document.getElementById("locPopInput").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();document.getElementById("locPopGo").click();}});
+ document.getElementById("locPopGPS").onclick=()=>{locate();document.getElementById("locPop").classList.remove("open");};
+ document.addEventListener("click",e=>{const pop=document.getElementById("locPop");if(pop.classList.contains("open")&&!pop.contains(e.target)&&e.target.id!=="locPill")pop.classList.remove("open");});
  document.getElementById("useDate").onclick=setDateFromInput;
  document.getElementById("nowMode").onclick=backToNow;
  document.getElementById("passBtn").onclick=showPasses;
  document.getElementById("astrosBtn").onclick=showVisibility;
  document.getElementById("astroBtn").onclick=showAstroData;
- const modeBtns={map:"mMap",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",wave:"mWave",day:"mDay"};
- function setMode(m){if((m==="sky"||m==="analemma")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");render();}
+ const modeBtns={map:"mMap",satellite:"mSat",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",solarreturn:"mRev",wave:"mWave",day:"mDay",orbes:"mOrbs",domo:"mDomo"};
+ function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
+  const prim={map:0,sky:1,zodiac:2,domo:3},bn=document.querySelectorAll("#bnav .bn");bn.forEach(x=>x.classList.remove("on"));if(m in prim)bn[prim[m]].classList.add("on");else{const more=document.getElementById("bnMore");if(more)more.classList.add("on");}
+  const ms=document.getElementById("moreSheet");if(ms)ms.classList.remove("open");
+  render();}
  Object.keys(modeBtns).forEach(m=>document.getElementById(modeBtns[m]).onclick=()=>setMode(m));
+ document.getElementById("panelToggle").onclick=function(){const c=document.querySelector(".app").classList.toggle("pc");this.textContent=c?"⟩":"⟨";setTimeout(render,60);};
+ function toggleTheme(){const light=document.body.classList.toggle("light");const t=document.getElementById("themeToggle");if(t)t.textContent=light?"🌙":"🌞";const m=document.getElementById("themeToggleM");if(m)m.textContent=light?"🌙 Tema oscuro":"🌞 Tema claro";}
+ document.getElementById("themeToggle").onclick=toggleTheme;
+ document.getElementById("themeToggleM").onclick=toggleTheme;
+ document.getElementById("revCalc").onclick=computeRS;
+ document.getElementById("revLocMode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
+ document.getElementById("revYear").value=new Date().getFullYear();
+ (function(){document.querySelectorAll("aside section.sec").forEach(sec=>{const hd=sec.querySelector(".sec-h");if(!hd)return;const chev=document.createElement("span");chev.className="chev";chev.textContent="▾";hd.appendChild(chev);hd.addEventListener("click",()=>sec.classList.toggle("collapsed"));sec.classList.add("collapsed");});})();
+ document.querySelectorAll("#bnav .bn[data-m], #moreSheet button[data-m]").forEach(b=>b.onclick=()=>setMode(b.dataset.m));
+ document.getElementById("bnMore").onclick=()=>document.getElementById("moreSheet").classList.toggle("open");
+ const app=document.querySelector(".app");
+ document.getElementById("openPanel").onclick=()=>{document.getElementById("moreSheet").classList.remove("open");app.classList.add("showpanel");};
+ document.getElementById("asideClose").onclick=()=>app.classList.remove("showpanel");
+ document.getElementById("scrim").onclick=()=>app.classList.remove("showpanel");
+ ["orbesUI","domoUI","satUI"].forEach(id=>{const p=document.getElementById(id);if(!p)return;p.classList.add("floatpanel","folded");const btn=document.createElement("button");btn.className="pfoldbtn";btn.type="button";btn.textContent="⚙";btn.title="Opciones";btn.onclick=()=>{const f=p.classList.toggle("folded");btn.textContent=f?"⚙":"✕";btn.title=f?"Opciones":"Cerrar";};p.insertBefore(btn,p.firstChild);});
+ (function(){const s=document.getElementById("satUI");if(!s)return;const title=document.createElement("div");title.className="oh";title.textContent="🛰 SATGUS · NORAD 62713";s.appendChild(title);
+  const obj=document.getElementById("secObjeto");if(obj)s.appendChild(obj);
+  const lh=document.getElementById("lectHdr");if(lh)s.appendChild(lh);
+  const dt=document.getElementById("satData");if(dt)s.appendChild(dt);
+  const pb=document.getElementById("passBtn");if(pb)s.appendChild(pb);
+  const pp=document.getElementById("passes");if(pp)s.appendChild(pp);})();
  document.getElementById("chartRing").onchange=e=>{chartRing=e.target.checked;if(viewMode==="chart")render();};
+ document.getElementById("analemmaTrue").onchange=e=>{analemmaTrue=e.target.checked;if(viewMode==="analemma")render();};
+ document.getElementById("analemmaMoon").onchange=()=>{if(viewMode==="analemma")render();};
+ document.getElementById("analemmaClean").onchange=()=>{if(viewMode==="analemma")render();};
  svg.call(zoom);
  document.getElementById("zin").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1.6);
  document.getElementById("zout").onclick=()=>svg.transition().duration(220).call(zoom.scaleBy,1/1.6);
