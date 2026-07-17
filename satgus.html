@@ -1532,18 +1532,17 @@ function render(){
 
  if((viewMode==="sky"||viewMode==="analemma"||viewMode==="day"||viewMode==="domo")&&!userLocation)viewMode="map";
  const mapOn=viewMode==="map"||viewMode==="satellite";
+ const orbesOn=viewMode==="orbes",domoOn=viewMode==="domo";
  document.body.classList.toggle("satellite-mode",viewMode==="satellite");
+ document.body.classList.toggle("orbes-mode",orbesOn);
+ document.body.classList.toggle("domo-mode",domoOn);
+ document.body.classList.toggle("zodiac-mode",viewMode==="zodiac");
  [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",mapOn?null:"none"));
  skyLayer.style("display",mapOn?"none":null);
- const orbesOn=viewMode==="orbes";
- document.body.classList.toggle("orbes-mode",orbesOn);
+ if(!orbesOn&&Orbes.running)Orbes.stop();
+ if(!domoOn&&Domo.running)Domo.stop();
  if(orbesOn){skyLayer.style("display","none");Orbes.setDate(now);Orbes.start();return;}
- else if(Orbes.running){Orbes.stop();}
- const domoOn=viewMode==="domo";
- document.body.classList.toggle("domo-mode",domoOn);
  if(domoOn){skyLayer.style("display","none");Domo.setDate(now);Domo.start();return;}
- else if(Domo.running){Domo.stop();}
- document.body.classList.toggle("zodiac-mode",viewMode==="zodiac");
  if(!mapOn){
   if(viewMode==="sky")renderSky(now,sun,moon,sat);
   else if(viewMode==="analemma")renderAnalemma(now);
