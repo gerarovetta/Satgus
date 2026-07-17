@@ -472,6 +472,30 @@ body.solarreturn-mode #revUI{display:flex}
 #domoUI .oswitch input::after{content:"";position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--muted-2);transition:.18s}
 #domoUI .oswitch input:checked{background:rgba(201,151,63,.28);border-color:var(--brass)}
 #domoUI .oswitch input:checked::after{transform:translateX(14px);background:var(--brass)}
+
+/* — Diseño Humano — */
+#hdUI{position:absolute;left:22px;top:22px;z-index:6;display:none;flex-direction:column;gap:8px;width:300px;max-width:calc(100% - 44px);max-height:calc(100vh - 44px);overflow-y:auto;
+  background:linear-gradient(180deg,#11162bee,#0b0e1cf2);border:1px solid var(--line);border-radius:13px;padding:14px;
+  backdrop-filter:blur(6px);box-shadow:0 12px 40px rgba(0,0,0,.55)}
+body.hd-mode #hdUI{display:flex}
+#hdUI .oh{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass)}
+#hdUI label{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+#hdUI input[type=text],#hdUI input[type=datetime-local]{background:#0d1122;border:1px solid var(--line-soft);border-radius:8px;color:var(--parchment);padding:8px 9px;font:500 12px var(--sans)}
+#hdCalc{padding:9px 8px;font:600 12px var(--sans);background:linear-gradient(180deg,rgba(95,184,166,.22),rgba(95,184,166,.07));color:#8fe3c0;border:1px solid #5fb8a6;border-radius:8px;cursor:pointer}
+#hdUI .zinfo{font-family:var(--sans);font-size:11px;line-height:1.5;color:var(--muted);border-top:1px solid var(--line-soft);padding-top:9px;margin-top:4px}
+#hdUI .zinfo b{color:var(--brass);font-weight:600}
+#hdUI .ztab{width:100%;border-collapse:collapse;margin:3px 0 8px}
+#hdUI .ztab td{padding:1px 4px 1px 0;font-size:10.5px;color:var(--parchment);vertical-align:top;white-space:nowrap}
+#hdUI .ztab td.ho{color:var(--muted-2);text-align:right}
+#hdUI p{margin:4px 0 8px;font-size:11px;line-height:1.5;color:var(--parchment)}
+#hdUI p.syn{font-size:12px;line-height:1.55;color:var(--parchment);background:rgba(201,151,63,.06);border:1px solid rgba(201,151,63,.25);border-radius:8px;padding:8px 10px;margin:4px 0 10px}
+#hdUI p.syn b{color:var(--brass)}
+.hdhdr{background:rgba(201,151,63,.10);border:1px solid rgba(201,151,63,.32);border-radius:8px;padding:9px 11px;margin-bottom:9px;color:var(--parchment);font-size:12px}
+.hdhdr b{color:var(--brass)}
+#hdUI .zexport{display:flex;gap:6px;margin-top:10px}
+#hdUI .zexport button{flex:1;padding:8px 6px;font:600 11.5px var(--sans);background:linear-gradient(180deg,rgba(201,151,63,.2),rgba(201,151,63,.06));color:var(--brass);border:1px solid var(--brass);border-radius:8px;cursor:pointer}
+#hdUI .zexport button:last-child{flex:none;padding:8px 12px}
+@media(max-width:760px){body.hd-mode #hdUI{position:static;width:auto;max-width:100%;max-height:none;overflow:visible;margin:14px auto 30px}}
 </style>
 </head>
 <body>
@@ -485,6 +509,7 @@ body.solarreturn-mode #revUI{display:flex}
   <button id="mZod" class="modebtn"><span class="ico">⊙</span><span class="lbl">Zodíaco</span></button>
   <button id="mChart" class="modebtn"><span class="ico">◈</span><span class="lbl">Carta</span></button>
   <button id="mRev" class="modebtn"><span class="ico">☉↻</span><span class="lbl">Revolución</span></button>
+  <button id="mHD" class="modebtn"><span class="ico">⬡</span><span class="lbl">Diseño HD</span></button>
   <button id="mWave" class="modebtn"><span class="ico">∿</span><span class="lbl">Onda</span></button>
   <button id="mDay" class="modebtn"><span class="ico">☀</span><span class="lbl">Día</span></button>
   <button id="mOrbs" class="modebtn"><span class="ico">◉</span><span class="lbl">Órbes</span></button>
@@ -616,8 +641,11 @@ body.solarreturn-mode #revUI{display:flex}
 <div class="oseg" id="zHsys"><button data-h="whole" class="on">Signos</button><button data-h="equal">Iguales</button><button data-h="porphyry">Porfirio</button></div>
 <label class="oswitch"><input type="checkbox" id="zRot" checked><span>Rotar al Ascendente</span></label>
 <label class="oswitch"><input type="checkbox" id="zLect" checked><span>Lectura helenística</span></label>
+<label class="oswitch"><input type="checkbox" id="zHDRing"><span>Anillo de puertas HD</span></label>
+<div class="oh" style="margin-top:6px">Extensión de la lectura</div>
+<div class="oseg" id="zLen"><button data-n="1">Breve</button><button data-n="2">Media</button><button data-n="3" class="on">Extensa</button></div>
 <div id="zodInfo" class="zinfo"></div>
-<div class="zexport"><button id="zDlHtml">Descargar carta (HTML)</button><button id="zDlTxt">Texto</button></div>
+<div class="zexport"><button id="zDlHtml">Descargar carta (HTML)</button><button id="zDlTxt">Texto</button><button id="zAI" title="Copiar prompt para ampliar con IA">✦ IA</button></div>
 </div><div id="revUI">
 <div class="oh">Revolución solar</div>
 <label>Nacimiento · fecha y hora</label>
@@ -630,9 +658,22 @@ body.solarreturn-mode #revUI{display:flex}
 <div class="oseg" id="revLocMode"><button data-l="here" class="on">Donde estás</button><button data-l="natal">Lugar natal</button></div>
 <input type="text" id="revCity" list="cityList" placeholder="…u otra ciudad (opcional)">
 <label class="oswitch"><input type="checkbox" id="revBi" checked><span>Bi-rueda (natal + revolución)</span></label>
+<div class="oh" style="margin-top:6px">Extensión de la lectura</div>
+<div class="oseg" id="revLen"><button data-n="1">Breve</button><button data-n="2">Media</button><button data-n="3" class="on">Extensa</button></div>
 <button id="revCalc">Calcular revolución</button>
 <div id="revInfo" class="zinfo"></div>
-<div class="zexport"><button id="revDlHtml">Descargar revolución (HTML)</button><button id="revDlTxt">Texto</button></div>
+<div class="zexport"><button id="revDlHtml">Descargar revolución (HTML)</button><button id="revDlTxt">Texto</button><button id="revAI" title="Copiar prompt para ampliar con IA">✦ IA</button></div>
+</div><div id="hdUI">
+<div class="oh">Diseño Humano · rave chart</div>
+<label>Nacimiento · fecha y hora</label>
+<input type="datetime-local" id="hdBirthDT">
+<label>Nacimiento · ciudad</label>
+<input type="text" id="hdBirthCity" list="cityList" placeholder="ej. Fray Bentos">
+<button id="hdCalc">Calcular diseño</button>
+<div class="oh" style="margin-top:4px">Vista</div>
+<div class="oseg" id="hdView"><button data-v="body" class="on">Bodygraph</button><button data-v="rueda">Mandala</button></div>
+<div id="hdInfo" class="zinfo"></div>
+<div class="zexport"><button id="hdDlHtml">Descargar diseño (HTML)</button><button id="hdDlTxt">Texto</button><button id="hdAI" title="Copiar prompt para ampliar con IA">✦ IA</button></div>
 </div><div id="satUI"></div></main>
 <nav class="bottomnav" id="bnav">
   <button data-m="map" class="bn"><span class="i">◐</span>Mapa</button>
@@ -645,7 +686,7 @@ body.solarreturn-mode #revUI{display:flex}
   <div class="grip"></div>
   <div class="moregrid">
     <button data-m="satellite">🛰 Satélite</button><button data-m="analemma">◊ Analema</button><button data-m="chart">◈ Carta (trazas)</button><button data-m="solarreturn">☉↻ Revolución</button><button data-m="wave">∿ Onda</button>
-    <button data-m="day">☀ Día</button><button data-m="orbes">◉ Órbes</button>
+    <button data-m="day">☀ Día</button><button data-m="orbes">◉ Órbes</button><button data-m="hd">⬡ Diseño HD</button>
   </div>
   <button id="openPanel" class="morectrl">⚙ Controles y ajustes</button>
   <button id="themeToggleM" class="morectrl">🌞 Tema claro</button>
@@ -1100,6 +1141,165 @@ function solarCondition(lon,sunLon){let d=Math.abs(normDeg(lon-sunLon));if(d>180
  if(d<0.283)return"cazimi (en el corazón del Sol)";if(d<8.5)return"combusto";if(d<15)return"bajo los rayos";return"";}
 function computeLots(asc,sun,moon,day){const F=day?normDeg(asc+moon-sun):normDeg(asc+sun-moon);const S=day?normDeg(asc+sun-moon):normDeg(asc+moon-sun);return{fortuna:F,espiritu:S};}
 
+// ===== Extensiones de lectura: niveles, velocidades, lotes de Paulus, estrellas fijas, nodos, fase lunar =====
+function readLevel(id){const e=document.querySelector("#"+(id||"zLen")+" button.on");return e?parseInt(e.dataset.n,10):3;}
+function bodySpeeds(date){const a=chartBodies(date),b=chartBodies(new Date(date.getTime()+21600000)),m={};
+ a.forEach((x,i)=>{let dl=b[i].lon-x.lon;dl=((dl+540)%360)-180;m[x.name]=dl*4;});return m;} // grados/día
+function aspectPhase(lonA,lonB,vA,vB,ang){let d=Math.abs(normDeg(lonA-lonB));if(d>180)d=360-d;
+ const dt=0.25;let d2=Math.abs(normDeg((lonA+(vA||0)*dt)-(lonB+(vB||0)*dt)));if(d2>180)d2=360-d2;
+ return Math.abs(d2-ang)<Math.abs(d-ang)-1e-9?"aplicativo":"separativo";}
+function lunarPhaseInfo(date){const e=normDeg(getMoon(date).eclLon-getSun(date).eclLon);
+ if(e<22.5||e>=337.5)return["nueva","semilla que comienza en lo oscuro"];
+ if(e<67.5)return["creciente","brote que empuja hacia la luz"];
+ if(e<112.5)return["cuarto creciente","crisis de acción: hay que decidir"];
+ if(e<157.5)return["gibosa creciente","ajuste fino antes de la plenitud"];
+ if(e<202.5)return["llena","plenitud: todo se ve de frente"];
+ if(e<247.5)return["gibosa menguante","compartir y repartir lo cosechado"];
+ if(e<292.5)return["cuarto menguante","crisis de conciencia: soltar"];
+ return["balsámica","entrega, descanso y cierre de ciclo"];}
+// Lotes herméticos según Paulus Alejandrino (fórmulas diurnas; invertidas de noche)
+function computeLotsExt(asc,by,day,lots){
+ const A=asc,F=lots.fortuna,S=lots.espiritu;
+ const lot=(dP,dQ)=>normDeg(day?A+dP-dQ:A+dQ-dP);
+ return{eros:lot(by["Venus"],S),victoria:lot(by["Júpiter"],S),coraje:lot(F,by["Marte"]),necesidad:lot(F,by["Mercurio"]),nemesis:lot(F,by["Saturno"])};}
+const LOTMEAN={"Eros":"el deseo y lo que se ama","Victoria":"lo que corona y da triunfo","Coraje":"el ánimo y la osadía","Necesidad":"lo forzoso, lo que constriñe","Némesis":"la cuenta que tarde o temprano se paga"};
+// Estrellas fijas (longitud eclíptica tropical J2000; se precesa ~50.3″/año)
+const FSTARS=[[56.17,"Algol","la cabeza de Medusa: intensidad extrema que pide corte consciente"],
+[60.00,"Alcyone (Pléyades)","las lloronas: mirada interior, sensibilidad honda"],
+[69.79,"Aldebarán","ojo del Toro, vigilante del Este: la integridad puesta a prueba"],
+[76.83,"Rigel","el pie de Orión: enseñar, construir, civilizar"],
+[88.76,"Betelgeuse","hombro de Orión: logro que avanza sin traba"],
+[104.08,"Sirio","la abrasadora: brillo que marca, fama que quema"],
+[110.24,"Cástor","el gemelo mortal: la palabra que narra y traduce"],
+[113.22,"Pólux","el gemelo inmortal: fuerza templada en la pérdida"],
+[149.83,"Régulo","corazón del León, estrella real: honor que se sostiene solo si no hay venganza"],
+[203.84,"Spica","la espiga de la Virgen: don puro, talento regalado"],
+[204.23,"Arcturus","guardián de la Osa: abrir camino donde no lo hay"],
+[249.76,"Antares","corazón del Escorpión, rival de Marte: todo o nada"],
+[285.32,"Vega","la lira que encanta: arte con hechizo propio"],
+[301.78,"Altair","el águila: audacia que se lanza al vacío"],
+[323.55,"Deneb Algedi","la cola de la cabra: ley, juicio y benevolencia"],
+[333.87,"Fomalhaut","la boca del Pez, vigilante del Sur: ideal que no debe venderse"]];
+function fixedStarBlock(date,by,AM){
+ const yr=date.getUTCFullYear()+date.getUTCMonth()/12,dr=(yr-2000)*0.013969;
+ const pts=PL7.map(nm=>({n:nm,g:PGLY[nm],lon:by[nm]}));
+ if(AM){pts.push({n:"Ascendente",g:"AC",lon:AM.asc});pts.push({n:"Mediocielo",g:"MC",lon:AM.mc});}
+ const hits=[];
+ FSTARS.forEach(st=>{const sl=normDeg(st[0]+dr);pts.forEach(p=>{let d=Math.abs(normDeg(p.lon-sl));if(d>180)d=360-d;
+  if(d<=1.3)hits.push("<p class='ax'><b>"+st[1]+"</b> ∗ "+p.g+" "+p.n+" ("+d.toFixed(1)+"°): "+st[2]+".</p>");});});
+ return hits.length?"<b>Estrellas fijas</b>"+hits.join(""):"";}
+function narrateNodes(date,cusps,by){
+ const nn=moonNode(date),sn=normDeg(nn+180);
+ const nh=bodyHouse(nn,cusps),sh=bodyHouse(sn,cusps),ns=Math.floor(normDeg(nn)/30),ss=Math.floor(normDeg(sn)/30);
+ let s="<b>Nodos y eclipses</b><p class='ax'>El eje de los nodos —el camino de los eclipses— tiende su cuerda entre <b>"+zodiac[ns].name+"</b> (☊ Nodo Norte, casa "+(nh+1)+": "+HOUSESHORT[nh]+", lo que pide crecer) y <b>"+zodiac[ss].name+"</b> (☋ Nodo Sur, casa "+(sh+1)+": "+HOUSESHORT[sh]+", lo que pide soltarse).";
+ const near=[];
+ PL7.forEach(nm=>{let d1=Math.abs(normDeg(by[nm]-nn));if(d1>180)d1=360-d1;let d2=Math.abs(normDeg(by[nm]-sn));if(d2>180)d2=360-d2;
+  const d=Math.min(d1,d2);if(d<=3.5)near.push(PGLY[nm]+" "+nm+" ("+(d1<d2?"☊":"☋")+" "+d.toFixed(1)+"°)");});
+ if(near.length)s+=" Sobre ese camino: "+near.join(", ")+" — puntos que los eclipses del período tocan de lleno.";
+ try{const ec=nextEclipses(date,1);
+  if(ec.length){const e=ec[0],el=e.t==="Solar"?getSun(e.date).eclLon:getMoon(e.date).eclLon,eh=bodyHouse(el,cusps);
+   s+=" Próximo eclipse: <b>"+(e.t==="Solar"?"solar":"lunar")+" "+e.c+"</b> el "+e.date.toISOString().slice(0,10)+" en "+fmtSign(el)+" — cae en la casa "+(eh+1)+" ("+HOUSESHORT[eh]+").";}}catch(err){}
+ return s+"</p>";}
+function lotsBlock(AM,by,day,lots,cusps){
+ const ext=computeLotsExt(AM.asc,by,day,lots);
+ const rows=[["\u2297 Fortuna",lots.fortuna],["Espíritu",lots.espiritu],["Eros",ext.eros],["Victoria",ext.victoria],["Coraje",ext.coraje],["Necesidad",ext.necesidad],["Némesis",ext.nemesis]];
+ let h="<b>Lotes</b><table class='ztab'>";
+ rows.forEach(r=>{const hh=bodyHouse(r[1],cusps);h+="<tr><td>"+r[0]+"</td><td>"+fmtSign(r[1])+"</td><td class='ho'>c"+(hh+1)+"</td></tr>";});
+ h+="</table>";
+ h+="<p class='lq'>Fortuna es el cuerpo y lo que la vida trae; Espíritu, el alma y lo que uno obra; Eros, "+LOTMEAN["Eros"]+"; Victoria, "+LOTMEAN["Victoria"]+"; Coraje, "+LOTMEAN["Coraje"]+"; Necesidad, "+LOTMEAN["Necesidad"]+"; Némesis, "+LOTMEAN["Némesis"]+".</p>";
+ [["Fortuna",lots.fortuna],["Espíritu",lots.espiritu]].forEach(pr=>{
+  const sg=Math.floor(normDeg(pr[1])/30),ld=RULER[sg],lh=bodyHouse(by[ld],cusps),dgn=dignity(ld,Math.floor(normDeg(by[ld])/30)).replace(" · ","");
+  h+="<p>El señor de <b>"+pr[0]+"</b> es "+PGLY[ld]+" "+ld+", que mora en la casa "+(lh+1)+" ("+HOUSESHORT[lh]+")"+(dgn?", en "+dgn:"")+": por ahí se administra "+(pr[0]==="Fortuna"?"la suerte del cuerpo y de la vida":"la obra del alma y la iniciativa propia")+".</p>";});
+ const fh=bodyHouse(lots.fortuna,cusps);
+ h+="<p>La Fortuna cae en la casa "+(fh+1)+" ("+HOUSEM[fh]+"): allí se concentra la suerte del cuerpo y la vida.</p>";
+ return h;}
+
+// ===== Pasada 2: orientalidad, halb/hayz, primera aplicación lunar, sizigia previa, recepción simple, lectura por temas =====
+function orientality(nm,lon,sunL){if(nm==="Sol"||nm==="Luna")return"";const d=normDeg(sunL-lon);return(d>0&&d<180)?"oriental":"occidental";}
+function sectPlace(nm,lon,sign,day,asc){ // halb: planeta de secta en su hemisferio; hayz: + signo de su género
+ if(nm==="Mercurio"||asc==null)return"";
+ const diu=(nm==="Sol"||nm==="Júpiter"||nm==="Saturno");
+ const above=normDeg(lon-asc)>=180;
+ const halb=(diu&&((day&&above)||(!day&&!above)))||(!diu&&((!day&&above)||(day&&!above)));
+ if(!halb)return"";
+ const mascP=(nm==="Sol"||nm==="Marte"||nm==="Júpiter"||nm==="Saturno"),mascS=sign%2===0;
+ return(mascP===mascS)?"hayz":"halb";}
+function moonFirstApp(by,spd){ // primera aplicación de la Luna (lineal con velocidades del momento)
+ const mL=normDeg(by["Luna"]),vM=(spd&&spd["Luna"])||13.18;
+ const NAMES={0:"conjunción",60:"sextil",90:"cuadratura",120:"trígono",180:"oposición"};
+ let best=null;
+ PL7.forEach(nm=>{if(nm==="Luna")return;const pL=by[nm],vP=(spd&&spd[nm])||0,vr=vM-vP;if(vr<=0)return;
+  const s=normDeg(mL-pL);
+  [0,60,90,120,180].forEach(A=>{[A,360-A].forEach(T=>{let d=normDeg(T-s);if(d<1e-4)d+=360;const t=d/vr;
+   if(t>0&&(!best||t<best.t))best={nm,name:NAMES[A],t};});});});
+ const toIng=((30-(mL%30))||30)/vM;
+ if(best&&best.t<=toIng)return best;
+ return{voc:true,toIng};}
+function prevSyzygy(date){ // última lunación (nueva o llena) antes del momento
+ const from=new Date(date.getTime()-20*86400000);let prev=null,lastNew=null,lastFull=null;
+ for(let h=0;h<=24*20;h++){const t=new Date(from.getTime()+h*3600000);if(t>date)break;
+  const e=normDeg(getMoon(t).eclLon-getSun(t).eclLon);
+  if(prev!==null){const d0=((prev+540)%360)-180,d1=((e+540)%360)-180;if(d0<0&&d1>=0)lastNew=new Date(t.getTime());
+   const f0=((prev-180+540)%360)-180,f1=((e-180+540)%360)-180;if(f0<0&&f1>=0)lastFull=new Date(t.getTime());}
+  prev=e;}
+ let pick=null;
+ if(lastNew&&lastFull)pick=lastNew>lastFull?{d:lastNew,k:"nueva"}:{d:lastFull,k:"llena"};
+ else if(lastNew)pick={d:lastNew,k:"nueva"};else if(lastFull)pick={d:lastFull,k:"llena"};
+ if(!pick)return null;
+ const lon=pick.k==="nueva"?getSun(pick.d).eclLon:getMoon(pick.d).eclLon;
+ return{date:pick.d,kind:pick.k,lon};}
+function simpleReceptions(bs){ // A en dignidad de B, con aspecto entre ambos (excluye mutuas, ya listadas)
+ const asps=aspectsBetween(bs),out=[];
+ asps.forEach(ap=>{const A=bs[ap.i],B=bs[ap.j];if(!DIGN[A.name]||!DIGN[B.name])return;
+  const sA=Math.floor(normDeg(A.lon)/30),sB=Math.floor(normDeg(B.lon)/30);
+  const AinB=DIGN[B.name].dom.includes(sA)?"domicilio":(DIGN[B.name].exa===sA?"exaltación":null);
+  const BinA=DIGN[A.name].dom.includes(sB)?"domicilio":(DIGN[A.name].exa===sB?"exaltación":null);
+  if(AinB&&BinA)return;
+  if(AinB)out.push(PGLY[B.name]+" "+B.name+" recibe a "+PGLY[A.name]+" "+A.name+" — huésped en su "+AinB+", conectados por "+ap.asp.name.toLowerCase()+": el anfitrión atiende y suaviza");
+  if(BinA)out.push(PGLY[A.name]+" "+A.name+" recibe a "+PGLY[B.name]+" "+B.name+" — huésped en su "+BinA+", conectados por "+ap.asp.name.toLowerCase()+": el anfitrión atiende y suaviza");});
+ return out;}
+function themeSynthesis(by,cusps,AM,day,lots,bs){
+ const S=l=>Math.floor(normDeg(l)/30);
+ const dignShort=(nm,lon)=>{const d=essentialDignities(nm,lon,day);
+  if(d.out.length&&d.deb.length)return"con fuerza y merma a la vez";
+  if(d.out.length)return"con dignidad por "+d.out[0];
+  if(d.deb.length)return"en "+d.deb[0];return"peregrino";};
+ const inH=h=>PL7.filter(nm=>bodyHouse(by[nm],cusps)===h);
+ const glys=arr=>arr.map(n=>PGLY[n]+" "+n).join(", ");
+ const ext=computeLotsExt(AM.asc,by,day,lots);
+ const asps=aspectsBetween(bs);
+ let h="<b>Lectura por temas</b>";
+ // Vocación y obra
+ {const mcS=S(AM.mc),ld=RULER[mcS],lh=bodyHouse(by[ld],cusps),sh=bodyHouse(by["Sol"],cusps),eh=bodyHouse(lots.espiritu,cusps),occ=inH(9);
+  h+="<p class='pl'><b>Vocación y obra.</b> El Mediocielo se alza en "+zodiac[mcS].name+" —"+SIGNSTYLE[mcS]+"—; su señor, "+PGLY[ld]+" "+ld+", obra desde la casa "+(lh+1)+" ("+HOUSESHORT[lh]+"), "+dignShort(ld,by[ld])+": de ese terreno se nutre la obra pública."+(occ.length?" En la Décima moran "+glys(occ)+", dando cuerpo a la acción.":"")+" El Sol reparte el propósito en la casa "+(sh+1)+" ("+HOUSESHORT[sh]+"), y el Espíritu cae en la casa "+(eh+1)+": hacia allí apunta lo que uno obra por decisión propia.</p>";}
+ // Vínculos y unión
+ {const s7=S(cusps[6]),ld=RULER[s7],lh=bodyHouse(by[ld],cusps),vh=bodyHouse(by["Venus"],cusps),erh=bodyHouse(ext.eros,cusps),occ=inH(6);
+  h+="<p class='pl'><b>Vínculos y unión.</b> La Séptima se abre en "+zodiac[s7].name+"; el otro llega con el temple de "+SIGNSTYLE[s7]+". Su señor, "+PGLY[ld]+" "+ld+", habita la casa "+(lh+1)+" ("+HOUSESHORT[lh]+"): la pareja se entreteje con ese asunto."+(occ.length?" Habitan la Séptima "+glys(occ)+".":"")+" Venus, que rige el deseo y la unión, está en la casa "+(vh+1)+", "+dignShort("Venus",by["Venus"])+"; y el Lote de Eros cae en la casa "+(erh+1)+": ahí se enciende lo que se ama.</p>";}
+ // Recursos y sustento
+ {const s2=S(cusps[1]),ld=RULER[s2],lh=bodyHouse(by[ld],cusps),fh=bodyHouse(lots.fortuna,cusps),fl=RULER[S(lots.fortuna)],flh=bodyHouse(by[fl],cusps),occ=inH(1);
+  h+="<p class='pl'><b>Recursos y sustento.</b> La Segunda se sostiene en "+zodiac[s2].name+"; su señor, "+PGLY[ld]+" "+ld+", administra desde la casa "+(lh+1)+" ("+HOUSESHORT[lh]+"), "+dignShort(ld,by[ld])+"."+(occ.length?" Moran en la Segunda "+glys(occ)+".":"")+" La Fortuna cae en la casa "+(fh+1)+" y su señor, "+PGLY[fl]+" "+fl+", en la casa "+(flh+1)+": por esas dos vías circula lo que la vida trae al cuerpo y a la bolsa.</p>";}
+ // Cuerpo y salud
+ {const s6=S(cusps[5]),ld=RULER[s6],lh=bodyHouse(by[ld],cusps),mh=bodyHouse(by["Luna"],cusps),occ=inH(5);
+  const hard=asps.filter(ap=>{const A=bs[ap.i].name,B=bs[ap.j].name;const par=(A==="Luna"&&(B==="Marte"||B==="Saturno"))||(B==="Luna"&&(A==="Marte"||A==="Saturno"));
+   return par&&(ap.asp.name==="Cuadratura"||ap.asp.name==="Oposición"||ap.asp.name==="Conjunción");});
+  h+="<p class='pl'><b>Cuerpo y salud.</b> La Sexta cae en "+zodiac[s6].name+"; su señor, "+PGLY[ld]+" "+ld+", opera desde la casa "+(lh+1)+" ("+HOUSESHORT[lh]+")."+(occ.length?" Habitan la Sexta "+glys(occ)+".":"")+" La Luna, que lleva el cuerpo y el alma sensible, mora en la casa "+(mh+1)+", "+dignShort("Luna",by["Luna"])+"."+(hard.length?" Recibe rigor de "+hard.map(ap=>{const o=bs[ap.i].name==="Luna"?bs[ap.j]:bs[ap.i];return o.sym+" "+o.name+" ("+ap.asp.name.toLowerCase()+")";}).join(", ")+": ahí conviene el cuidado.":" Sin aflicción mayor de los maléficos: el cuerpo respira.")+"</p>";}
+ return h;}
+
+function copyAIPrompt(kind){
+ const info=document.getElementById(kind==="rev"?"revInfo":(kind==="hd"?"hdInfo":"zodInfo"));
+ if(!info||!info.innerText.trim()){setStatus("No hay lectura calculada todavía.","status warn");return;}
+ const head=kind==="hd"
+  ?"Sos un analista de Diseño Humano riguroso que escribe en rioplatense, cálido y directo. A partir de los datos calculados (tipo, estrategia, autoridad, perfil, definición, canales, centros y activaciones), escribí una lectura extensa: cómo opera la estrategia y la autoridad en la vida cotidiana, los dones de cada canal definido, la sabiduría y el condicionamiento de los centros abiertos, y el perfil como camino de vida. No inventes activaciones ni canales: usá únicamente los datos de abajo.\n\nDATOS CALCULADOS:\n\n"
+  :kind==="rev"
+  ?"Sos un astrólogo helenístico (Valens, Firmicus, Doroteo) que escribe en rioplatense, con lenguaje poético pero preciso. A partir de los datos calculados de esta revolución solar, escribí una lectura extensa y narrativa del año: el temple con que se abre, el señor del año y su condición, la profección anual y los meses, los contactos con la carta natal, y un cierre con tres consejos concretos. No inventes posiciones ni aspectos: usá únicamente los datos de abajo.\n\nDATOS CALCULADOS:\n\n"
+  :"Sos un astrólogo helenístico (Valens, Firmicus, Doroteo) que escribe en rioplatense, con lenguaje poético pero preciso. A partir de los datos calculados de esta carta, escribí una lectura extensa y narrativa: síntesis del temperamento, los siete planetas y sus condiciones, las casas con sus regentes, los aspectos (distinguiendo aplicativos de separativos), los lotes y las estrellas fijas. No inventes posiciones ni aspectos: usá únicamente los datos de abajo.\n\nDATOS CALCULADOS:\n\n";
+ const txt=head+info.innerText;
+ const done=()=>setStatus("Prompt copiado: pegalo en Claude para una lectura ampliada.","status ok");
+ const fallback=()=>{const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
+  try{document.execCommand("copy");done();}catch(e){setStatus("No pude copiar al portapapeles.","status warn");}ta.remove();};
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,fallback);else fallback();}
+
+
 function almutenOfDegree(lon,day){const sign=Math.floor(normDeg(lon)/30),deg=normDeg(lon)%30,elem=sign%4,sc={};PL7.forEach(n=>sc[n]=0);
  PL7.forEach(n=>{if(DIGN[n].dom.includes(sign))sc[n]+=5;if(DIGN[n].exa===sign)sc[n]+=4;});
  const tr=TRIP[elem];sc[day?tr.d:tr.n]+=3;
@@ -1123,9 +1323,13 @@ function dignPhrase(dg){const map={domicilio:"en su domicilio, señor de sí mis
  const good=dg.out.map(d=>map[d]||d),bad=dg.deb.map(d=>d==="caída"?"en caída, sin apoyo":"en exilio, en tierra ajena");
  if(good.length&&bad.length)return good.join(", ")+", aunque "+bad.join(" y ")+" — mezcla de fuerza y merma";
  if(good.length)return good.join(", ");if(bad.length)return bad.join(" y ");return "peregrino, sin dignidad ni tacha en su asiento";}
-function narratePlanet(nm,lon,house,day,roles,sunL,retro){const sign=Math.floor(normDeg(lon)/30),dg=essentialDignities(nm,lon,day),parts=[dignPhrase(dg)];
+function narratePlanet(nm,lon,house,day,roles,sunL,retro,asc){const sign=Math.floor(normDeg(lon)/30),dg=essentialDignities(nm,lon,day),parts=[dignPhrase(dg)];
  const sc=nm==="Sol"?"":solarCondition(lon,sunL);
  if(sc.indexOf("cazimi")>=0)parts.push("en el corazón del Sol —cazimi—, encendido");else if(sc==="combusto")parts.push("combusto, velado por el fuego solar");else if(sc==="bajo los rayos")parts.push("bajo los rayos, a media luz");
+ const ori=orientality(nm,lon,sunL);
+ if(ori&&sc.indexOf("cazimi")<0&&sc!=="combusto")parts.push(ori==="oriental"?"oriental del Sol —matutino, de vigor temprano—":"occidental del Sol —vespertino, que madura en la tarde de las cosas—");
+ const hz=sectPlace(nm,lon,sign,day,asc);
+ if(hz==="hayz")parts.push("en hayz —secta, hemisferio y género concordes: plena condición—");else if(hz==="halb")parts.push("en su halb, cómodo en su hemisferio");
  let sect="";if(nm===roles.lum)sect="luminar que rige la secta";else if(nm===roles.benS)sect="benéfico en su secta, su bien fluye con largueza";else if(nm===roles.malS)sect="maléfico de secta, su rigor se atempera";else if(nm===roles.malC)sect="maléfico fuera de secta, su filo se endurece";else if((day&&(nm==="Venus"||nm==="Marte"))||(!day&&(nm==="Júpiter"||nm==="Saturno")))sect="fuera de su secta, más medido";
  if(sect)parts.push(sect);
  const ang=angularity(house);parts.push(ang==="angular"?"angular, con brío para manifestarse":(ang==="sucedente"?"sucedente, que sostiene y acumula":"cadente, de trasfondo"));
@@ -1143,16 +1347,21 @@ function planetStrength(nm,lon,house,day,sunL,retro){let s=essentialDignities(nm
  if(retro)s-=2;if(JOY[nm]===house)s+=2;return s;}
 
 const ASPREL={"Conjunción":{v:"se une a",t:"funden sus naturalezas en un solo impulso"},"Sextil":{v:"colabora con",t:"se abre una oportunidad que pide ser tomada"},"Cuadratura":{v:"tensiona con",t:"hay fricción que exige obra y ajuste"},"Trígono":{v:"fluye con",t:"el don se da con facilidad, casi sin esfuerzo"},"Oposición":{v:"se enfrenta a",t:"dos fuerzas se miran y piden equilibrio"}};
-function narrateAspects(bs){const asps=aspectsBetween(bs).sort((a,b)=>a.orb-b.orb);let s="<b>Aspectos</b>";
+function narrateAspects(bs,spd){const asps=aspectsBetween(bs).sort((a,b)=>a.orb-b.orb);let s="<b>Aspectos</b>";
  if(!asps.length)return s+"<p class='ax'>Sin aspectos mayores entre los siete: cada uno obra por su cuenta.</p>";
  asps.forEach(ap=>{const A=bs[ap.i],B=bs[ap.j],R=ASPREL[ap.asp.name],tight=ap.orb<=1.5?", ajustado":(ap.orb>=5?", amplio":"");
-  s+="<p class='ax'><span class='ag' style='color:"+ap.asp.col+"'>"+A.sym+" "+ap.asp.sym+" "+B.sym+"</span> <b>"+A.name+"</b> "+R.v+" <b>"+B.name+"</b> <span class='am'>("+ap.asp.name.toLowerCase()+", "+ap.orb.toFixed(1)+"\u00b0"+tight+")</span>: "+PLFUNC[A.name]+" · "+PLFUNC[B.name]+" — "+R.t+".</p>";});
+  let phase="";if(spd&&spd[A.name]!=null&&spd[B.name]!=null){const pf=aspectPhase(A.lon,B.lon,spd[A.name],spd[B.name],ap.asp.ang);
+   phase=pf==="aplicativo"?", <i>aplicativo</i>":", <i>separativo</i>";}
+  const phTxt=phase.indexOf("aplicativo")>=0?" El aspecto se está formando: lo que anuncia todavía viene en camino.":(phase.indexOf("separativo")>=0?" El aspecto ya perfeccionó: habla de lo que ya se dio y ahora decanta.":"");
+  s+="<p class='ax'><span class='ag' style='color:"+ap.asp.col+"'>"+A.sym+" "+ap.asp.sym+" "+B.sym+"</span> <b>"+A.name+"</b> "+R.v+" <b>"+B.name+"</b> <span class='am'>("+ap.asp.name.toLowerCase()+", "+ap.orb.toFixed(1)+"\u00b0"+tight+phase+")</span>: "+PLFUNC[A.name]+" · "+PLFUNC[B.name]+" — "+R.t+"."+phTxt+"</p>";});
  return s;}
 
 function composeReading(date,u){
  if(!u)return"<i>La lectura helenística necesita tu ubicación (Ascendente y secta).</i>";
+ const L=readLevel("zLen");
  const AM=ascMC(date,u),day=chartSect(date,u),ascSign=Math.floor(normDeg(AM.asc)/30);
  const bs=chartBodies(date),by={};bs.forEach(b=>by[b.name]=b.lon);
+ const spd=bodySpeeds(date);
  const sunL=by["Sol"],moonL=by["Luna"];
  const sys=hsysNow(),cusps=houseCusps(AM.asc,AM.mc,sys);
  const lum=day?"Sol":"Luna",benSecta=day?"Júpiter":"Venus",malSecta=day?"Saturno":"Marte",malContra=day?"Marte":"Saturno";
@@ -1172,29 +1381,46 @@ function composeReading(date,u){
  let rline;if(rd.out.length)rline="Con dignidad por "+rd.out.join(", ")+(rd.deb.length?(", aunque en "+rd.deb.join(", ")+" — mezcla de fuerza y dificultad."):" — fuerza para obrar.");else if(rd.deb.length)rline="En "+rd.deb.join(", ")+": obra con dificultad.";else rline="Peregrino: sin dignidad propia.";
  h+=" "+rline;
  const alm=almutenOfDegree(AM.asc,day);h+=" El <b>almuten</b> del grado ascendente (mayor dignidad allí) es "+PGLY[alm]+" "+alm+(alm===ruler?" — coincide con el regente, señal de foco.":", que matiza al regente.");
+ const mp=lunarPhaseInfo(date);
+ h+=" La Luna transita su fase <b>"+mp[0]+"</b>: "+mp[1]+".";
+ const mfa=moonFirstApp(by,spd);
+ if(mfa&&!mfa.voc)h+=" Su <b>primera aplicación</b> es a "+PGLY[mfa.nm]+" "+mfa.nm+" por "+mfa.name+" (~"+(mfa.t*24).toFixed(0)+" h): el primer alimento del alma viene de "+PLFUNC[mfa.nm]+".";
+ else if(mfa&&mfa.voc)h+=" La Luna corre <b>vacía de curso</b>: no perfecciona aspecto antes de cambiar de signo — lo que se inicia queda librado a su propio impulso.";
  h+="</p>";
- // planetas (narrado)
- const roles={lum:lum,benS:benSecta,malS:malSecta,malC:malContra};
- h+="<b>Los siete</b>";
- PL7.forEach(nm=>{const pd=planetDefs.find(p=>p.name===nm),retro=pd?isRetro(pd,date):false;h+=narratePlanet(nm,by[nm],bodyHouse(by[nm],cusps),day,roles,sunL,retro);});
- // las doce casas (narrado)
- const occ={};for(let i=0;i<12;i++)occ[i]=[];
- PL7.forEach(nm=>{occ[bodyHouse(by[nm],cusps)].push(PGLY[nm]);});
- h+="<b>Las doce casas</b>";
- for(let i=0;i<12;i++)h+=narrateHouse(i,cusps,by,occ);
- // aspectos narrados
- h+=narrateAspects(bs);
- // configuraciones y recepciones
- const cfg=configurations(by),rec=receptions(by);
- if(cfg.length||rec.length){h+="<b>Configuraciones</b><div class='lx' style='margin:3px 0 8px'>";
-  if(cfg.length)h+=cfg.join("<br>");else h+="<i>Sin patrones mayores.</i>";
-  if(rec.length)h+="<br>"+rec.join("<br>");
-  h+="</div>";}
- // lotes
- const fh=bodyHouse(lots.fortuna,cusps),eh=bodyHouse(lots.espiritu,cusps);
- h+="<b>Lotes</b><table class='ztab'><tr><td>\u2297 Fortuna</td><td>"+fmtSign(lots.fortuna)+"</td><td class='ho'>c"+(fh+1)+"</td></tr><tr><td>Espíritu</td><td>"+fmtSign(lots.espiritu)+"</td><td class='ho'>c"+(eh+1)+"</td></tr></table>";
- h+="<p class='lq'>Fortuna es el cuerpo y lo que la vida trae; Espíritu es el alma y lo que uno obra. Entre ambos, el retorno.</p>";
- h+="<p>La Fortuna cae en la casa "+(fh+1)+" ("+HOUSEM[fh]+"): allí se concentra la suerte del cuerpo y la vida.</p>";
+ if(L>=2){
+  // planetas (narrado)
+  const roles={lum:lum,benS:benSecta,malS:malSecta,malC:malContra};
+  h+="<b>Los siete</b>";
+  PL7.forEach(nm=>{const pd=planetDefs.find(p=>p.name===nm),retro=pd?isRetro(pd,date):false;h+=narratePlanet(nm,by[nm],bodyHouse(by[nm],cusps),day,roles,sunL,retro,AM.asc);});
+  // aspectos narrados (aplicativos / separativos)
+  h+=narrateAspects(bs,spd);
+  // nodos y eclipses
+  h+=narrateNodes(date,cusps,by);
+  // sizigia previa (lunación que precede)
+  const syz=prevSyzygy(date);
+  if(syz){const ss=Math.floor(normDeg(syz.lon)/30),sl=RULER[ss],slh=bodyHouse(by[sl],cusps),syh=bodyHouse(syz.lon,cusps);
+   h+="<b>Sizigia previa</b><p class='ax'>La lunación que precede fue <b>Luna "+syz.kind+"</b> en "+fmtSign(syz.lon)+" ("+syz.date.toISOString().slice(0,10)+"), sobre la casa "+(syh+1)+". Su señor, "+PGLY[sl]+" "+sl+", mora en la casa "+(slh+1)+" ("+HOUSESHORT[slh]+"): la semilla del ciclo que desemboca en este momento.</p>";}
+  // lectura por temas (vocación, vínculos, recursos, salud)
+  h+=themeSynthesis(by,cusps,AM,day,lots,bs);
+ }
+ if(L>=3){
+  // las doce casas (narrado)
+  const occ={};for(let i=0;i<12;i++)occ[i]=[];
+  PL7.forEach(nm=>{occ[bodyHouse(by[nm],cusps)].push(PGLY[nm]);});
+  h+="<b>Las doce casas</b>";
+  for(let i=0;i<12;i++)h+=narrateHouse(i,cusps,by,occ);
+  // configuraciones y recepciones
+  const cfg=configurations(by),rec=receptions(by),rec2=simpleReceptions(bs);
+  if(cfg.length||rec.length||rec2.length){h+="<b>Configuraciones y recepciones</b><div class='lx' style='margin:3px 0 8px'>";
+   if(cfg.length)h+=cfg.join("<br>");else h+="<i>Sin patrones mayores.</i>";
+   if(rec.length)h+="<br>"+rec.join("<br>");
+   if(rec2.length)h+="<br>"+rec2.join("<br>");
+   h+="</div>";}
+  // estrellas fijas
+  h+=fixedStarBlock(date,by,AM);
+  // lotes (Fortuna, Espíritu + herméticos de Paulus, con regentes)
+  h+=lotsBlock(AM,by,day,lots,cusps);
+ }
  h+="</div>";return h;
 }
 function hsysNow(){const e=document.querySelector("#zHsys button.on");return e?e.dataset.h:"whole";}
@@ -1213,6 +1439,24 @@ function renderZodiacWheel(date,uOverride,infoId){
   skyLayer.append("path").attr("d",d).attr("fill",ELEMC[s%4]).attr("opacity",0.06).attr("stroke","none");}}
  skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rout);
  skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rin);
+ if(typeof zGet==="function"&&zGet("zHDRing")&&typeof HDWHEEL!=="undefined"){
+  const RA=Rout+4,RB=Rout+17;
+  const actP=(typeof hdChart!=="undefined"&&hdChart)?new Set(hdChart.pers.map(x=>x.gate)):null;
+  const actD=(typeof hdChart!=="undefined"&&hdChart)?new Set(hdChart.des.map(x=>x.gate)):null;
+  skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",RB).attr("opacity",0.65);
+  for(let i=0;i<64;i++){const g=HDWHEEL[i],a0=normDeg(HD_START+i*5.625);
+   const stg=actP&&actP.has(g)?(actD&&actD.has(g)?"B":"P"):(actD&&actD.has(g)?"D":"");
+   if(stg){let d="";for(let a=0;a<=5.626;a+=1.125){const p=at(a0+Math.min(a,5.625),RB);d+=(a===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1);}
+    for(let a=5.625;a>=-0.001;a-=1.125){const p=at(a0+Math.max(a,0),RA);d+="L"+p[0].toFixed(1)+","+p[1].toFixed(1);}d+="Z";
+    const col=stg==="B"?"#e8d5a8":(stg==="P"?"#c9973f":"#5fb8a6");
+    skyLayer.append("path").attr("d",d).attr("fill",col).attr("opacity",0.5).attr("stroke","none");}
+   const p1=at(a0,RA),p2=at(a0,RB);
+   skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]).attr("opacity",0.55);
+   const gp=at(a0+2.8125,RB+10);
+   skyLayer.append("text").attr("class","gridlabel").attr("x",gp[0]).attr("y",gp[1]+2.5).attr("text-anchor","middle").attr("font-size",7.5)
+    .attr("fill",stg==="P"?"#c9973f":stg==="D"?"#5fb8a6":stg==="B"?"#e8d5a8":null).attr("font-weight",stg?"700":null).text(g);}
+ }
+
  for(let s=0;s<12;s++){const a=s*30,p1=at(a,Rin),p2=at(a,Rout);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);
   const g=at(a+15,(Rin+Rout)/2);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+7).attr("fill",optElem?ELEMC[s%4]:null).text(zodiac[s].sym);
   if(optElem){const m=at(a+15,Rout-12);skyLayer.append("text").attr("class","gridlabel").attr("x",m[0]).attr("y",m[1]+3).attr("text-anchor","middle").attr("font-size",8).text(MODAL[s%3][0]);}}
@@ -1337,43 +1581,308 @@ function renderBiWheel(){
 function rsBlock(date,u,year){
   if(!u)return"";
   const AM=ascMC(date,u);if(!AM)return"";
+  const L=readLevel("revLen");
+  const day=chartSect(date,u);
   const cusps=houseCusps(AM.asc,AM.mc,hsysNow());
-  const bodies=chartBodies(date);
+  const bodies=chartBodies(date),by={};bodies.forEach(b=>by[b.name]=b.lon);
+  const spd=bodySpeeds(date);
   const sName=i=>zodiac[((i%12)+12)%12].name;
   const hOf=b=>bodyHouse(b.lon,cusps);
   const ascSign=Math.floor(normDeg(AM.asc)/30);
+  const asps=aspectsBetween(bodies);
   let t="<div class='syn'><b>El año que se abre</b><br>";
   t+="El Ascendente de la revolución asciende por <b>"+sName(ascSign)+"</b> — "+SIGNSTYLE[ascSign]+" —: ese es el temple con que se abre el ciclo, la puerta por donde entra el año.";
   const lordName=RULER[ascSign],lord=bodies.find(b=>b.name===lordName);
+  let lordHouse=null,lordAng="";
   if(lord){const lh=hOf(lord),ls=Math.floor(normDeg(lord.lon)/30),retro=lord.def&&isRetro(lord.def,date),ang=angularity(lh),dg=dignity(lordName,ls).replace(" · ","");
-    t+="<br><br><b>Señor del año:</b> "+(PGLY[lordName]||"")+" "+lordName+", regente de "+sName(ascSign)+", gobierna el año desde la <b>casa "+(lh+1)+"</b> ("+HOUSESHORT[lh]+") en "+sName(ls)+(retro?", retrógrado":"")+". "+(ang==="angular"?"Angular: el año tiene timonel firme; los asuntos de esa casa marcan el pulso.":ang==="sucedente"?"Sucedente: el año construye y sostiene lo de esa casa.":"Cadente: el timón obra entre bambalinas, en lo que no se ve.")+(dg?" Su condición esencial: "+dg+".":"");}
+    lordHouse=lh;lordAng=ang;
+    t+="<br><br><b>Señor del año:</b> "+(PGLY[lordName]||"")+" "+lordName+", regente de "+sName(ascSign)+", gobierna el año desde la <b>casa "+(lh+1)+"</b> ("+HOUSESHORT[lh]+") en "+sName(ls)+(retro?", retrógrado":"")+". "+(ang==="angular"?"Angular: el año tiene timonel firme; los asuntos de esa casa marcan el pulso.":ang==="sucedente"?"Sucedente: el año construye y sostiene lo de esa casa.":"Cadente: el timón obra entre bambalinas, en lo que no se ve.")+(dg?" Su condición esencial: "+dg+".":"");
+    const la=asps.filter(a=>bodies[a.i].name===lordName||bodies[a.j].name===lordName).sort((a,b)=>a.orb-b.orb).slice(0,4);
+    if(la.length)t+=" Lo aspectan: "+la.map(a=>{const o=bodies[a.i].name===lordName?bodies[a.j]:bodies[a.i];const pf=aspectPhase(lord.lon,o.lon,spd[lordName]||0,spd[o.name]||0,a.asp.ang);return o.sym+" "+o.name+" ("+a.asp.name.toLowerCase()+" "+a.orb.toFixed(1)+"°, "+pf+")";}).join("; ")+".";}
   const moon=bodies.find(b=>b.name==="Luna");
-  if(moon){const mh=hOf(moon),ms=Math.floor(normDeg(moon.lon)/30);
-    t+="<br><br><b>La Luna del retorno</b> en "+sName(ms)+", casa "+(mh+1)+": marca el clima anímico y el ritmo mes a mes — la aguja emocional apunta a "+HOUSESHORT[mh]+".";}
+  if(moon){const mh=hOf(moon),ms=Math.floor(normDeg(moon.lon)/30),mp=lunarPhaseInfo(date);
+    t+="<br><br><b>La Luna del retorno</b> en "+sName(ms)+", casa "+(mh+1)+": marca el clima anímico y el ritmo mes a mes — la aguja emocional apunta a "+HOUSESHORT[mh]+". El año nace bajo Luna <b>"+mp[0]+"</b>: "+mp[1]+".";}
   const sun=bodies.find(b=>b.name==="Sol");
   if(sun){const sh=hOf(sun);t+="<br><br><b>El Sol del año</b> ilumina la casa "+(sh+1)+" ("+HOUSESHORT[sh]+"): ahí se derrama la vitalidad y ahí buscás brillar durante el ciclo.";}
   const angs=bodies.filter(b=>[0,3,6,9].indexOf(hOf(b))>=0);
   if(angs.length)t+="<br><br><b>En los ángulos:</b> "+angs.map(b=>(PGLY[b.name]||"")+" "+b.name+" (casa "+(hOf(b)+1)+")").join(", ")+" — las fuerzas que el año pone al frente, las que más se hacen sentir.";
   else t+="<br><br><b>Ángulos despejados:</b> ningún planeta abraza los ejes; el año no grita, obra por dentro.";
+  // profección anual enriquecida
+  let ph=null,nAscSign=null,age=null;
   if(revChart.natal&&revChart.natal.asc!=null){
-    const nAscSign=Math.floor(normDeg(revChart.natal.asc)/30),age=revChart.year-revChart.birthYear,ph=((age%12)+12)%12,pSign=(nAscSign+ph)%12,pLord=RULER[pSign],pl=bodies.find(b=>b.name===pLord);
+    nAscSign=Math.floor(normDeg(revChart.natal.asc)/30);age=revChart.year-revChart.birthYear;ph=((age%12)+12)%12;
+    const pSign=(nAscSign+ph)%12,pLord=RULER[pSign],pl=bodies.find(b=>b.name===pLord);
     t+="<br><br><b>Profección anual (edad "+age+"):</b> el año se profecta a la <b>casa "+(ph+1)+"</b> ("+HOUSESHORT[ph]+"), en "+sName(pSign)+". Su regente, "+(PGLY[pLord]||"")+" "+pLord+", es el <i>señor del tiempo</i> del período"+(pl?", y en la revolución se aloja en la casa "+(hOf(pl)+1)+" ("+HOUSESHORT[hOf(pl)]+"): ahí conviene mirar lo que el año pide.":".");
+    if(revChart.natal.bodies&&revChart.natal.cusps){
+      const npl=revChart.natal.bodies.find(b=>b.name===pLord);
+      if(npl){const nlh=bodyHouse(npl.lon,revChart.natal.cusps),nls=Math.floor(normDeg(npl.lon)/30);
+        t+=" En tu natal, ese señor vive en la casa "+(nlh+1)+" ("+HOUSESHORT[nlh]+"), en "+sName(nls)+": ese es el asunto de fondo que el año viene a mover.";}
+      const act=revChart.natal.bodies.filter(b=>Math.floor(normDeg(b.lon)/30)===pSign);
+      if(act.length)t+=" Y en el signo profectado habitan, de tu natal, "+act.map(b=>b.sym+" "+b.name).join(", ")+": <b>se activan por profección</b> — sus promesas natales entran en vigencia este año.";
+    }
   }
+  // el Asc del retorno sobre la natal + contactos ampliados
   if(revChart.natal&&revChart.natal.cusps){
     const nc=revChart.natal.cusps,rsInNatal=bodyHouse(AM.asc,nc);
     t+="<br><br><b>El Ascendente del retorno sobre tu carta natal</b> cae en tu casa "+(rsInNatal+1)+" ("+HOUSESHORT[rsInNatal]+"): el año ilumina ese sector.";
+    const nAscS=Math.floor(normDeg(revChart.natal.asc)/30),nRuler=RULER[nAscS];
     const targets=[{n:"Ascendente natal",lon:revChart.natal.asc},{n:"Mediocielo natal",lon:revChart.natal.mc}];
-    const nSun=revChart.natal.bodies.find(b=>b.name==="Sol"),nMoon=revChart.natal.bodies.find(b=>b.name==="Luna");
+    const nSun=revChart.natal.bodies.find(b=>b.name==="Sol"),nMoon=revChart.natal.bodies.find(b=>b.name==="Luna"),nRul=revChart.natal.bodies.find(b=>b.name===nRuler);
     if(nSun)targets.push({n:"Sol natal",lon:nSun.lon});if(nMoon)targets.push({n:"Luna natal",lon:nMoon.lon});
+    if(nRul)targets.push({n:nRuler+" natal (tu regente)",lon:nRul.lon});
+    const KINDS=[[0,"conjunción","∗"],[180,"oposición","☍"],[120,"trígono","△"],[90,"cuadratura","□"]];
     const hits=[];
-    bodies.forEach(rb=>targets.forEach(tg=>{if(tg.lon==null)return;if(rb.name==="Sol"&&tg.n==="Sol natal")return;const d=Math.abs(((normDeg(rb.lon-tg.lon)+180)%360)-180);if(d<=3)hits.push((PGLY[rb.name]||"")+" "+rb.name+" \u2192 "+tg.n+" ("+d.toFixed(1)+"\u00b0)");}));
-    if(hits.length)t+="<br><br><b>Contactos con la natal (conjunciones \u22643\u00b0):</b> "+hits.join("; ")+". Los toques m\u00e1s vivos del a\u00f1o.";
+    bodies.forEach(rb=>targets.forEach(tg=>{if(tg.lon==null)return;if(rb.name==="Sol"&&tg.n==="Sol natal")return;
+      let d=Math.abs(normDeg(rb.lon-tg.lon));if(d>180)d=360-d;
+      for(const K of KINDS){if(Math.abs(d-K[0])<=3){hits.push((PGLY[rb.name]||"")+" "+rb.name+" "+K[2]+" "+tg.n+" ("+K[1]+" "+Math.abs(d-K[0]).toFixed(1)+"°)");break;}}}));
+    if(hits.length)t+="<br><br><b>Contactos con la natal (orbe ≤3°):</b> "+hits.join("; ")+". Los toques más vivos del año: la conjunción entrega, la oposición confronta, el trígono facilita, la cuadratura exige obra.";
   }else if(!revChart.natal){
-    t+="<br><br><i>Para ver profecci\u00f3n y contactos con la natal, carg\u00e1 una ciudad de nacimiento reconocida.</i>";
+    t+="<br><br><i>Para ver profección y contactos con la natal, cargá una ciudad de nacimiento reconocida.</i>";
   }
   t+="</div>";
+  if(L>=2){
+    // los siete del año, narrados con el motor helenístico
+    const lum=day?"Sol":"Luna",benS=day?"Júpiter":"Venus",malS=day?"Saturno":"Marte",malC=day?"Marte":"Saturno";
+    const roles={lum:lum,benS:benS,malS:malS,malC:malC};
+    t+="<div class='lect'><b>Los siete del año</b>";
+    PL7.forEach(nm=>{const pd=planetDefs.find(p=>p.name===nm),retro=pd?isRetro(pd,date):false;t+=narratePlanet(nm,by[nm],bodyHouse(by[nm],cusps),day,roles,by["Sol"],retro,AM.asc);});
+    t+="</div>";
+  }
+  if(L>=3&&revChart.natal&&revChart.natal.cusps){
+    // planetas del año sobre las casas natales
+    t+="<div class='lect'><b>Los planetas del año sobre tu carta natal</b><table class='ztab'>";
+    bodies.forEach(b=>{const nh=bodyHouse(b.lon,revChart.natal.cusps);t+="<tr><td>"+b.sym+" "+b.name+"</td><td>"+fmtSign(b.lon)+"</td><td class='ho'>tu c"+(nh+1)+"</td></tr>";});
+    t+="</table><p class='lq'>Cada planeta del retorno visita un sector de tu carta de raíz: ahí deposita su naturaleza durante el ciclo.</p></div>";
+  }
+  if(L>=3&&ph!=null){
+    // profección mensual
+    t+="<div class='lect'><b>Profección mensual · el año por dentro</b><table class='ztab'>";
+    const ML=365.2425/12*86400000;
+    for(let k=0;k<12;k++){const d0=new Date(date.getTime()+k*ML),hh=(ph+k)%12,sg=(nAscSign+ph+k)%12,ld=RULER[sg];
+      t+="<tr><td>"+d0.toISOString().slice(0,10)+"</td><td>c"+(hh+1)+" · "+sName(sg)+"</td><td class='ho'>"+(PGLY[ld]||"")+" "+ld+"</td></tr>";}
+    t+="</table><p class='lq'>Cada mes el año avanza una casa desde la profección anual; el regente del signo es el señor del mes: su condición en la revolución tiñe esas semanas.</p></div>";
+  }
+  if(L>=2){
+    // síntesis final del año
+    const angTxt=angs.length?("Al frente, "+angs.map(b=>b.name).join(", ")+".") : "Sin planetas angulares: año de obra interior.";
+    let synT="<div class='lect'><b>Síntesis del año</b><p class='syn'>El ciclo se abre con temple de <b>"+sName(ascSign)+"</b>";
+    if(lordHouse!=null)synT+=", con "+lordName+" como timonel desde la casa "+(lordHouse+1)+" ("+lordAng+")";
+    if(ph!=null)synT+=". La profección apunta a la casa "+(ph+1)+": <b>"+HOUSESHORT[ph]+"</b> es el tema que el tiempo pone sobre la mesa";
+    synT+=". "+angTxt+"</p></div>";
+    t+=synT;
+  }
   return t;
 }
+
+
+// ==== DISEÑO HUMANO · fase 1: motor rave chart ====
+// Planetas exteriores: elementos keplerianos JPL (J2000 + tasa/siglo), 1800-2050
+const OUTERDEFS=[
+ {name:"Urano",sym:"♅",color:"#7fd4e6",el:[19.18916464,-0.00196176,0.04725744,-0.00004397,0.77263783,-0.00242939,313.23810451,428.48202785,170.95427630,0.40805281,74.01692503,0.04240589]},
+ {name:"Neptuno",sym:"♆",color:"#6f8ff5",el:[30.06992276,0.00026291,0.00859048,0.00005105,1.77004347,0.00035372,-55.12002969,218.45945325,44.96476227,-0.32241464,131.78422574,-0.00508664]},
+ {name:"Plutón",sym:"♇",color:"#caa5d8",el:[39.48211675,-0.00031596,0.24882730,0.00005170,17.14001206,0.00004818,238.92903833,145.20780515,224.06891629,-0.04062942,110.30393684,-0.01183482]}
+];
+// Rueda de 64 puertas en orden zodiacal; Puerta 41 línea 1 comienza en 2°00' Acuario (302°)
+const HDWHEEL=[41,19,13,49,30,55,37,63,22,36,25,17,21,51,42,3,27,24,2,23,8,20,16,35,45,12,15,52,39,53,62,56,31,33,7,4,29,59,40,64,47,6,46,18,48,57,32,50,28,44,1,43,14,34,9,5,26,11,10,58,38,54,61,60];
+const HD_START=302;
+function hdGate(lon){const off=normDeg(lon-HD_START),idx=Math.floor(off/5.625)%64,line=Math.floor((off%5.625)/0.9375)+1;return{gate:HDWHEEL[idx],line:Math.min(line,6),idx};}
+const HDCENTERS={"Cabeza":[64,61,63],"Ajna":[47,24,4,17,43,11],"Garganta":[62,23,56,16,20,31,8,33,35,12,45],"G (Identidad)":[1,13,25,46,2,15,10,7],"Corazón (Ego)":[21,40,26,51],"Sacral":[34,5,14,29,59,9,3,42,27],"Bazo":[48,57,44,50,32,28,18],"Plexo Solar":[36,22,37,6,49,55,30],"Raíz":[58,38,54,53,60,52,19,39,41]};
+const HDMOTORS=["Sacral","Corazón (Ego)","Plexo Solar","Raíz"];
+const HDCHANNELS=[[1,8,"Inspiración"],[2,14,"El Latido"],[3,60,"Mutación"],[4,63,"Lógica"],[5,15,"Ritmo"],[6,59,"Intimidad"],[7,31,"El Alfa"],[9,52,"Concentración"],[10,20,"Despertar"],[10,34,"Exploración"],[10,57,"Forma Perfeccionada"],[11,56,"Curiosidad"],[12,22,"Apertura"],[13,33,"El Pródigo"],[16,48,"Talento"],[17,62,"Aceptación"],[18,58,"Juicio"],[19,49,"Síntesis"],[20,34,"Carisma"],[20,57,"Onda Cerebral"],[21,45,"El Dinero"],[23,43,"Estructuración"],[24,61,"Conciencia"],[25,51,"Iniciación"],[26,44,"Entrega"],[27,50,"Preservación"],[28,38,"La Lucha"],[29,46,"Descubrimiento"],[30,41,"Reconocimiento"],[32,54,"Transformación"],[34,57,"Poder"],[35,36,"Transitoriedad"],[37,40,"Comunidad"],[39,55,"Emocionalidad"],[42,53,"Maduración"],[47,64,"Abstracción"]];
+const HDGATEN={1:"La Creatividad",2:"La Dirección",3:"El Ordenamiento",4:"La Formulación",5:"La Espera",6:"La Fricción",7:"El Rol del Ser",8:"La Contribución",9:"El Enfoque",10:"El Comportamiento",11:"Las Ideas",12:"La Precaución",13:"El Escucha",14:"La Posesión",15:"Los Extremos",16:"Las Habilidades",17:"Las Opiniones",18:"La Corrección",19:"El Querer",20:"El Ahora",21:"El Cazador",22:"La Gracia",23:"La Asimilación",24:"La Racionalización",25:"El Espíritu del Ser",26:"El Egoísta",27:"El Cuidado",28:"El Jugador",29:"El Decir Sí",30:"El Deseo",31:"La Influencia",32:"La Continuidad",33:"El Retiro",34:"El Poder",35:"El Cambio",36:"La Crisis",37:"La Amistad",38:"El Luchador",39:"La Provocación",40:"La Soledad",41:"La Fantasía",42:"El Crecimiento",43:"La Visión Interna",44:"La Alerta",45:"El Soberano",46:"El Amor al Cuerpo",47:"La Comprensión",48:"La Profundidad",49:"La Revolución",50:"Los Valores",51:"El Shock",52:"La Quietud",53:"Los Comienzos",54:"La Ambición",55:"El Espíritu",56:"El Narrador",57:"La Intuición",58:"La Alegría Vital",59:"La Sexualidad",60:"La Limitación",61:"El Misterio",62:"El Detalle",63:"La Duda",64:"La Confusión"};
+const HDPROFILE={"1/3":"Investigador / Mártir","1/4":"Investigador / Oportunista","2/4":"Ermitaño / Oportunista","2/5":"Ermitaño / Hereje","3/5":"Mártir / Hereje","3/6":"Mártir / Modelo de Rol","4/6":"Oportunista / Modelo de Rol","4/1":"Oportunista / Investigador","5/1":"Hereje / Investigador","5/2":"Hereje / Ermitaño","6/2":"Modelo de Rol / Ermitaño","6/3":"Modelo de Rol / Mártir"};
+const HDTYPETXT={
+ "Generador":["Responder","La frustración","La satisfacción","El aura envolvente atrae la vida hacia vos: la energía sacral sabe, pero solo cuando algo llega de afuera para responder."],
+ "Generador Manifestante":["Responder (y luego informar)","La frustración y la ira","La satisfacción","Motor sacral con salida a la Garganta: respondés y arrancás rápido, salteando pasos. Informar antes de actuar ahorra resistencia."],
+ "Manifestador":["Informar antes de actuar","La ira","La paz","Iniciás sin esperar: el aura cerrada e impactante abre caminos. Informar no es pedir permiso, es despejar el campo."],
+ "Proyector":["Esperar la invitación","La amargura","El éxito","El don es ver al otro y guiar la energía ajena. Reconocimiento primero: sin invitación, la guía cae en el vacío."],
+ "Reflector":["Esperar un ciclo lunar","La decepción","La sorpresa","Sin centros definidos: espejo y termómetro del entorno. La Luna recorre las 64 puertas y recién ahí hay claridad."]};
+const HDAUTHTXT={"Emocional":"la claridad llega con la ola: nada de decisiones en el pico ni en el valle — dormir la propuesta.","Sacral":"la respuesta es del cuerpo, sonora y del momento: el ajá/uh-uh visceral, no la mente.","Esplénica":"un susurro instantáneo, una sola vez, en el presente: intuición de supervivencia que no se repite.","Ego":"la voluntad manda: ¿qué quiero yo, qué hay para mí en esto? El corazón decide por deseo declarado.","Autoproyectada":"la verdad aparece al hablar: escucharse decir la decisión frente a alguien de confianza.","Mental / ambiental":"sin autoridad interna: la claridad se destila conversando en los entornos correctos, nunca decidiendo en soledad.","Lunar":"esperar el ciclo lunar completo antes de todo movimiento mayor."};
+function designDate(birthUTC){ // Sol 88° de arco antes del nacimiento
+ const target=normDeg(getSun(birthUTC).eclLon-88);
+ const f=t=>{let d=getSun(t).eclLon-target;return((d%360)+540)%360-180;};
+ let lo=new Date(birthUTC.getTime()-100*864e5),hi=new Date(birthUTC.getTime()-70*864e5);
+ let flo=f(lo),fhi=f(hi),tries=0;
+ while(flo*fhi>0&&tries<6){lo=new Date(lo.getTime()-5*864e5);hi=new Date(hi.getTime()+2*864e5);flo=f(lo);fhi=f(hi);tries++;}
+ for(let i=0;i<40;i++){const mid=new Date((lo.getTime()+hi.getTime())/2),fm=f(mid);if(flo*fm<=0){hi=mid;fhi=fm;}else{lo=mid;flo=fm;}}
+ return new Date((lo.getTime()+hi.getTime())/2);
+}
+function hdBodies(date){
+ const sun=getSun(date).eclLon,nn=moonNode(date);
+ const out=[{n:"Sol",sym:"☉",lon:sun},{n:"Tierra",sym:"⊕",lon:normDeg(sun+180)},{n:"Nodo Norte",sym:"☊",lon:nn},{n:"Nodo Sur",sym:"☋",lon:normDeg(nn+180)},{n:"Luna",sym:"☽",lon:getMoon(date).eclLon}];
+ planetDefs.forEach(p=>out.push({n:p.name,sym:p.sym,lon:planetPosition(p,date).eclLon}));
+ OUTERDEFS.forEach(p=>out.push({n:p.name,sym:p.sym,lon:planetPosition(p,date).eclLon}));
+ return out;
+}
+function computeHDChart(birthUTC){
+ const dDate=designDate(birthUTC);
+ const mk=(b)=>{const g=hdGate(b.lon);return{n:b.n,sym:b.sym,lon:b.lon,gate:g.gate,line:g.line};};
+ const pers=hdBodies(birthUTC).map(mk),des=hdBodies(dDate).map(mk);
+ const gset=new Set(pers.concat(des).map(a=>a.gate));
+ const channels=HDCHANNELS.filter(c=>gset.has(c[0])&&gset.has(c[1]));
+ const centerOf=g=>{for(const c in HDCENTERS)if(HDCENTERS[c].indexOf(g)>=0)return c;return null;};
+ const defined=new Set(),edges=[];
+ channels.forEach(c=>{const A=centerOf(c[0]),B=centerOf(c[1]);defined.add(A);defined.add(B);if(A!==B)edges.push([A,B]);});
+ const comp={};let nComp=0;
+ defined.forEach(c=>{if(comp[c]!=null)return;nComp++;const q=[c];comp[c]=nComp;
+  while(q.length){const x=q.pop();edges.forEach(e=>{let o=null;if(e[0]===x)o=e[1];else if(e[1]===x)o=e[0];if(o&&comp[o]==null){comp[o]=nComp;q.push(o);}});}});
+ const throatComp=defined.has("Garganta")?comp["Garganta"]:null;
+ const motorToThroat=throatComp!=null&&HDMOTORS.some(m=>defined.has(m)&&comp[m]===throatComp);
+ const sacral=defined.has("Sacral");
+ let type;
+ if(defined.size===0)type="Reflector";
+ else if(sacral)type=motorToThroat?"Generador Manifestante":"Generador";
+ else type=motorToThroat?"Manifestador":"Proyector";
+ let auth;
+ if(defined.size===0)auth="Lunar";
+ else if(defined.has("Plexo Solar"))auth="Emocional";
+ else if(sacral)auth="Sacral";
+ else if(defined.has("Bazo"))auth="Esplénica";
+ else if(defined.has("Corazón (Ego)")&&throatComp!=null&&comp["Corazón (Ego)"]===throatComp)auth="Ego";
+ else if(defined.has("G (Identidad)")&&throatComp!=null&&comp["G (Identidad)"]===throatComp)auth="Autoproyectada";
+ else auth="Mental / ambiental";
+ const profile=pers[0].line+"/"+des[0].line;
+ const RAX=["1/3","1/4","2/4","2/5","3/5","3/6","4/6"];
+ const angle=profile==="4/1"?"Yuxtaposición":(RAX.indexOf(profile)>=0?"Ángulo Recto":"Ángulo Izquierdo");
+ const cross=pers[0].gate+"/"+pers[1].gate+" · "+des[0].gate+"/"+des[1].gate;
+ const defName=defined.size===0?"Sin definición":(["","Definición única","Definición dividida","Definición triple","Definición cuádruple"][nComp]||nComp+" áreas");
+ return{birthUTC,dDate,pers,des,channels,defined,centerOf,comp,type,auth,profile,angle,cross,defName,nComp};
+}
+let hdChart=null;
+function computeHD(){
+ const info=document.getElementById("hdInfo");
+ const dtStr=document.getElementById("hdBirthDT").value;
+ if(!dtStr){info.innerHTML="<i>Cargá fecha y hora de nacimiento.</i>";return;}
+ const bc=cityLookup(document.getElementById("hdBirthCity").value);
+ const blon=bc?bc.lon:(userLocation?userLocation.lon:0);
+ const birthUTC=parseLocalToUTC(dtStr,blon);
+ if(!birthUTC){info.innerHTML="<i>Fecha/hora de nacimiento inválida.</i>";return;}
+ hdChart=computeHDChart(birthUTC);
+ hdChart.city=bc?bc.n:null;
+ setMode("hd");
+}
+
+// — Bodygraph: 9 centros, 36 canales, mitades coloreadas por activación —
+const HDLAYOUT={
+ "Cabeza":{x:0,y:0.045,s:"triup",r:0.050},
+ "Ajna":{x:0,y:0.150,s:"tridown",r:0.050},
+ "Garganta":{x:0,y:0.295,s:"sq",r:0.052},
+ "G (Identidad)":{x:0,y:0.452,s:"dia",r:0.056},
+ "Corazón (Ego)":{x:0.152,y:0.545,s:"tridown",r:0.034},
+ "Bazo":{x:-0.315,y:0.655,s:"trir",r:0.052},
+ "Plexo Solar":{x:0.315,y:0.655,s:"tril",r:0.052},
+ "Sacral":{x:0,y:0.700,s:"sq",r:0.052},
+ "Raíz":{x:0,y:0.862,s:"sq",r:0.052}
+};
+function drawBodygraph(){
+ skyLayer.selectAll("*").remove();
+ const C=hdChart,S=Math.min(width,height)*0.94,top=(height-S)/2,cx0=width/2;
+ const P=c=>{const L=HDLAYOUT[c];return[cx0+L.x*S,top+L.y*S];};
+ const pG=new Set(C.pers.map(a=>a.gate)),dG=new Set(C.des.map(a=>a.gate));
+ const st=g=>pG.has(g)?(dG.has(g)?"B":"P"):(dG.has(g)?"D":"");
+ const colOf=s=>s==="P"?"#c9973f":s==="D"?"#5fb8a6":s==="B"?"#e8d5a8":"#232b47";
+ const groups={};
+ HDCHANNELS.forEach(ch=>{const A=C.centerOf(ch[0]),B=C.centerOf(ch[1]);const k=[A,B].sort().join("|");(groups[k]=groups[k]||[]).push(ch);});
+ const gateDots=[];
+ Object.keys(groups).forEach(k=>{const chs=groups[k];
+  chs.forEach((ch,li)=>{
+   const A=C.centerOf(ch[0]),B=C.centerOf(ch[1]),pA=P(A),pB=P(B);
+   const dx=pB[0]-pA[0],dy=pB[1]-pA[1],L=Math.hypot(dx,dy),ux=dx/L,uy=dy/L,px=-uy,py=ux;
+   const off=(li-(chs.length-1)/2)*13;
+   const rA=HDLAYOUT[A].r*S*0.92,rB=HDLAYOUT[B].r*S*0.92;
+   const a=[pA[0]+ux*rA+px*off,pA[1]+uy*rA+py*off],b=[pB[0]-ux*rB+px*off,pB[1]-uy*rB+py*off];
+   const m=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+   const sA=st(ch[0]),sB=st(ch[1]);
+   const seg=(p,q,scol,act)=>{skyLayer.append("line").attr("x1",p[0]).attr("y1",p[1]).attr("x2",q[0]).attr("y2",q[1])
+     .attr("stroke",colOf(scol)).attr("stroke-width",act?5:2.4).attr("stroke-linecap","round").attr("opacity",act?0.95:0.5)
+     .append("title").text(ch[0]+"–"+ch[1]+" · "+ch[2]);};
+   seg(a,m,sA,!!sA);seg(m,b,sB,!!sB);
+   if(sA&&sB)skyLayer.append("circle").attr("cx",m[0]).attr("cy",m[1]).attr("r",3).attr("fill","#e8d5a8");
+   gateDots.push([ch[0],a]);gateDots.push([ch[1],b]);
+  });});
+ Object.keys(HDLAYOUT).forEach(c=>{const L=HDLAYOUT[c],p=P(c),r=L.r*S,def=C.defined.has(c);
+  let pts;
+  if(L.s==="triup")pts=[[0,-r],[-r*0.95,r*0.72],[r*0.95,r*0.72]];
+  else if(L.s==="tridown")pts=[[0,r],[-r*0.95,-r*0.72],[r*0.95,-r*0.72]];
+  else if(L.s==="dia")pts=[[0,-r],[r,0],[0,r],[-r,0]];
+  else if(L.s==="trir")pts=[[r,0],[-r*0.85,-r*0.9],[-r*0.85,r*0.9]];
+  else if(L.s==="tril")pts=[[-r,0],[r*0.85,-r*0.9],[r*0.85,r*0.9]];
+  else pts=[[-r*0.85,-r*0.85],[r*0.85,-r*0.85],[r*0.85,r*0.85],[-r*0.85,r*0.85]];
+  const d="M"+pts.map(q=>(p[0]+q[0]).toFixed(1)+","+(p[1]+q[1]).toFixed(1)).join("L")+"Z";
+  skyLayer.append("path").attr("d",d)
+   .attr("fill",def?"rgba(201,151,63,.30)":"#0d1122").attr("stroke",def?"#c9973f":"#2a3152").attr("stroke-width",def?1.6:1.1)
+   .append("title").text(c+(def?" · definido":" · abierto"));
+  const nm=c.split(" ")[0];
+  skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]).attr("y",p[1]+(L.s==="triup"?r*0.5:L.s==="tridown"?-r*0.22:3.5)).attr("text-anchor","middle").attr("font-size",9).attr("fill",def?"#e8d5a8":null).text(nm);
+ });
+ const seen={};
+ gateDots.forEach(gd=>{const g=gd[0],p=gd[1],key=g+":"+p[0].toFixed(0)+":"+p[1].toFixed(0);if(seen[key])return;seen[key]=1;
+  const s=st(g);
+  skyLayer.append("circle").attr("cx",p[0]).attr("cy",p[1]).attr("r",7).attr("fill",s?colOf(s):"#0d1122").attr("stroke",s?"#000":"#2a3152").attr("stroke-width",1);
+  skyLayer.append("text").attr("x",p[0]).attr("y",p[1]+2.8).attr("text-anchor","middle").attr("font-size",8).attr("font-weight",s?"700":"400").attr("fill",s?"#0d1122":"#5a6284").text(g);});
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx0).attr("y",top+12).text(C.type+" · Perfil "+C.profile+" · Autoridad "+C.auth);
+ [["Personalidad","#c9973f"],["Diseño","#5fb8a6"],["Ambas","#e8d5a8"]].forEach((Lg,i)=>{const x=40+i*140,y=height-16;
+  skyLayer.append("circle").attr("cx",x).attr("cy",y-4).attr("r",5).attr("fill",Lg[1]);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",x+11).attr("y",y).text(Lg[0]);});
+}
+function renderHD(){
+ const info=document.getElementById("hdInfo");
+ if(!hdChart){if(info)info.innerHTML="<i>Cargá fecha, hora y ciudad de nacimiento, y tocá <b>Calcular diseño</b>.</i>";skyLayer.selectAll("*").remove();return;}
+ const v=document.querySelector("#hdView button.on");
+ if(v&&v.dataset.v==="rueda")drawHDWheel();else drawBodygraph();
+ if(info)info.innerHTML=hdReport();
+}
+function drawHDWheel(){
+ skyLayer.selectAll("*").remove();
+ const cx=width/2,cy=height/2,Rout=398,Rzi=372,Rg=366,Rgi=318,D2R=Math.PI/180;
+ const at=(lon,r)=>{const f=(180+lon)*D2R;return[cx+r*Math.cos(f),cy-r*Math.sin(f)];};
+ const C=hdChart,pG=new Set(C.pers.map(a=>a.gate)),dG=new Set(C.des.map(a=>a.gate));
+ skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rout);
+ skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rzi);
+ for(let s=0;s<12;s++){const p1=at(s*30,Rzi),p2=at(s*30,Rout);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]);
+  const g=at(s*30+15,(Rout+Rzi)/2);skyLayer.append("text").attr("class","wheelGlyph").attr("x",g[0]).attr("y",g[1]+6).attr("font-size",14).text(zodiac[s].sym);}
+ skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rg);
+ skyLayer.append("circle").attr("class","wheelRing").attr("cx",cx).attr("cy",cy).attr("r",Rgi);
+ for(let i=0;i<64;i++){const g=HDWHEEL[i],a0=normDeg(HD_START+i*5.625),inP=pG.has(g),inD=dG.has(g);
+  if(inP||inD){let d="";for(let a=0;a<=5.626;a+=1.125){const p=at(a0+Math.min(a,5.625),Rg);d+=(a===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1);}
+   for(let a=5.625;a>=-0.001;a-=1.125){const p=at(a0+Math.max(a,0),Rgi);d+="L"+p[0].toFixed(1)+","+p[1].toFixed(1);}d+="Z";
+   const col=inP&&inD?"#e8d5a8":(inP?"#c9973f":"#5fb8a6");
+   skyLayer.append("path").attr("d",d).attr("fill",col).attr("opacity",inP&&inD?0.6:0.42).attr("stroke",col).attr("stroke-width",0.6);}
+  const p1=at(a0,Rgi),p2=at(a0,Rg);skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p1[0]).attr("y1",p1[1]).attr("x2",p2[0]).attr("y2",p2[1]).attr("opacity",0.5);
+  const gp=at(a0+2.8125,(Rg+Rgi)/2);skyLayer.append("text").attr("class","gridlabel").attr("x",gp[0]).attr("y",gp[1]+3).attr("text-anchor","middle").attr("font-size",8.5).attr("font-weight",(inP||inD)?"700":null).attr("fill",(inP||inD)?"#0d1122":null).text(g);}
+ function place(arr,R,filled,col){arr.forEach((b,i)=>{const rr=R-(i%3)*24,p=at(b.lon,rr),tick=at(b.lon,Rgi);
+  skyLayer.append("line").attr("class","wheelSpoke").attr("x1",p[0]).attr("y1",p[1]).attr("x2",tick[0]).attr("y2",tick[1]).attr("stroke",col).attr("stroke-width",1).attr("opacity",filled?.8:.45);
+  skyLayer.append("circle").attr("cx",p[0]).attr("cy",p[1]).attr("r",filled?5.5:6).attr("fill",filled?col:"#0d1122").attr("stroke",filled?"#000":col).attr("stroke-width",filled?1:1.7);
+  skyLayer.append("text").attr("class","smallLabel").attr("x",p[0]).attr("y",p[1]-9).attr("text-anchor","middle").attr("fill",filled?null:col).text(b.sym+" "+b.gate+"."+b.line);});}
+ place(C.pers,Rgi-42,true,"#c9973f");
+ place(C.des,Rgi-166,false,"#5fb8a6");
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy-6).text("Diseño Humano · "+C.type);
+ skyLayer.append("text").attr("class","constLabel").attr("x",cx).attr("y",cy+13).attr("font-size",13).text("Perfil "+C.profile+" · Autoridad "+C.auth);
+ [["Personalidad (consciente)","#c9973f",true],["Diseño (inconsciente)","#5fb8a6",false]].forEach((L,i)=>{const y=height-32+i*17;skyLayer.append("circle").attr("cx",42).attr("cy",y-4).attr("r",5).attr("fill",L[2]?L[1]:"#0d1122").attr("stroke",L[1]).attr("stroke-width",L[2]?1:1.8);skyLayer.append("text").attr("class","smallLabel").attr("x",54).attr("y",y).text(L[0]);});
+}
+function hdReport(){
+ const C=hdChart,T=HDTYPETXT[C.type]||["","","",""];
+ let h="<div class='hdhdr'><b>"+C.type+"</b> · Perfil "+C.profile+" ("+(HDPROFILE[C.profile]||"")+")<br>Autoridad: <b>"+C.auth+"</b> · "+C.defName+"<br>Cruz de Encarnación ("+C.angle+"): puertas "+C.cross+"<br>Nacimiento: "+fmtUTC(C.birthUTC)+(C.city?" · "+C.city:"")+"<br>Diseño (☉ −88°): "+fmtUTC(C.dDate)+"</div>";
+ h+="<p class='syn'><b>Estrategia:</b> "+T[0]+" · <b>No-ser:</b> "+T[1]+" · <b>Firma:</b> "+T[2]+"<br>"+T[3]+"</p>";
+ h+="<p class='syn'><b>Autoridad "+C.auth+":</b> "+HDAUTHTXT[C.auth]+"</p>";
+ h+="<b>Activaciones</b><table class='ztab'><tr><td></td><td><b style='color:#c9973f'>Personalidad</b></td><td class='ho'><b style='color:#5fb8a6'>Diseño</b></td></tr>";
+ for(let i=0;i<C.pers.length;i++){const p=C.pers[i],d=C.des[i];
+  h+="<tr><td>"+p.sym+" "+p.n+"</td><td>"+p.gate+"."+p.line+" "+HDGATEN[p.gate]+"</td><td class='ho'>"+d.gate+"."+d.line+" "+HDGATEN[d.gate]+"</td></tr>";}
+ h+="</table>";
+ h+="<b>Canales definidos · "+C.channels.length+"</b>";
+ if(C.channels.length){h+="<table class='ztab'>";C.channels.forEach(c=>{h+="<tr><td>"+c[0]+"–"+c[1]+"</td><td>"+c[2]+"</td><td class='ho'>"+C.centerOf(c[0]).split(" ")[0]+" ↔ "+C.centerOf(c[1]).split(" ")[0]+"</td></tr>";});h+="</table>";}
+ else h+="<p><i>Sin canales completos: la definición viene de puertas colgantes.</i></p>";
+ const all=Object.keys(HDCENTERS);
+ h+="<b>Centros</b><p><b>Definidos:</b> "+(C.defined.size?[...C.defined].join(", "):"ninguno")+".<br><b>Abiertos</b> (donde se toma y amplifica el mundo): "+all.filter(c=>!C.defined.has(c)).join(", ")+".</p>";
+ h+="<p style='font-size:9.5px;color:#6b7390'>Nodos: nodo medio · efemérides propias (JPL kepleriano); validá casos límite de línea con Swiss Ephemeris.</p>";
+ return h;
+}
+function exportHDHTML(){const info=document.getElementById("hdInfo");if(!hdChart||!info||!info.innerHTML){setStatus("Calculá un diseño primero.","status warn");return;}
+ let wheel="";try{wheel='<div class="wheel"><svg viewBox="0 0 '+width+' '+height+'" xmlns="http://www.w3.org/2000/svg">'+skyLayer.node().outerHTML+'</svg></div>';}catch(e){}
+ const doc='<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diseño Humano</title><style>'+EXPORT_CSS+'</style></head><body><h1>Diseño Humano</h1>'+wheel+'<div class="reading">'+info.innerHTML+'</div><hr><p class="foot">Generado con SATGUS · rave chart</p></body></html>';
+ dlFile("diseno_humano.html",doc,"text/html;charset=utf-8");setStatus("Diseño descargado (HTML).","status ok");}
+function exportHDTxt(){const info=document.getElementById("hdInfo");if(!hdChart||!info||!info.innerText.trim()){setStatus("Calculá un diseño primero.","status warn");return;}
+ dlFile("diseno_humano.txt","DISEÑO HUMANO\n\n"+info.innerText+"\n\n— Generado con SATGUS",'text/plain;charset=utf-8');setStatus("Diseño descargado (texto).","status ok");}
 
 // ---- Modo DÍA: largo del día y crepúsculos a lo largo del año ----
 function renderDayLength(date){
@@ -1687,6 +2196,7 @@ function render(){
  document.body.classList.toggle("domo-mode",domoOn);
  document.body.classList.toggle("zodiac-mode",viewMode==="zodiac");
  document.body.classList.toggle("solarreturn-mode",viewMode==="solarreturn");
+ document.body.classList.toggle("hd-mode",viewMode==="hd");
  [baseLayer,overlayLayer,labelLayer].forEach(g=>g.style("display",mapOn?null:"none"));
  skyLayer.style("display",mapOn?"none":null);
  if(!orbesOn&&Orbes.running)Orbes.stop();
@@ -1698,6 +2208,7 @@ function render(){
   else if(viewMode==="analemma")renderAnalemma(now);
   else if(viewMode==="zodiac")renderZodiacWheel(now);
   else if(viewMode==="solarreturn")renderRS();
+  else if(viewMode==="hd")renderHD();
   else if(viewMode==="chart")renderChart(now);
   else if(viewMode==="wave")renderWave(now);
   else if(viewMode==="day")renderDayLength(now);
@@ -1844,6 +2355,9 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("cityInput").addEventListener("change",()=>{const v=document.getElementById("cityInput").value;if(CITIES.some(c=>c.n===v))cityGo();});
  document.getElementById("zDlHtml").onclick=exportChartHTML;
  document.getElementById("zDlTxt").onclick=exportChartTXT;
+ ["zLen","revLen"].forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));if(id==="zLen"&&viewMode==="zodiac")render();if(viewMode==="solarreturn"&&revChart)renderRS();});});
+ const zaiBtn=document.getElementById("zAI");if(zaiBtn)zaiBtn.onclick=()=>copyAIPrompt("carta");
+ const raiBtn=document.getElementById("revAI");if(raiBtn)raiBtn.onclick=()=>copyAIPrompt("rev");
  document.getElementById("revDlHtml").onclick=exportRSHTML;
  document.getElementById("revDlTxt").onclick=exportRSTxt;
  document.getElementById("locPill").onclick=()=>document.getElementById("locPop").classList.toggle("open");
@@ -1856,7 +2370,7 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("passBtn").onclick=showPasses;
  document.getElementById("astrosBtn").onclick=showVisibility;
  document.getElementById("astroBtn").onclick=showAstroData;
- const modeBtns={map:"mMap",satellite:"mSat",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",solarreturn:"mRev",wave:"mWave",day:"mDay",orbes:"mOrbs",domo:"mDomo"};
+ const modeBtns={map:"mMap",satellite:"mSat",sky:"mSky",analemma:"mAna",zodiac:"mZod",chart:"mChart",solarreturn:"mRev",hd:"mHD",wave:"mWave",day:"mDay",orbes:"mOrbs",domo:"mDomo"};
  function setMode(m){if((m==="sky"||m==="analemma"||m==="domo")&&!userLocation){setStatus("Ese modo necesita tu ubicación: tocá \u201CTomar mi ubicación\u201D o buscá tu ciudad.","status warn");return;}viewMode=m;document.querySelectorAll(".modebtn").forEach(b=>b.classList.remove("active"));document.getElementById(modeBtns[m]).classList.add("active");
   const prim={map:0,sky:1,zodiac:2,domo:3},bn=document.querySelectorAll("#bnav .bn");bn.forEach(x=>x.classList.remove("on"));if(m in prim)bn[prim[m]].classList.add("on");else{const more=document.getElementById("bnMore");if(more)more.classList.add("on");}
   const ms=document.getElementById("moreSheet");if(ms)ms.classList.remove("open");
@@ -1867,6 +2381,12 @@ if(typeof d3==="undefined"||typeof satellite==="undefined"||typeof topojson==="u
  document.getElementById("themeToggle").onclick=toggleTheme;
  document.getElementById("themeToggleM").onclick=toggleTheme;
  document.getElementById("revCalc").onclick=computeRS;
+ document.getElementById("hdCalc").onclick=computeHD;
+ document.getElementById("hdDlHtml").onclick=exportHDHTML;
+ document.getElementById("hdDlTxt").onclick=exportHDTxt;
+ (function(){const b=document.getElementById("hdAI");if(b)b.onclick=()=>copyAIPrompt("hd");})();
+ (function(){const el=document.getElementById("hdView");if(el)el.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));if(viewMode==="hd")renderHD();});})();
+ (function(){const r=document.getElementById("zHDRing");if(r)r.onchange=()=>{if(viewMode==="zodiac")render();else if(viewMode==="solarreturn"&&revChart)renderRS();};})();
  document.getElementById("revBi").onchange=()=>{if(viewMode==="solarreturn"&&revChart)renderRS();};
  document.getElementById("revLocMode").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;[...e.currentTarget.children].forEach(x=>x.classList.toggle("on",x===b));});
  document.getElementById("revYear").value=new Date().getFullYear();
